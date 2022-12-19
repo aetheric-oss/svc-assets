@@ -1,11 +1,11 @@
 [package]
-description = "Arrow template service GRPC server"
+description = "Assets Service REST server"
 edition     = "2021"                                                       # Allowed values are 2015, 2018, 2021
 homepage    = "https://www.arrowair.com/docs/documentation/services/intro"
-keywords    = ["vtol", "server", "template"]                               # max 5
+keywords    = ["vtol", "server", "assets"]                                 # max 5
 license     = "BUSL-1.1"
-name        = "svc-template-rust"
-repository  = "https://github.com/Arrow-air/svc-template-rust"
+name        = "svc-assets"
+repository  = "https://github.com/Arrow-air/svc-assets"
 version     = "0.2.0-develop.2"
 
 categories = [
