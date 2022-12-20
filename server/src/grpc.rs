@@ -2,24 +2,25 @@
 ///
 /// No arguments
 #[derive(Eq, Copy)]
+#[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct QueryIsReady {
-}
+pub struct QueryIsReady {}
 /// I'm Ready
 #[derive(Eq, Copy)]
+#[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct ReadyResponse {
     /// True if ready
-    #[prost(bool, tag="1")]
+    #[prost(bool, tag = "1")]
     pub ready: bool,
 }
 /// Generated server implementations.
-pub mod template_rust_rpc_server {
+pub mod svc_assets_rpc_server {
     #![allow(unused_variables, dead_code, missing_docs, clippy::let_unit_value)]
     use tonic::codegen::*;
-    ///Generated trait containing gRPC methods that should be implemented for use with TemplateRustRpcServer.
+    /// Generated trait containing gRPC methods that should be implemented for use with SvcAssetsRpcServer.
     #[async_trait]
-    pub trait TemplateRustRpc: Send + Sync + 'static {
+    pub trait SvcAssetsRpc: Send + Sync + 'static {
         /// Common Interfaces
         async fn is_ready(
             &self,
@@ -28,13 +29,13 @@ pub mod template_rust_rpc_server {
     }
     /// Heartbeat
     #[derive(Debug)]
-    pub struct TemplateRustRpcServer<T: TemplateRustRpc> {
+    pub struct SvcAssetsRpcServer<T: SvcAssetsRpc> {
         inner: _Inner<T>,
         accept_compression_encodings: EnabledCompressionEncodings,
         send_compression_encodings: EnabledCompressionEncodings,
     }
     struct _Inner<T>(Arc<T>);
-    impl<T: TemplateRustRpc> TemplateRustRpcServer<T> {
+    impl<T: SvcAssetsRpc> SvcAssetsRpcServer<T> {
         pub fn new(inner: T) -> Self {
             Self::from_arc(Arc::new(inner))
         }
@@ -68,9 +69,9 @@ pub mod template_rust_rpc_server {
             self
         }
     }
-    impl<T, B> tonic::codegen::Service<http::Request<B>> for TemplateRustRpcServer<T>
+    impl<T, B> tonic::codegen::Service<http::Request<B>> for SvcAssetsRpcServer<T>
     where
-        T: TemplateRustRpc,
+        T: SvcAssetsRpc,
         B: Body + Send + 'static,
         B::Error: Into<StdError> + Send + 'static,
     {
@@ -86,11 +87,11 @@ pub mod template_rust_rpc_server {
         fn call(&mut self, req: http::Request<B>) -> Self::Future {
             let inner = self.inner.clone();
             match req.uri().path() {
-                "/grpc.TemplateRustRpc/isReady" => {
+                "/grpc.SvcAssetsRpc/isReady" => {
                     #[allow(non_camel_case_types)]
-                    struct isReadySvc<T: TemplateRustRpc>(pub Arc<T>);
+                    struct isReadySvc<T: SvcAssetsRpc>(pub Arc<T>);
                     impl<
-                        T: TemplateRustRpc,
+                        T: SvcAssetsRpc,
                     > tonic::server::UnaryService<super::QueryIsReady>
                     for isReadySvc<T> {
                         type Response = super::ReadyResponse;
@@ -139,7 +140,7 @@ pub mod template_rust_rpc_server {
             }
         }
     }
-    impl<T: TemplateRustRpc> Clone for TemplateRustRpcServer<T> {
+    impl<T: SvcAssetsRpc> Clone for SvcAssetsRpcServer<T> {
         fn clone(&self) -> Self {
             let inner = self.inner.clone();
             Self {
@@ -149,7 +150,7 @@ pub mod template_rust_rpc_server {
             }
         }
     }
-    impl<T: TemplateRustRpc> Clone for _Inner<T> {
+    impl<T: SvcAssetsRpc> Clone for _Inner<T> {
         fn clone(&self) -> Self {
             Self(self.0.clone())
         }
@@ -159,7 +160,7 @@ pub mod template_rust_rpc_server {
             write!(f, "{:?}", self.0)
         }
     }
-    impl<T: TemplateRustRpc> tonic::server::NamedService for TemplateRustRpcServer<T> {
-        const NAME: &'static str = "grpc.TemplateRustRpc";
+    impl<T: SvcAssetsRpc> tonic::server::NamedService for SvcAssetsRpcServer<T> {
+        const NAME: &'static str = "grpc.SvcAssetsRpc";
     }
 }
