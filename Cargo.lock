@@ -1107,7 +1107,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "svc-template-rust"
+name = "svc-assets"
 version = "0.2.0-develop.2"
 dependencies = [
  "cargo-husky",
@@ -1129,7 +1129,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "svc-template-rust-client-grpc"
+name = "svc-assets-client-grpc"
 version = "0.2.0-develop.2"
 dependencies = [
  "prost",
