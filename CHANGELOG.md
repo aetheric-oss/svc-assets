@@ -1,3 +1,5 @@
+## [Release 0.2.0-develop.2](https://github.com/Arrow-air/svc-assets/releases/tag/v0.2.0-develop.2)
+
 ## [Release 0.2.0-develop.2](https://github.com/Arrow-air/svc-template-rust/releases/tag/v0.2.0-develop.2)
 
 ### 🛠 Maintenance
