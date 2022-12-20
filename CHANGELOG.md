@@ -27,4 +27,3 @@
 -  **ci:** .editorconfig - provisioned by terraform ([`6b23f99`](https://github.com/Arrow-air/svc-template-rust/commit/6b23f9980c989ac781cb67feb838842a50aa0377))
 -  **ci:** .github/workflows/release.yml - provisioned by terraform ([`bb99bd8`](https://github.com/Arrow-air/svc-template-rust/commit/bb99bd8443ebb36de8fb606dae9974765d156a84))
 -  **license:** add license and release requirements ([`245d7ec`](https://github.com/Arrow-air/svc-template-rust/commit/245d7ec8db19f78c5d73936be92f101977c546d6))
-

@@ -2,28 +2,29 @@
 ///
 /// No arguments
 #[derive(Eq, Copy)]
+#[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct QueryIsReady {
-}
+pub struct QueryIsReady {}
 /// I'm Ready
 #[derive(Eq, Copy)]
+#[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct ReadyResponse {
     /// True if ready
-    #[prost(bool, tag="1")]
+    #[prost(bool, tag = "1")]
     pub ready: bool,
 }
 /// Generated client implementations.
-pub mod template_rust_rpc_client {
+pub mod svc_assets_rpc_client {
     #![allow(unused_variables, dead_code, missing_docs, clippy::let_unit_value)]
     use tonic::codegen::*;
     use tonic::codegen::http::Uri;
     /// Heartbeat
     #[derive(Debug, Clone)]
-    pub struct TemplateRustRpcClient<T> {
+    pub struct SvcAssetsRpcClient<T> {
         inner: tonic::client::Grpc<T>,
     }
-    impl TemplateRustRpcClient<tonic::transport::Channel> {
+    impl SvcAssetsRpcClient<tonic::transport::Channel> {
         /// Attempt to create a new client by connecting to a given endpoint.
         pub async fn connect<D>(dst: D) -> Result<Self, tonic::transport::Error>
         where
@@ -34,7 +35,7 @@ pub mod template_rust_rpc_client {
             Ok(Self::new(conn))
         }
     }
-    impl<T> TemplateRustRpcClient<T>
+    impl<T> SvcAssetsRpcClient<T>
     where
         T: tonic::client::GrpcService<tonic::body::BoxBody>,
         T::Error: Into<StdError>,
@@ -52,7 +53,7 @@ pub mod template_rust_rpc_client {
         pub fn with_interceptor<F>(
             inner: T,
             interceptor: F,
-        ) -> TemplateRustRpcClient<InterceptedService<T, F>>
+        ) -> SvcAssetsRpcClient<InterceptedService<T, F>>
         where
             F: tonic::service::Interceptor,
             T::ResponseBody: Default,
@@ -66,7 +67,7 @@ pub mod template_rust_rpc_client {
                 http::Request<tonic::body::BoxBody>,
             >>::Error: Into<StdError> + Send + Sync,
         {
-            TemplateRustRpcClient::new(InterceptedService::new(inner, interceptor))
+            SvcAssetsRpcClient::new(InterceptedService::new(inner, interceptor))
         }
         /// Compress requests with the given encoding.
         ///
@@ -99,7 +100,7 @@ pub mod template_rust_rpc_client {
                 })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
-                "/grpc.TemplateRustRpc/isReady",
+                "/grpc.SvcAssetsRpc/isReady",
             );
             self.inner.unary(request.into_request(), path, codec).await
         }
