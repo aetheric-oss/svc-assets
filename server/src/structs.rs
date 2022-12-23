@@ -38,10 +38,44 @@ pub struct Operator {
 // Implementations of helper tools for the assets structs
 // =====================================================================
 
+/// A struct representing a group of assets.
+///
+/// The asset group can be delegated to another operator.
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct AssetGroup {
+    pub id: Uuid,
+    pub name: Option<String>,
+    pub owner: Uuid,
+    pub created_at: SystemTime,
+    pub updated_at: Option<SystemTime>,
+    pub delegatee: Option<Uuid>,
+    pub assets: Vec<Uuid>,
+}
+
+/// Attributes that are common to all assets.
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct Basics {
+    pub id: Uuid,
+    pub name: Option<String>,
+    /// The UUID of an [`AssetGroup`] struct, if available.
+    pub group_id: Option<Uuid>,
+    pub owner: Uuid,
+    pub created_at: SystemTime,
+    pub updated_at: Option<SystemTime>,
+    /// If the vector is empty, the asset is available to everyone.
+    ///
+    /// Otherwise, the asset is only available to the clients in the
+    /// vector.
+    pub whitelist: Vec<Uuid>,
+    pub status: AssetStatus,
+}
+
 /// Get information about an asset.
 ///
 /// This trait is implemented by all asset types.
 pub trait AssetsInfo {
+    /// Get the asset's basic information.
+    fn basics(&self) -> Basics;
     /// Get the asset's ID.
     fn id(&self) -> Uuid;
     /// Get the asset's group ID.
@@ -50,9 +84,6 @@ pub trait AssetsInfo {
     fn name(&self) -> String;
     /// Get the asset's owner.
     fn owner(&self) -> Uuid;
-    /// Get the asset's delegatee. If the asset is not delegated, this
-    /// will return None.
-    fn delegatee(&self) -> Option<Uuid>;
     /// Get the asset's creation time.
     fn created_at(&self) -> SystemTime;
     /// Get the asset's last update time. If the asset has never been
@@ -60,53 +91,48 @@ pub trait AssetsInfo {
     fn updated_at(&self) -> Option<SystemTime>;
     /// Check if the asset is grouped.
     fn is_grouped(&self) -> bool;
-    /// Check if the asset is delegated.
-    fn is_delegated(&self) -> bool;
     /// Check if the asset is open to the public.
     fn is_public(&self) -> bool;
     /// Get the list of clients that have access to the asset.
-    fn clients(&self) -> Vec<Uuid>;
+    fn whitelist(&self) -> Vec<Uuid>;
     /// Get the status of the asset.
     fn status(&self) -> AssetStatus;
 }
 
 #[duplicate_item(asset; [Aircraft]; [Vertiport])]
 impl AssetsInfo for asset {
+    fn basics(&self) -> Basics {
+        self.basics.clone()
+    }
     fn id(&self) -> Uuid {
-        self.id
+        self.basics().id
     }
     fn group_id(&self) -> Option<Uuid> {
-        self.group_id
+        self.basics().group_id
     }
     fn name(&self) -> String {
         self.full_name()
     }
     fn owner(&self) -> Uuid {
-        self.owner
-    }
-    fn delegatee(&self) -> Option<Uuid> {
-        self.delegatee
+        self.basics().owner
     }
     fn created_at(&self) -> SystemTime {
-        self.created_at
+        self.basics().created_at
     }
     fn updated_at(&self) -> Option<SystemTime> {
-        self.updated_at
+        self.basics().updated_at
     }
     fn is_grouped(&self) -> bool {
-        self.group_id.is_some()
-    }
-    fn is_delegated(&self) -> bool {
-        self.delegatee.is_some()
+        self.basics().group_id.is_some()
     }
     fn is_public(&self) -> bool {
-        self.restricted_to.is_empty()
+        self.basics().whitelist.is_empty()
     }
-    fn clients(&self) -> Vec<Uuid> {
-        self.restricted_to.clone()
+    fn whitelist(&self) -> Vec<Uuid> {
+        self.basics().whitelist
     }
     fn status(&self) -> AssetStatus {
-        self.status.clone()
+        self.basics().status
     }
 }
 
@@ -135,18 +161,7 @@ pub struct Location {
 /// A struct representing an aircraft.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct Aircraft {
-    pub id: Uuid,
-    pub name: Option<String>,
-    pub group_id: Option<Uuid>,
-    pub owner: Uuid,
-    pub delegatee: Option<Uuid>,
-    pub created_at: SystemTime,
-    pub updated_at: Option<SystemTime>,
-    /// If the vector is empty, the aircraft is available to everyone.
-    /// Otherwise, the aircraft is only available to the clients in the
-    /// vector.
-    pub restricted_to: Vec<Uuid>,
-    pub status: AssetStatus,
+    pub basics: Basics,
     /// The aircraft's manufacturer.
     ///
     /// TODO: For now we can just say "Boeing", "Airbus", etc. Later, we
@@ -176,7 +191,7 @@ impl Aircraft {
     ///
     /// For example, "Boeing 737-800 N12345".
     pub fn full_name(&self) -> String {
-        match &self.name {
+        match &self.basics.name {
             Some(name) => name.clone(),
             None => format!(
                 "{} {} {}",
@@ -204,18 +219,7 @@ pub struct Vertipad {
 /// landing (VTOL) aircraft. A vertiport may have one or more vertipads.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct Vertiport {
-    pub id: Uuid,
-    pub name: String,
-    pub group_id: Option<Uuid>,
-    pub owner: Uuid,
-    pub delegatee: Option<Uuid>,
-    pub created_at: SystemTime,
-    pub updated_at: Option<SystemTime>,
-    /// If the vector is empty, the vertiport is available to everyone.
-    /// Otherwise, the vertiport is only available to the clients in the
-    /// vector.
-    pub restricted_to: Vec<Uuid>,
-    pub status: AssetStatus,
+    pub basics: Basics,
     pub description: Option<String>,
     pub location: Location,
     pub vertipads: Vec<Uuid>,
@@ -224,8 +228,169 @@ pub struct Vertiport {
 impl Vertiport {
     /// Get the vertiport's name.
     ///
-    /// This is the same as the `name` field, which is a required field.
+    /// It is recommended to make the `name` field required for
+    /// vertiports. This can be done through frontend validation.
     pub fn full_name(&self) -> String {
-        self.name.clone()
+        match &self.basics.name {
+            Some(name) => name.clone(),
+            None => "Unnamed vertiport".to_string(),
+        }
+    }
+}
+
+// =====================================================================
+// Tests
+// =====================================================================
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_asset_basics() {
+        let basics = Basics {
+            id: Uuid::new_v4(),
+            name: Some("Test asset".to_string()),
+            group_id: Some(Uuid::new_v4()),
+            owner: Uuid::new_v4(),
+            created_at: SystemTime::now(),
+            updated_at: Some(SystemTime::now()),
+            whitelist: vec![Uuid::new_v4()],
+            status: AssetStatus::Available,
+        };
+        let asset = Aircraft {
+            basics: basics.clone(),
+            manufacturer: "Boeing".to_string(),
+            model: "737-800".to_string(),
+            serial_number: "12345".to_string(),
+            registration_number: "N12345".to_string(),
+            description: None,
+            max_payload: OrderedFloat(100.0),
+            max_range: None,
+        };
+        assert_eq!(asset.id(), basics.id);
+        assert_eq!(asset.name(), basics.name.unwrap());
+        assert_eq!(asset.owner(), basics.owner);
+        assert_eq!(asset.created_at(), basics.created_at);
+        assert_eq!(asset.updated_at(), basics.updated_at);
+        assert_eq!(asset.is_grouped(), true);
+        assert_eq!(asset.is_public(), false);
+        assert_eq!(asset.whitelist(), basics.whitelist);
+        assert_eq!(asset.status(), basics.status);
+    }
+
+    #[test]
+    fn test_assets_info_trait_methods_on_different_asset_types() {
+        let basics = Basics {
+            id: Uuid::new_v4(),
+            name: Some("Test asset".to_string()),
+            group_id: Some(Uuid::new_v4()),
+            owner: Uuid::new_v4(),
+            created_at: SystemTime::now(),
+            updated_at: Some(SystemTime::now()),
+            whitelist: vec![Uuid::new_v4()],
+            status: AssetStatus::Available,
+        };
+        let aircraft = Aircraft {
+            basics: basics.clone(),
+            manufacturer: "Boeing".to_string(),
+            model: "737-800".to_string(),
+            serial_number: "12345".to_string(),
+            registration_number: "N12345".to_string(),
+            description: None,
+            max_payload: OrderedFloat(100.0),
+            max_range: None,
+        };
+
+        let vertiport = Vertiport {
+            basics: basics.clone(),
+            description: None,
+            location: Location {
+                latitude: 0.0.into(),
+                longitude: 0.0.into(),
+            },
+            vertipads: vec![Uuid::new_v4()],
+        };
+        assert_eq!(aircraft.id(), basics.id);
+        assert_eq!(aircraft.name(), basics.name.clone().unwrap());
+        assert_eq!(aircraft.owner(), basics.owner);
+        assert_eq!(aircraft.created_at(), basics.created_at);
+        assert_eq!(aircraft.updated_at(), basics.updated_at);
+        assert_eq!(aircraft.is_grouped(), true);
+        assert_eq!(aircraft.is_public(), false);
+        assert_eq!(aircraft.whitelist(), basics.whitelist);
+        assert_eq!(aircraft.status(), basics.status);
+
+        assert_eq!(vertiport.id(), basics.id);
+        assert_eq!(vertiport.name(), basics.name.clone().unwrap());
+        assert_eq!(vertiport.owner(), basics.owner);
+        assert_eq!(vertiport.created_at(), basics.created_at);
+        assert_eq!(vertiport.updated_at(), basics.updated_at);
+        assert_eq!(vertiport.is_grouped(), true);
+        assert_eq!(vertiport.is_public(), false);
+        assert_eq!(vertiport.whitelist(), basics.whitelist);
+        assert_eq!(vertiport.status(), basics.status);
+    }
+
+    #[test]
+    fn test_asset_group() {
+        let group_id = Uuid::new_v4();
+
+        let basics = Basics {
+            id: Uuid::new_v4(),
+            name: Some("Test asset".to_string()),
+            group_id: Some(group_id.clone()),
+            owner: Uuid::new_v4(),
+            created_at: SystemTime::now(),
+            updated_at: Some(SystemTime::now()),
+            whitelist: vec![Uuid::new_v4()],
+            status: AssetStatus::Available,
+        };
+        let aircraft = Aircraft {
+            basics: basics.clone(),
+            manufacturer: "Boeing".to_string(),
+            model: "737-800".to_string(),
+            serial_number: "12345".to_string(),
+            registration_number: "N12345".to_string(),
+            description: None,
+            max_payload: OrderedFloat(100.0),
+            max_range: None,
+        };
+        let vertiport = Vertiport {
+            basics: basics.clone(),
+            description: None,
+            location: Location {
+                latitude: 0.0.into(),
+                longitude: 0.0.into(),
+            },
+            vertipads: vec![Uuid::new_v4()],
+        };
+
+        let asset_group = AssetGroup {
+            // pub id: Uuid,
+            // pub name: Option<String>,
+            // pub owner: Uuid,
+            // pub created_at: SystemTime,
+            // pub updated_at: Option<SystemTime>,
+            // pub delegatee: Option<Uuid>,
+            // pub assets: Vec<Uuid>,
+            id: group_id,
+            name: Some("Test group".to_string()),
+            owner: Uuid::new_v4(),
+            created_at: SystemTime::now(),
+            updated_at: Some(SystemTime::now()),
+            delegatee: None,
+            assets: vec![aircraft.id(), vertiport.id()],
+        };
+
+        assert_eq!(asset_group.id, group_id);
+        assert_eq!(asset_group.name, Some("Test group".to_string()));
+
+        assert_eq!(asset_group.assets.len(), 2);
+        assert_eq!(asset_group.assets[0], aircraft.id());
+        assert_eq!(asset_group.assets[1], vertiport.id());
+
+        assert_eq!(aircraft.group_id(), Some(group_id));
+        assert_eq!(vertiport.group_id(), Some(group_id));
     }
 }
