@@ -6,6 +6,9 @@ pub mod svc_assets {
     include!("grpc.rs");
 }
 
+//TODO - replace this with database calls when ready
+mod structs;
+
 use svc_assets::svc_assets_rpc_server::{SvcAssetsRpc, SvcAssetsRpcServer};
 use svc_assets::{QueryIsReady, ReadyResponse};
 use tonic::{transport::Server, Request, Response, Status};
