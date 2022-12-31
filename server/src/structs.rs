@@ -6,9 +6,12 @@
 //! Types here are different from the openapi types.
 
 use duplicate::duplicate_item;
+use lipsum::{lipsum, lipsum_title};
 use ordered_float::OrderedFloat;
+use rand::Rng;
 use serde::{Deserialize, Serialize};
 use std::time::SystemTime;
+use utoipa::{IntoParams, ToSchema};
 use uuid::Uuid;
 
 /// A struct representing the operator.
@@ -17,7 +20,7 @@ use uuid::Uuid;
 /// Arrow Cargo. The operator supplies the assets to the network,
 /// expects to receive and operate cargo shipments, and is expected to
 /// derive revenue from the operation.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema, IntoParams)]
 pub struct Operator {
     pub id: Uuid,
     pub name: String,
@@ -30,8 +33,29 @@ pub struct Operator {
     pub website: String,
     pub description: String,
     pub logo: String,
-    pub created_at: String,
-    pub updated_at: String,
+    pub created_at: SystemTime,
+    pub updated_at: Option<SystemTime>,
+}
+
+impl Operator {
+    /// Generate a random operator.
+    pub fn random() -> Self {
+        Self {
+            id: Uuid::new_v4(),
+            name: lipsum_title(),
+            country: lipsum(1),
+            city: lipsum(2),
+            address: lipsum(6),
+            postal_code: lipsum(1),
+            email: lipsum(1),
+            phone: lipsum(1),
+            website: lipsum(1),
+            description: lipsum(10),
+            logo: lipsum(1),
+            created_at: SystemTime::now(),
+            updated_at: None,
+        }
+    }
 }
 
 // =====================================================================
@@ -50,6 +74,26 @@ pub struct AssetGroup {
     pub updated_at: Option<SystemTime>,
     pub delegatee: Option<Uuid>,
     pub assets: Vec<Uuid>,
+}
+
+impl AssetGroup {
+    /// Generate a random asset group.
+    pub fn random() -> Self {
+        let num_assets = rand::thread_rng().gen_range(0..=10);
+        let mut assets = Vec::with_capacity(num_assets);
+        for _ in 0..num_assets {
+            assets.push(Uuid::new_v4());
+        }
+        Self {
+            id: Uuid::new_v4(),
+            name: Some(lipsum_title()),
+            owner: Uuid::new_v4(),
+            created_at: SystemTime::now(),
+            updated_at: None,
+            delegatee: None,
+            assets,
+        }
+    }
 }
 
 /// Attributes that are common to all assets.
@@ -199,6 +243,29 @@ impl Aircraft {
             ),
         }
     }
+
+    /// Generate a random aircraft.
+    pub fn random() -> Self {
+        Self {
+            basics: Basics {
+                id: Uuid::new_v4(),
+                group_id: None,
+                name: Some(lipsum_title()),
+                owner: Uuid::new_v4(),
+                created_at: SystemTime::now(),
+                updated_at: None,
+                whitelist: Vec::new(),
+                status: AssetStatus::Available,
+            },
+            manufacturer: lipsum_title(),
+            model: lipsum(12),
+            serial_number: lipsum(12),
+            registration_number: lipsum(12),
+            description: None,
+            max_payload: OrderedFloat(100.0),
+            max_range: None,
+        }
+    }
 }
 
 /// A struct representing a vertipad (a vertical landing pad).
@@ -211,6 +278,21 @@ pub struct Vertipad {
     pub vertiport_id: Uuid,
     pub status: AssetStatus,
     pub location: Location,
+}
+
+impl Vertipad {
+    /// Generate a random vertipad.
+    pub fn random() -> Self {
+        Self {
+            id: Uuid::new_v4(),
+            vertiport_id: Uuid::new_v4(),
+            status: AssetStatus::Available,
+            location: Location {
+                latitude: OrderedFloat(0.0),
+                longitude: OrderedFloat(0.0),
+            },
+        }
+    }
 }
 
 /// A struct representing a vertiport (a vertical airport).
@@ -234,6 +316,28 @@ impl Vertiport {
         match &self.basics.name {
             Some(name) => name.clone(),
             None => "Unnamed vertiport".to_string(),
+        }
+    }
+
+    /// Generate a random vertiport.
+    pub fn random() -> Self {
+        Self {
+            basics: Basics {
+                id: Uuid::new_v4(),
+                group_id: None,
+                name: Some(lipsum_title()),
+                owner: Uuid::new_v4(),
+                created_at: SystemTime::now(),
+                updated_at: None,
+                whitelist: Vec::new(),
+                status: AssetStatus::Available,
+            },
+            description: None,
+            location: Location {
+                latitude: OrderedFloat(0.0),
+                longitude: OrderedFloat(0.0),
+            },
+            vertipads: Vec::new(),
         }
     }
 }

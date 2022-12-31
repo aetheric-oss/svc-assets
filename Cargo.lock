@@ -322,12 +322,37 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "00b0228411908ca8685dba7fc2cdd70ec9990a6e753e89b6ac91a84c40fbaf4b"
 
 [[package]]
+name = "form_urlencoded"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a9c384f161156f5260c24a097c56119f9be8c798586aecc13afbcbe7b7e26bf8"
+dependencies = [
+ "percent-encoding",
+]
+
+[[package]]
+name = "futures"
+version = "0.3.25"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "38390104763dc37a5145a53c29c63c1290b5d316d6086ec32c293f6736051bb0"
+dependencies = [
+ "futures-channel",
+ "futures-core",
+ "futures-executor",
+ "futures-io",
+ "futures-sink",
+ "futures-task",
+ "futures-util",
+]
+
+[[package]]
 name = "futures-channel"
 version = "0.3.25"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "52ba265a92256105f45b719605a571ffe2d1f0fea3807304b522c1d778f79eed"
 dependencies = [
  "futures-core",
+ "futures-sink",
 ]
 
 [[package]]
@@ -335,6 +360,34 @@ name = "futures-core"
 version = "0.3.25"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "04909a7a7e4633ae6c4a9ab280aeb86da1236243a77b694a49eacd659a4bd3ac"
+
+[[package]]
+name = "futures-executor"
+version = "0.3.25"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7acc85df6714c176ab5edf386123fafe217be88c0840ec11f199441134a074e2"
+dependencies = [
+ "futures-core",
+ "futures-task",
+ "futures-util",
+]
+
+[[package]]
+name = "futures-io"
+version = "0.3.25"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "00f5fb52a06bdcadeb54e8d3671f8888a39697dcb0b81b23b55174030427f4eb"
+
+[[package]]
+name = "futures-macro"
+version = "0.3.25"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bdfb8ce053d86b91919aad980c220b1fb8401a9394410e1c289ed7e66b61835d"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
 
 [[package]]
 name = "futures-sink"
@@ -354,10 +407,25 @@ version = "0.3.25"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "197676987abd2f9cadff84926f410af1c183608d36641465df73ae8211dc65d6"
 dependencies = [
+ "futures-channel",
  "futures-core",
+ "futures-io",
+ "futures-macro",
+ "futures-sink",
  "futures-task",
+ "memchr",
  "pin-project-lite",
  "pin-utils",
+ "slab",
+]
+
+[[package]]
+name = "geo-types"
+version = "0.7.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e26879b63ac36ca5492918dc16f8c1e604b0f70f884fffbd3533f89953ab1991"
+dependencies = [
+ "num-traits",
 ]
 
 [[package]]
@@ -527,6 +595,7 @@ checksum = "1885e79c1fc4b10f0e172c475f458b7f7b93061064d98c3293e98c5ba0c8b399"
 dependencies = [
  "autocfg",
  "hashbrown",
+ "serde",
 ]
 
 [[package]]
@@ -596,6 +665,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0717cef1bc8b636c6e1c1bbdefc09e6322da8a9321966e8928ef80d20f7f770f"
 
 [[package]]
+name = "lipsum"
+version = "0.8.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a8451846f1f337e44486666989fbce40be804da139d5a4477d6b88ece5dc69f4"
+dependencies = [
+ "rand",
+ "rand_chacha",
+]
+
+[[package]]
 name = "lock_api"
 version = "0.4.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -650,6 +729,12 @@ dependencies = [
 
 [[package]]
 name = "matchit"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "73cbba799671b762df5a175adf59ce145165747bb891505c43d09aefbbf38beb"
+
+[[package]]
+name = "matchit"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b87248edafb776e59e6ee64a79086f65890d3510f2c656c000bf2a7e8a0aea40"
@@ -692,6 +777,17 @@ name = "multimap"
 version = "0.8.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e5ce46fe64a9d73be07dcbe690a38ce1b293be448fd8ce1e6c1b8062c9f72c6a"
+
+[[package]]
+name = "num-derive"
+version = "0.3.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "876a53fff98e03a936a674b29568b0e605f06b29372c2489ff4de23f1949743d"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
 
 [[package]]
 name = "num-integer"
@@ -1133,6 +1229,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "serde_urlencoded"
+version = "0.7.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d3491c14715ca2294c4d6a88f15e84739788c1d030eed8c110436aafdaa2f3fd"
+dependencies = [
+ "form_urlencoded",
+ "itoa",
+ "ryu",
+ "serde",
+]
+
+[[package]]
 name = "serde_yaml"
 version = "0.8.26"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1182,10 +1290,13 @@ dependencies = [
 name = "svc-assets"
 version = "0.3.0-develop.1"
 dependencies = [
+ "axum 0.5.17",
  "cargo-husky",
  "chrono",
  "duplicate",
+ "futures",
  "hyper",
+ "lipsum",
  "log",
  "log4rs",
  "openssl",
@@ -1193,13 +1304,16 @@ dependencies = [
  "prost",
  "prost-build",
  "prost-types",
+ "rand",
  "serde",
  "serde_json",
+ "svc-storage-client-grpc",
  "tokio",
  "tokio-util",
  "tonic",
  "tonic-build",
  "tonic-health",
+ "utoipa",
  "uuid",
 ]
 
@@ -1211,6 +1325,21 @@ dependencies = [
  "prost-types",
  "tokio",
  "tonic",
+]
+
+[[package]]
+name = "svc-storage-client-grpc"
+version = "0.2.0"
+source = "git+https://github.com/Arrow-air/svc-storage?branch=main#b963ed9a43aa1dd1381697146b96ba9b9bb73ad9"
+dependencies = [
+ "geo-types",
+ "num-derive",
+ "num-traits",
+ "ordered-float 3.4.0",
+ "prost",
+ "prost-types",
+ "tonic",
+ "uuid",
 ]
 
 [[package]]
@@ -1375,7 +1504,7 @@ checksum = "8f219fad3b929bef19b1f86fbc0358d35daed8f2cac972037ac0dc10bbb8d5fb"
 dependencies = [
  "async-stream",
  "async-trait",
- "axum",
+ "axum 0.6.1",
  "base64",
  "bytes",
  "futures-core",
@@ -1556,6 +1685,30 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e0a303d30665362d9680d7d91d78b23f5f899504d4f08b3c4cf08d055d87c0ad"
 dependencies = [
  "destructure_traitobject",
+]
+
+[[package]]
+name = "utoipa"
+version = "2.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b626abb3bbbe41ce00df6dea3d109a83a034930245c3307026d82d71e7a06e43"
+dependencies = [
+ "indexmap",
+ "serde",
+ "serde_json",
+ "utoipa-gen",
+]
+
+[[package]]
+name = "utoipa-gen"
+version = "2.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "250e8cdb0461b6fbaa1c1acb7f08300d773713fab721776becf5f7386b41a791"
+dependencies = [
+ "proc-macro-error",
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]
