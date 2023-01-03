@@ -118,6 +118,18 @@ pub async fn rest_server(grpc_clients: GrpcClients) {
             rest_api::get_vertipad_by_id,
             rest_api::get_vertiport_by_id,
             rest_api::get_asset_group_by_id,
+            rest_api::register_aircraft,
+            rest_api::register_vertiport,
+            rest_api::register_vertipad,
+            rest_api::register_asset_group,
+        ),
+        components(
+            schemas(
+                rest_api::rest_types::RegisterAircraftPayload,
+                rest_api::rest_types::RegisterVertiportPayload,
+                rest_api::rest_types::RegisterVertipadPayload,
+                rest_api::rest_types::RegisterAssetGroupPayload,
+            )
         ),
         tags(
             (name = "svc-assets", description = "svc-assets API")
@@ -128,6 +140,7 @@ pub async fn rest_server(grpc_clients: GrpcClients) {
     let app = Router::new()
         // .merge(SwaggerUi::new("/swagger-ui/*tail").url("/api-doc/openapi.json", ApiDoc::openapi()))
         .fallback(not_found.into_service())
+        // GET endpoints
         .route("/operators/:id", routing::get(rest_api::get_operator))
         .route(
             "/operators/:id/assets",
@@ -154,6 +167,14 @@ pub async fn rest_server(grpc_clients: GrpcClients) {
         .route(
             "/assets/groups/:id",
             routing::get(rest_api::get_asset_group_by_id),
+        )
+        // POST endpoints
+        .route("/aircraft", routing::post(rest_api::register_aircraft))
+        .route("/vertiports", routing::post(rest_api::register_vertiport))
+        .route("/vertipads", routing::post(rest_api::register_vertipad))
+        .route(
+            "/assets/groups",
+            routing::post(rest_api::register_asset_group),
         )
         .layer(Extension(grpc_clients)); // Extension layer must be last
 

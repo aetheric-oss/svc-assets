@@ -223,8 +223,8 @@ pub struct Aircraft {
     /// aircraft from national aviation authorities like the FAA.
     pub registration_number: String,
     pub description: Option<String>,
-    pub max_payload: OrderedFloat<f32>,
-    pub max_range: Option<OrderedFloat<f64>>,
+    pub max_payload_kg: OrderedFloat<f32>,
+    pub max_range_km: Option<OrderedFloat<f64>>,
 }
 
 impl Aircraft {
@@ -262,8 +262,8 @@ impl Aircraft {
             serial_number: lipsum(12),
             registration_number: lipsum(12),
             description: None,
-            max_payload: OrderedFloat(100.0),
-            max_range: None,
+            max_payload_kg: OrderedFloat(100.0),
+            max_range_km: None,
         }
     }
 }
@@ -369,8 +369,8 @@ mod tests {
             serial_number: "12345".to_string(),
             registration_number: "N12345".to_string(),
             description: None,
-            max_payload: OrderedFloat(100.0),
-            max_range: None,
+            max_payload_kg: OrderedFloat(100.0),
+            max_range_km: None,
         };
         assert_eq!(asset.id(), basics.id);
         assert_eq!(asset.name(), basics.name.unwrap());
@@ -402,8 +402,8 @@ mod tests {
             serial_number: "12345".to_string(),
             registration_number: "N12345".to_string(),
             description: None,
-            max_payload: OrderedFloat(100.0),
-            max_range: None,
+            max_payload_kg: OrderedFloat(100.0),
+            max_range_km: None,
         };
 
         let vertiport = Vertiport {
@@ -457,8 +457,8 @@ mod tests {
             serial_number: "12345".to_string(),
             registration_number: "N12345".to_string(),
             description: None,
-            max_payload: OrderedFloat(100.0),
-            max_range: None,
+            max_payload_kg: OrderedFloat(100.0),
+            max_range_km: None,
         };
         let vertiport = Vertiport {
             basics: basics.clone(),
