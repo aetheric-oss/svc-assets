@@ -583,3 +583,194 @@ pub async fn register_asset_group(
     //TODO
     Ok(_asset_group.id.to_string())
 }
+
+//-----------------------------------------------------------
+// Asset Updates
+//-----------------------------------------------------------
+
+/// Update/modify an [`Aircraft`] in the database.
+///
+/// This will update the aircraft's information.
+#[utoipa::path(
+    put,
+    path="/aircraft/{id}",
+    request_body=Aircraft,
+    responses(
+        (status = 200, description = "Aircraft updated in database"),
+        (status = 422, description = "Request body is invalid format"),
+        (status = 503, description = "Could not connect to other microservice dependencies")
+    ),
+    params(
+        ("id" = String, Path, description = "Aircraft id"),
+    )
+)]
+pub async fn update_aircraft(
+    Extension(mut grpc_clients): Extension<GrpcClients>,
+    Json(payload): Json<Aircraft>,
+    // TODO: change _id to id
+    Path(_id): Path<String>,
+) -> Result<String, (StatusCode, String)> {
+    req_debug!("update_aircraft()");
+
+    // TODO: validate payload - need to check ownerships, existence, etc.
+
+    // validate payload
+    // to check with the database to validate the registration number
+    //
+    // if !payload.is_valid() {
+    //     return Err((
+    // StatusCode::BAD_REQUEST,
+    //         "Invalid payload format".to_string(),
+    //     ));
+    // }
+
+    // Get Client
+    let _client_option = grpc_clients.storage.get_client().await;
+    // if client_option.is_none() {
+    //     let error_msg = "svc-storage unavailable.".to_string();
+    //     req_error!("(get_asset_group_by_id) {}", &error_msg);
+    //     return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
+    // }
+    // let mut client = client_option.unwrap();
+
+    //TODO
+    Ok(payload.id().to_string())
+}
+
+/// Update/modify a [`Vertiport`] in the database.
+///
+/// This will update the vertiport's information. It can also be used to
+/// perform batch add/remove of vertipads.
+#[utoipa::path(
+    put,
+    path="/vertiports/{id}",
+    request_body=Vertiport,
+    responses(
+        (status = 200, description = "Vertiport updated in database"),
+        (status = 422, description = "Request body is invalid format"),
+        (status = 503, description = "Could not connect to other microservice dependencies")
+    ),
+    params(
+        ("id" = String, Path, description = "Vertiport id"),
+    )
+)]
+pub async fn update_vertiport(
+    Extension(mut grpc_clients): Extension<GrpcClients>,
+    Json(payload): Json<Vertiport>,
+    Path(_id): Path<String>,
+) -> Result<String, (StatusCode, String)> {
+    req_debug!("update_vertiport()");
+    // TODO: validate payload - need to check ownerships, existence, etc.
+
+    // validate payload
+    // to check with the database to validate the registration number
+    //
+    // if !payload.is_valid() {
+    //     return Err((
+    // StatusCode::BAD_REQUEST,
+    //         "Invalid payload format".to_string(),
+    //     ));
+    // }
+
+    // Get Client
+    let _client_option = grpc_clients.storage.get_client().await;
+    // if client_option.is_none() {
+    //     let error_msg = "svc-storage unavailable.".to_string();
+    //     req_error!("(get_asset_group_by_id) {}", &error_msg);
+    //     return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
+    // }
+    // let mut client = client_option.unwrap();
+
+    //TODO
+    Ok(payload.id().to_string())
+}
+
+/// Update/modify a [`Vertipad`] in the database.
+#[utoipa::path(
+    put,
+    path="/vertipads/{id}",
+    request_body=Vertipad,
+    responses(
+        (status = 200, description = "Vertipad updated in database"),
+        (status = 422, description = "Request body is invalid format"),
+        (status = 503, description = "Could not connect to other microservice dependencies")
+    ),
+    params(
+        ("id" = String, Path, description = "Vertipad id"),
+    )
+)]
+pub async fn update_vertipad(
+    Extension(mut grpc_clients): Extension<GrpcClients>,
+    Json(payload): Json<Vertipad>,
+    Path(_id): Path<String>,
+) -> Result<String, (StatusCode, String)> {
+    req_debug!("update_vertipad()");
+    // TODO: validate payload - need to check ownerships, existence, etc.
+
+    // validate payload
+    // to check with the database to validate the registration number
+    //
+    // if !payload.is_valid() {
+    //     return Err((
+    // StatusCode::BAD_REQUEST,
+    //         "Invalid payload format".to_string(),
+    //     ));
+    // }
+
+    // Get Client
+    let _client_option = grpc_clients.storage.get_client().await;
+    // if client_option.is_none() {
+    //     let error_msg = "svc-storage unavailable.".to_string();
+    //     req_error!("(get_asset_group_by_id) {}", &error_msg);
+    //     return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
+    // }
+    // let mut client = client_option.unwrap();
+
+    //TODO
+    Ok(payload.id.to_string())
+}
+
+/// Update/modify an [`AssetGroup`] in the database.
+#[utoipa::path(
+    put,
+    path="/assets/groups/{id}",
+    request_body=AssetGroup,
+    responses(
+        (status = 200, description = "AssetGroup updated in database"),
+        (status = 422, description = "Request body is invalid format"),
+        (status = 503, description = "Could not connect to other microservice dependencies")
+    ),
+    params(
+        ("id" = String, Path, description = "AssetGroup id"),
+    )
+)]
+pub async fn update_asset_group(
+    Extension(mut grpc_clients): Extension<GrpcClients>,
+    Json(payload): Json<AssetGroup>,
+    Path(_id): Path<String>,
+) -> Result<String, (StatusCode, String)> {
+    req_debug!("update_asset_group()");
+    // TODO: validate payload - need to check ownerships, existence, etc.
+
+    // validate payload
+    // to check with the database to validate the registration number
+    //
+    // if !payload.is_valid() {
+    //     return Err((
+    // StatusCode::BAD_REQUEST,
+    //         "Invalid payload format".to_string(),
+    //     ));
+    // }
+
+    // Get Client
+    let _client_option = grpc_clients.storage.get_client().await;
+    // if client_option.is_none() {
+    //     let error_msg = "svc-storage unavailable.".to_string();
+    //     req_error!("(get_asset_group_by_id) {}", &error_msg);
+    //     return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
+    // }
+    // let mut client = client_option.unwrap();
+
+    //TODO
+    Ok(payload.id.to_string())
+}

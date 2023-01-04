@@ -16,6 +16,7 @@ mod loggers;
 use axum::{extract::Extension, handler::Handler, response::IntoResponse, routing, Router};
 use grpc_clients::GrpcClients;
 use log::{info, warn};
+use structs::*;
 use svc_assets::svc_assets_rpc_server::{SvcAssetsRpc, SvcAssetsRpcServer};
 use svc_assets::{QueryIsReady, ReadyResponse};
 use tonic::{Request, Response, Status};
@@ -122,6 +123,10 @@ pub async fn rest_server(grpc_clients: GrpcClients) {
             rest_api::register_vertiport,
             rest_api::register_vertipad,
             rest_api::register_asset_group,
+            rest_api::update_aircraft,
+            rest_api::update_vertiport,
+            rest_api::update_vertipad,
+            rest_api::update_asset_group,
         ),
         components(
             schemas(
@@ -129,6 +134,10 @@ pub async fn rest_server(grpc_clients: GrpcClients) {
                 rest_api::rest_types::RegisterVertiportPayload,
                 rest_api::rest_types::RegisterVertipadPayload,
                 rest_api::rest_types::RegisterAssetGroupPayload,
+                Aircraft,
+                Vertiport,
+                Vertipad,
+                AssetGroup,
             )
         ),
         tags(
@@ -175,6 +184,14 @@ pub async fn rest_server(grpc_clients: GrpcClients) {
         .route(
             "/assets/groups",
             routing::post(rest_api::register_asset_group),
+        )
+        // PUT endpoints
+        .route("/aircraft/:id", routing::put(rest_api::update_aircraft))
+        .route("/vertiports/:id", routing::put(rest_api::update_vertiport))
+        .route("/vertipads/:id", routing::put(rest_api::update_vertipad))
+        .route(
+            "/assets/groups/:id",
+            routing::put(rest_api::update_asset_group),
         )
         .layer(Extension(grpc_clients)); // Extension layer must be last
 

@@ -65,7 +65,7 @@ impl Operator {
 /// A struct representing a group of assets.
 ///
 /// The asset group can be delegated to another operator.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema, IntoParams)]
 pub struct AssetGroup {
     pub id: Uuid,
     pub name: Option<String>,
@@ -97,7 +97,7 @@ impl AssetGroup {
 }
 
 /// Attributes that are common to all assets.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema, IntoParams)]
 pub struct Basics {
     pub id: Uuid,
     pub name: Option<String>,
@@ -181,7 +181,7 @@ impl AssetsInfo for asset {
 }
 
 /// Status of an asset.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema)]
 pub enum AssetStatus {
     /// The asset is available for use.
     Available,
@@ -192,7 +192,7 @@ pub enum AssetStatus {
 }
 
 /// A struct representing a location.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema, IntoParams)]
 pub struct Location {
     pub latitude: OrderedFloat<f64>,
     pub longitude: OrderedFloat<f64>,
@@ -203,7 +203,7 @@ pub struct Location {
 // =====================================================================
 
 /// A struct representing an aircraft.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema, IntoParams)]
 pub struct Aircraft {
     pub basics: Basics,
     /// The aircraft's manufacturer.
@@ -272,7 +272,7 @@ impl Aircraft {
 ///
 /// A vertipad is a landing pad that is used for vertical takeoff and
 /// landing (VTOL) aircraft. Usually, vertipads belong to vertiports.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema, IntoParams)]
 pub struct Vertipad {
     pub id: Uuid,
     pub vertiport_id: Uuid,
@@ -299,7 +299,7 @@ impl Vertipad {
 ///
 /// A vertiport is an airport that is used for vertical takeoff and
 /// landing (VTOL) aircraft. A vertiport may have one or more vertipads.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema, IntoParams)]
 pub struct Vertiport {
     pub basics: Basics,
     pub description: Option<String>,
