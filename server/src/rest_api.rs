@@ -774,3 +774,179 @@ pub async fn update_asset_group(
     //TODO
     Ok(payload.id.to_string())
 }
+
+/// Remove a [`Aircraft`] from the database.
+#[utoipa::path(
+    delete,
+    path="/aircraft/{id}",
+    responses(
+        (status = 200, description = "Aircraft removed from database"),
+        (status = 503, description = "Could not connect to other microservice dependencies")
+    ),
+    params(
+        ("id" = String, Path, description = "Aircraft id"),
+    )
+)]
+pub async fn remove_aircraft(
+    Extension(mut grpc_clients): Extension<GrpcClients>,
+    Path(_id): Path<String>,
+) -> Result<String, (StatusCode, String)> {
+    req_debug!("remove_aircraft()");
+    // TODO: validate payload - need to check ownerships, existence,
+    // etc.
+    // TODO: also remove from associated asset group
+
+    // validate payload
+    // to check with the database to validate the registration number
+    //
+    // if !payload.is_valid() {
+    //     return Err((
+    // StatusCode::BAD_REQUEST,
+    //         "Invalid payload format".to_string(),
+    //     ));
+    // }
+
+    // Get Client
+    let _client_option = grpc_clients.storage.get_client().await;
+    // if client_option.is_none() {
+    //     let error_msg = "svc-storage unavailable.".to_string();
+    //     req_error!("(get_asset_group_by_id) {}", &error_msg);
+    //     return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
+    // }
+    // let mut client = client_option.unwrap();
+
+    //TODO
+    Ok(_id)
+}
+
+/// Remove a [`Vertipad`] from the database.
+#[utoipa::path(
+    delete,
+    path="/vertipads/{id}",
+    responses(
+        (status = 200, description = "Vertipad removed from database"),
+        (status = 503, description = "Could not connect to other microservice dependencies")
+    ),
+    params(
+        ("id" = String, Path, description = "Vertipad id"),
+    )
+)]
+pub async fn remove_vertipad(
+    Extension(mut grpc_clients): Extension<GrpcClients>,
+    Path(_id): Path<String>,
+) -> Result<String, (StatusCode, String)> {
+    req_debug!("remove_vertipad()");
+    // TODO: validate payload - need to check ownerships, existence,
+    // etc.
+    // TODO: also remove from associated asset group and vertiport
+
+    // validate payload
+    // to check with the database to validate the registration number
+    //
+    // if !payload.is_valid() {
+    //     return Err((
+    // StatusCode::BAD_REQUEST,
+    //         "Invalid payload format".to_string(),
+    //     ));
+    // }
+
+    // Get Client
+    let _client_option = grpc_clients.storage.get_client().await;
+    // if client_option.is_none() {
+    //     let error_msg = "svc-storage unavailable.".to_string();
+    //     req_error!("(get_asset_group_by_id) {}", &error_msg);
+    //     return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
+    // }
+    // let mut client = client_option.unwrap();
+
+    //TODO
+    Ok(_id)
+}
+
+/// Remove a [`Vertiport`] from the database.
+#[utoipa::path(
+    delete,
+    path="/vertiports/{id}",
+    responses(
+        (status = 200, description = "Vertiport removed from database"),
+        (status = 503, description = "Could not connect to other microservice dependencies")
+    ),
+    params(
+        ("id" = String, Path, description = "Vertiport id"),
+    )
+)]
+pub async fn remove_vertiport(
+    Extension(mut grpc_clients): Extension<GrpcClients>,
+    Path(_id): Path<String>,
+) -> Result<String, (StatusCode, String)> {
+    req_debug!("remove_vertiport()");
+    // TODO: validate payload - need to check ownerships, existence,
+    // etc.
+    // TODO: also remove from associated asset group
+
+    // validate payload
+    // to check with the database to validate the registration number
+    //
+    // if !payload.is_valid() {
+    //     return Err((
+    // StatusCode::BAD_REQUEST,
+    //         "Invalid payload format".to_string(),
+    //     ));
+    // }
+
+    // Get Client
+    let _client_option = grpc_clients.storage.get_client().await;
+    // if client_option.is_none() {
+    //     let error_msg = "svc-storage unavailable.".to_string();
+    //     req_error!("(get_asset_group_by_id) {}", &error_msg);
+    //     return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
+    // }
+    // let mut client = client_option.unwrap();
+
+    //TODO
+    Ok(_id)
+}
+
+/// Remove an [`AssetGroup`] from the database.
+#[utoipa::path(
+    delete,
+    path="/assets/groups/{id}",
+    responses(
+        (status = 200, description = "AssetGroup removed from database"),
+        (status = 503, description = "Could not connect to other microservice dependencies")
+    ),
+    params(
+        ("id" = String, Path, description = "AssetGroup id"),
+    )
+)]
+pub async fn remove_asset_group(
+    Extension(mut grpc_clients): Extension<GrpcClients>,
+    Path(_id): Path<String>,
+) -> Result<String, (StatusCode, String)> {
+    req_debug!("remove_asset_group()");
+    // TODO: validate payload - need to check ownerships, existence,
+    // etc.
+    // TODO: set associated assets' 'group_id' to None
+
+    // validate payload
+    // to check with the database to validate the registration number
+    //
+    // if !payload.is_valid() {
+    //     return Err((
+    // StatusCode::BAD_REQUEST,
+    //         "Invalid payload format".to_string(),
+    //     ));
+    // }
+
+    // Get Client
+    let _client_option = grpc_clients.storage.get_client().await;
+    // if client_option.is_none() {
+    //     let error_msg = "svc-storage unavailable.".to_string();
+    //     req_error!("(get_asset_group_by_id) {}", &error_msg);
+    //     return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
+    // }
+    // let mut client = client_option.unwrap();
+
+    //TODO
+    Ok(_id)
+}

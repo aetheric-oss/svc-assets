@@ -127,6 +127,10 @@ pub async fn rest_server(grpc_clients: GrpcClients) {
             rest_api::update_vertiport,
             rest_api::update_vertipad,
             rest_api::update_asset_group,
+            rest_api::remove_aircraft,
+            rest_api::remove_vertiport,
+            rest_api::remove_vertipad,
+            rest_api::remove_asset_group,
         ),
         components(
             schemas(
@@ -192,6 +196,17 @@ pub async fn rest_server(grpc_clients: GrpcClients) {
         .route(
             "/assets/groups/:id",
             routing::put(rest_api::update_asset_group),
+        )
+        // DELETE endpoints
+        .route("/aircraft/:id", routing::delete(rest_api::remove_aircraft))
+        .route(
+            "/vertiports/:id",
+            routing::delete(rest_api::remove_vertiport),
+        )
+        .route("/vertipads/:id", routing::delete(rest_api::remove_vertipad))
+        .route(
+            "/assets/groups/:id",
+            routing::delete(rest_api::remove_asset_group),
         )
         .layer(Extension(grpc_clients)); // Extension layer must be last
 
