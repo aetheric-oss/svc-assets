@@ -14,6 +14,7 @@ mod structs;
 mod loggers;
 
 use axum::{extract::Extension, handler::Handler, response::IntoResponse, routing, Router};
+use clap::Parser;
 use grpc_clients::GrpcClients;
 use log::{info, warn};
 use structs::*;
@@ -25,6 +26,13 @@ use utoipa::OpenApi;
 ///Implementation of gRPC endpoints
 #[derive(Debug, Default, Copy, Clone)]
 pub struct SvcAssetsImpl {}
+
+#[derive(Parser, Debug)]
+struct Cli {
+    /// Target file to write the OpenAPI Spec
+    #[arg(long)]
+    openapi: Option<String>,
+}
 
 #[tonic::async_trait]
 impl SvcAssetsRpc for SvcAssetsImpl {
@@ -100,55 +108,55 @@ pub async fn shutdown_signal(server: &str) {
     warn!("({}) shutdown signal", server);
 }
 
+#[derive(OpenApi)]
+#[openapi(
+    paths(
+        rest_api::get_operator,
+        rest_api::get_all_assets,
+        rest_api::get_all_grouped_assets,
+        rest_api::get_all_grouped_assets_delegated_to,
+        rest_api::get_all_grouped_assets_delegated_from,
+        rest_api::get_aircraft_by_id,
+        rest_api::get_vertipad_by_id,
+        rest_api::get_vertiport_by_id,
+        rest_api::get_asset_group_by_id,
+        rest_api::register_aircraft,
+        rest_api::register_vertiport,
+        rest_api::register_vertipad,
+        rest_api::register_asset_group,
+        rest_api::update_aircraft,
+        rest_api::update_vertiport,
+        rest_api::update_vertipad,
+        rest_api::update_asset_group,
+        rest_api::remove_aircraft,
+        rest_api::remove_vertiport,
+        rest_api::remove_vertipad,
+        rest_api::remove_asset_group,
+    ),
+    components(
+        schemas(
+            rest_api::rest_types::RegisterAircraftPayload,
+            rest_api::rest_types::RegisterVertiportPayload,
+            rest_api::rest_types::RegisterVertipadPayload,
+            rest_api::rest_types::RegisterAssetGroupPayload,
+            Aircraft,
+            Vertiport,
+            Vertipad,
+            AssetGroup,
+        )
+    ),
+    tags(
+        (name = "svc-assets", description = "svc-assets API")
+    )
+)]
+struct ApiDoc;
+
 /// Starts the REST API server for this microservice
 pub async fn rest_server(grpc_clients: GrpcClients) {
     let rest_port = std::env::var("DOCKER_PORT_REST")
         .unwrap_or_else(|_| "8000".to_string())
         .parse::<u16>()
         .unwrap_or(8000);
-
-    #[derive(OpenApi)]
-    #[openapi(
-        paths(
-            rest_api::get_operator,
-            rest_api::get_all_assets,
-            rest_api::get_all_grouped_assets,
-            rest_api::get_all_grouped_assets_delegated_to,
-            rest_api::get_all_grouped_assets_delegated_from,
-            rest_api::get_aircraft_by_id,
-            rest_api::get_vertipad_by_id,
-            rest_api::get_vertiport_by_id,
-            rest_api::get_asset_group_by_id,
-            rest_api::register_aircraft,
-            rest_api::register_vertiport,
-            rest_api::register_vertipad,
-            rest_api::register_asset_group,
-            rest_api::update_aircraft,
-            rest_api::update_vertiport,
-            rest_api::update_vertipad,
-            rest_api::update_asset_group,
-            rest_api::remove_aircraft,
-            rest_api::remove_vertiport,
-            rest_api::remove_vertipad,
-            rest_api::remove_asset_group,
-        ),
-        components(
-            schemas(
-                rest_api::rest_types::RegisterAircraftPayload,
-                rest_api::rest_types::RegisterVertiportPayload,
-                rest_api::rest_types::RegisterVertipadPayload,
-                rest_api::rest_types::RegisterAssetGroupPayload,
-                Aircraft,
-                Vertiport,
-                Vertipad,
-                AssetGroup,
-            )
-        ),
-        tags(
-            (name = "svc-assets", description = "svc-assets API")
-        )
-    )]
-    struct ApiDoc;
 
     let app = Router::new()
         // .merge(SwaggerUi::new("/swagger-ui/*tail").url("/api-doc/openapi.json", ApiDoc::openapi()))
@@ -219,9 +227,27 @@ pub async fn rest_server(grpc_clients: GrpcClients) {
         .unwrap();
 }
 
+/// Create OpenAPI3 Specification File
+fn generate_openapi_spec(target: &str) -> Result<(), Box<dyn std::error::Error>> {
+    let output = ApiDoc::openapi()
+        .to_pretty_json()
+        .expect("(ERROR) unable to write openapi specification to json.");
+
+    std::fs::write(target, output).expect("(ERROR) unable to write json string to file.");
+
+    Ok(())
+}
+
 ///Main entry point: starts gRPC Server on specified address and port
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Allow option to only generate the spec file to a given location
+    let args = Cli::parse();
+    if let Some(target) = args.openapi {
+        return generate_openapi_spec(&target);
+    }
+
+    // Initialize logger
     {
         let log_cfg: &str = "log4rs.yaml";
         if let Err(e) = log4rs::init_file(log_cfg, Default::default()) {

@@ -46,7 +46,6 @@ pub struct RegisterVertiportPayload {
     pub status: AssetStatus,
     pub description: Option<String>,
     pub location: Location,
-    pub vertipads: Vec<Uuid>,
 }
 
 /// Request to create a vertipad.
