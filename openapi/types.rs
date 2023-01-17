@@ -1,7 +1,6 @@
 use ordered_float::OrderedFloat;
 use serde::{Deserialize, Serialize};
 use utoipa::{IntoParams, ToSchema};
-use uuid::Uuid;
 
 use crate::structs::{AssetStatus, Location};
 
@@ -10,9 +9,9 @@ use crate::structs::{AssetStatus, Location};
 pub struct RegisterAircraftPayload {
     pub name: Option<String>,
     /// The UUID of an [`AssetGroup`] struct, if available.
-    pub group_id: Option<Uuid>,
-    pub owner: Uuid,
-    pub whitelist: Vec<Uuid>,
+    pub group_id: Option<String>,
+    pub owner: String,
+    pub whitelist: Vec<String>,
     pub status: AssetStatus,
     /// The aircraft's manufacturer.
     ///
@@ -40,9 +39,9 @@ pub struct RegisterAircraftPayload {
 pub struct RegisterVertiportPayload {
     pub name: Option<String>,
     /// The UUID of an [`AssetGroup`] struct, if available.
-    pub group_id: Option<Uuid>,
-    pub owner: Uuid,
-    pub whitelist: Vec<Uuid>,
+    pub group_id: Option<String>,
+    pub owner: String,
+    pub whitelist: Vec<String>,
     pub status: AssetStatus,
     pub description: Option<String>,
     pub location: Location,
@@ -51,7 +50,7 @@ pub struct RegisterVertiportPayload {
 /// Request to create a vertipad.
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema, IntoParams)]
 pub struct RegisterVertipadPayload {
-    pub vertiport_id: Uuid,
+    pub vertiport_id: String,
     pub status: AssetStatus,
     pub location: Location,
 }
@@ -60,6 +59,8 @@ pub struct RegisterVertipadPayload {
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema, IntoParams)]
 pub struct RegisterAssetGroupPayload {
     pub name: Option<String>,
-    pub owner: Uuid,
-    pub assets: Vec<Uuid>,
+    /// The UUID of an [`Operator`] struct, if available.
+    pub owner: String,
+    /// A list of UUIDs of assets.
+    pub assets: Vec<String>,
 }

@@ -394,7 +394,7 @@ pub async fn register_aircraft(
 
     let _aircraft = Aircraft {
         basics: Basics {
-            id: Uuid::new_v4(),
+            id: Uuid::new_v4().to_string(),
             name: payload.name,
             group_id: payload.group_id,
             owner: payload.owner,
@@ -422,7 +422,7 @@ pub async fn register_aircraft(
     // let mut client = client_option.unwrap();
 
     //TODO
-    Ok(_aircraft.id().to_string())
+    Ok(_aircraft.id().unwrap().to_string())
 }
 
 /// Register an [`Vertiport`] in the database.
@@ -454,7 +454,7 @@ pub async fn register_vertiport(
 
     let _vertiport = Vertiport {
         basics: Basics {
-            id: Uuid::new_v4(),
+            id: Uuid::new_v4().to_string(),
             name: payload.name,
             group_id: payload.group_id,
             owner: payload.owner,
@@ -478,7 +478,7 @@ pub async fn register_vertiport(
     // let mut client = client_option.unwrap();
 
     //TODO
-    Ok(_vertiport.id().to_string())
+    Ok(_vertiport.id().unwrap().to_string())
 }
 
 /// Register an [`Vertipad`] in the database.
@@ -511,7 +511,7 @@ pub async fn register_vertipad(
     // }
 
     let _vertipad = Vertipad {
-        id: Uuid::new_v4(),
+        id: Uuid::new_v4().to_string(),
         location: payload.location,
         status: payload.status,
         vertiport_id: payload.vertiport_id,
@@ -562,7 +562,7 @@ pub async fn register_asset_group(
     // }
 
     let _asset_group = AssetGroup {
-        id: Uuid::new_v4(),
+        id: Uuid::new_v4().to_string(),
         name: payload.name,
         owner: payload.owner,
         created_at: SystemTime::now(),
@@ -634,7 +634,7 @@ pub async fn update_aircraft(
     // let mut client = client_option.unwrap();
 
     //TODO
-    Ok(payload.id().to_string())
+    Ok(payload.id().unwrap().to_string())
 }
 
 /// Update/modify a [`Vertiport`] in the database.
@@ -682,7 +682,7 @@ pub async fn update_vertiport(
     // let mut client = client_option.unwrap();
 
     //TODO
-    Ok(payload.id().to_string())
+    Ok(payload.id().unwrap().to_string())
 }
 
 /// Update/modify a [`Vertipad`] in the database.
