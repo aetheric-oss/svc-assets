@@ -465,7 +465,6 @@ pub async fn register_vertiport(
         },
         location: payload.location,
         description: payload.description,
-        vertipads: Vec::new(),
     };
 
     // Get Client

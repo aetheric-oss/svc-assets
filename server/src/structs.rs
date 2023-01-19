@@ -319,8 +319,6 @@ pub struct Vertiport {
     pub basics: Basics,
     pub description: Option<String>,
     pub location: Location,
-    /// The vertiport's vertipads.
-    pub vertipads: Vec<String>,
 }
 
 impl Vertiport {
@@ -353,7 +351,6 @@ impl Vertiport {
                 latitude: OrderedFloat(0.0),
                 longitude: OrderedFloat(0.0),
             },
-            vertipads: Vec::new(),
         }
     }
 }
@@ -428,7 +425,6 @@ mod tests {
                 latitude: 0.0.into(),
                 longitude: 0.0.into(),
             },
-            vertipads: vec![Uuid::new_v4().to_string()],
         };
         assert_eq!(aircraft.id(), Uuid::parse_str(&basics.id));
         assert_eq!(aircraft.name(), basics.name.clone().unwrap());
@@ -480,7 +476,6 @@ mod tests {
                 latitude: 0.0.into(),
                 longitude: 0.0.into(),
             },
-            vertipads: vec![Uuid::new_v4().to_string()],
         };
 
         let asset_group = AssetGroup {
