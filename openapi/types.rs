@@ -1,8 +1,7 @@
-use ordered_float::OrderedFloat;
 use serde::{Deserialize, Serialize};
 use utoipa::{IntoParams, ToSchema};
 
-use crate::structs::{AssetStatus, Location};
+use crate::structs::{AssetStatus, Location, OrderedFloat32, OrderedFloat64};
 
 /// Request to create an aircraft.
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema, IntoParams)]
@@ -30,8 +29,8 @@ pub struct RegisterAircraftPayload {
     /// aircraft from national aviation authorities like the FAA.
     pub registration_number: String,
     pub description: Option<String>,
-    pub max_payload_kg: OrderedFloat<f32>,
-    pub max_range_km: Option<OrderedFloat<f64>>,
+    pub max_payload_kg: OrderedFloat32,
+    pub max_range_km: Option<OrderedFloat64>,
 }
 
 /// Request to create a vertiport.

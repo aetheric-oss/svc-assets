@@ -5,14 +5,64 @@
 //!
 //! Types here are different from the openapi types.
 
+use chrono::{DateTime, Utc};
 use duplicate::duplicate_item;
 use lipsum::{lipsum, lipsum_title};
 use ordered_float::OrderedFloat;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
-use std::time::SystemTime;
 use utoipa::{IntoParams, ToSchema};
 use uuid::Uuid;
+
+#[derive(Debug, Serialize, Deserialize, Hash, Eq, PartialEq, Clone)]
+pub struct OrderedFloat32(pub OrderedFloat<f32>);
+
+#[derive(Debug, Serialize, Deserialize, Hash, Eq, PartialEq, Clone)]
+pub struct OrderedFloat64(pub OrderedFloat<f64>);
+
+impl From<f32> for OrderedFloat32 {
+    fn from(value: f32) -> Self {
+        OrderedFloat32(OrderedFloat(value))
+    }
+}
+
+impl From<f64> for OrderedFloat64 {
+    fn from(value: f64) -> Self {
+        OrderedFloat64(OrderedFloat(value))
+    }
+}
+
+impl ToSchema for OrderedFloat32 {
+    fn schema() -> utoipa::openapi::schema::Schema {
+        utoipa::openapi::ObjectBuilder::new()
+            .property(
+                "value",
+                utoipa::openapi::ObjectBuilder::new()
+                    .schema_type(utoipa::openapi::SchemaType::Number)
+                    .format(Some(utoipa::openapi::SchemaFormat::KnownFormat(
+                        utoipa::openapi::KnownFormat::Float,
+                    ))),
+            )
+            .required("value")
+            .into()
+    }
+}
+
+impl ToSchema for OrderedFloat64 {
+    fn schema() -> utoipa::openapi::schema::Schema {
+        utoipa::openapi::ObjectBuilder::new()
+            .property(
+                "value",
+                utoipa::openapi::ObjectBuilder::new()
+                    .schema_type(utoipa::openapi::SchemaType::Number)
+                    .format(Some(utoipa::openapi::SchemaFormat::KnownFormat(
+                        utoipa::openapi::KnownFormat::Double,
+                    ))),
+            )
+            .required("value")
+            .into()
+    }
+}
 
 /// A struct representing the operator.
 ///
@@ -33,8 +83,8 @@ pub struct Operator {
     pub website: String,
     pub description: String,
     pub logo: String,
-    pub created_at: SystemTime,
-    pub updated_at: Option<SystemTime>,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: Option<DateTime<Utc>>,
 }
 
 impl Operator {
@@ -52,7 +102,7 @@ impl Operator {
             website: lipsum(1),
             description: lipsum(10),
             logo: lipsum(1),
-            created_at: SystemTime::now(),
+            created_at: Utc::now(),
             updated_at: None,
         }
     }
@@ -72,8 +122,8 @@ pub struct AssetGroup {
     pub name: Option<String>,
     /// The UUID of an [`Operator`] struct.
     pub owner: String,
-    pub created_at: SystemTime,
-    pub updated_at: Option<SystemTime>,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: Option<DateTime<Utc>>,
     /// The UUID of an [`Operator`] struct, if available.
     pub delegatee: Option<String>,
     /// The UUIDs of the assets in the group.
@@ -92,7 +142,7 @@ impl AssetGroup {
             id: Uuid::new_v4().to_string(),
             name: Some(lipsum_title()),
             owner: Uuid::new_v4().to_string(),
-            created_at: SystemTime::now(),
+            created_at: Utc::now(),
             updated_at: None,
             delegatee: None,
             assets,
@@ -110,8 +160,8 @@ pub struct Basics {
     pub group_id: Option<String>,
     /// The UUID of an [`Operator`] struct.
     pub owner: String,
-    pub created_at: SystemTime,
-    pub updated_at: Option<SystemTime>,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: Option<DateTime<Utc>>,
     /// A list of UUIDs of [`Operator`] structs.
     ///
     /// If the vector is empty, the asset is available to everyone.
@@ -137,10 +187,10 @@ pub trait AssetsInfo {
     /// Get the asset's owner.
     fn owner(&self) -> Result<Uuid, uuid::Error>;
     /// Get the asset's creation time.
-    fn created_at(&self) -> SystemTime;
+    fn created_at(&self) -> DateTime<Utc>;
     /// Get the asset's last update time. If the asset has never been
     /// updated, this will return None.
-    fn updated_at(&self) -> Option<SystemTime>;
+    fn updated_at(&self) -> Option<DateTime<Utc>>;
     /// Check if the asset is grouped.
     fn is_grouped(&self) -> bool;
     /// Check if the asset is open to the public.
@@ -171,10 +221,10 @@ impl AssetsInfo for asset {
     fn owner(&self) -> Result<Uuid, uuid::Error> {
         Uuid::parse_str(&self.basics().owner)
     }
-    fn created_at(&self) -> SystemTime {
+    fn created_at(&self) -> DateTime<Utc> {
         self.basics().created_at
     }
-    fn updated_at(&self) -> Option<SystemTime> {
+    fn updated_at(&self) -> Option<DateTime<Utc>> {
         self.basics().updated_at
     }
     fn is_grouped(&self) -> bool {
@@ -209,8 +259,8 @@ pub enum AssetStatus {
 /// A struct representing a location.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema, IntoParams)]
 pub struct Location {
-    pub latitude: OrderedFloat<f64>,
-    pub longitude: OrderedFloat<f64>,
+    pub latitude: OrderedFloat64,
+    pub longitude: OrderedFloat64,
 }
 
 // =====================================================================
@@ -238,8 +288,8 @@ pub struct Aircraft {
     /// aircraft from national aviation authorities like the FAA.
     pub registration_number: String,
     pub description: Option<String>,
-    pub max_payload_kg: OrderedFloat<f32>,
-    pub max_range_km: Option<OrderedFloat<f64>>,
+    pub max_payload_kg: OrderedFloat32,
+    pub max_range_km: Option<OrderedFloat64>,
 }
 
 impl Aircraft {
@@ -267,7 +317,7 @@ impl Aircraft {
                 group_id: None,
                 name: Some(lipsum_title()),
                 owner: Uuid::new_v4().to_string(),
-                created_at: SystemTime::now(),
+                created_at: Utc::now(),
                 updated_at: None,
                 whitelist: Vec::new(),
                 status: AssetStatus::Available,
@@ -277,7 +327,7 @@ impl Aircraft {
             serial_number: lipsum(12),
             registration_number: lipsum(12),
             description: None,
-            max_payload_kg: OrderedFloat(100.0),
+            max_payload_kg: OrderedFloat32::from(100.0),
             max_range_km: None,
         }
     }
@@ -303,8 +353,8 @@ impl Vertipad {
             vertiport_id: Uuid::new_v4().to_string(),
             status: AssetStatus::Available,
             location: Location {
-                latitude: OrderedFloat(0.0),
-                longitude: OrderedFloat(0.0),
+                latitude: OrderedFloat64::from(0.0),
+                longitude: OrderedFloat64::from(0.0),
             },
         }
     }
@@ -341,15 +391,15 @@ impl Vertiport {
                 group_id: None,
                 name: Some(lipsum_title()),
                 owner: Uuid::new_v4().to_string(),
-                created_at: SystemTime::now(),
+                created_at: Utc::now(),
                 updated_at: None,
                 whitelist: Vec::new(),
                 status: AssetStatus::Available,
             },
             description: None,
             location: Location {
-                latitude: OrderedFloat(0.0),
-                longitude: OrderedFloat(0.0),
+                latitude: OrderedFloat64::from(0.0),
+                longitude: OrderedFloat64::from(0.0),
             },
         }
     }
@@ -370,8 +420,8 @@ mod tests {
             name: Some("Test asset".to_string()),
             group_id: Some(Uuid::new_v4().to_string()),
             owner: Uuid::new_v4().to_string(),
-            created_at: SystemTime::now(),
-            updated_at: Some(SystemTime::now()),
+            created_at: Utc::now(),
+            updated_at: Some(Utc::now()),
             whitelist: vec![Uuid::new_v4().to_string()],
             status: AssetStatus::Available,
         };
@@ -382,7 +432,7 @@ mod tests {
             serial_number: "12345".to_string(),
             registration_number: "N12345".to_string(),
             description: None,
-            max_payload_kg: OrderedFloat(100.0),
+            max_payload_kg: OrderedFloat32::from(100.0),
             max_range_km: None,
         };
         assert_eq!(asset.id(), Uuid::parse_str(&basics.id));
@@ -402,8 +452,8 @@ mod tests {
             name: Some("Test asset".to_string()),
             group_id: Some(Uuid::new_v4().to_string()),
             owner: Uuid::new_v4().to_string(),
-            created_at: SystemTime::now(),
-            updated_at: Some(SystemTime::now()),
+            created_at: Utc::now(),
+            updated_at: Some(Utc::now()),
             whitelist: vec![Uuid::new_v4().to_string()],
             status: AssetStatus::Available,
         };
@@ -414,7 +464,7 @@ mod tests {
             serial_number: "12345".to_string(),
             registration_number: "N12345".to_string(),
             description: None,
-            max_payload_kg: OrderedFloat(100.0),
+            max_payload_kg: OrderedFloat32::from(100.0),
             max_range_km: None,
         };
 
@@ -454,8 +504,8 @@ mod tests {
             name: Some("Test asset".to_string()),
             group_id: Some(group_id.clone()),
             owner: Uuid::new_v4().to_string(),
-            created_at: SystemTime::now(),
-            updated_at: Some(SystemTime::now()),
+            created_at: Utc::now(),
+            updated_at: Some(Utc::now()),
             whitelist: vec![Uuid::new_v4().to_string()],
             status: AssetStatus::Available,
         };
@@ -466,7 +516,7 @@ mod tests {
             serial_number: "12345".to_string(),
             registration_number: "N12345".to_string(),
             description: None,
-            max_payload_kg: OrderedFloat(100.0),
+            max_payload_kg: OrderedFloat32::from(100.0),
             max_range_km: None,
         };
         let vertiport = Vertiport {
@@ -482,15 +532,15 @@ mod tests {
             // pub id: Uuid,
             // pub name: Option<String>,
             // pub owner: Uuid,
-            // pub created_at: SystemTime,
-            // pub updated_at: Option<SystemTime>,
+            // pub created_at: DateTime<Utc>,
+            // pub updated_at: Option<DateTime<Utc>>,
             // pub delegatee: Option<Uuid>,
             // pub assets: Vec<Uuid>,
             id: group_id.clone(),
             name: Some("Test group".to_string()),
             owner: Uuid::new_v4().to_string(),
-            created_at: SystemTime::now(),
-            updated_at: Some(SystemTime::now()),
+            created_at: Utc::now(),
+            updated_at: Some(Utc::now()),
             delegatee: None,
             assets: vec![
                 aircraft.id().unwrap().to_string(),

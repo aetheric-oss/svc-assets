@@ -4,7 +4,7 @@
 pub mod rest_types {
     include!("../../openapi/types.rs");
 }
-use std::time::SystemTime;
+use chrono::Utc;
 
 pub use rest_types::*;
 
@@ -399,7 +399,7 @@ pub async fn register_aircraft(
             group_id: payload.group_id,
             owner: payload.owner,
             whitelist: payload.whitelist,
-            created_at: SystemTime::now(),
+            created_at: Utc::now(),
             updated_at: None,
             status: payload.status,
         },
@@ -459,7 +459,7 @@ pub async fn register_vertiport(
             group_id: payload.group_id,
             owner: payload.owner,
             whitelist: payload.whitelist,
-            created_at: SystemTime::now(),
+            created_at: Utc::now(),
             updated_at: None,
             status: payload.status,
         },
@@ -564,7 +564,7 @@ pub async fn register_asset_group(
         id: Uuid::new_v4().to_string(),
         name: payload.name,
         owner: payload.owner,
-        created_at: SystemTime::now(),
+        created_at: Utc::now(),
         updated_at: None,
         delegatee: None,
         assets: payload.assets,

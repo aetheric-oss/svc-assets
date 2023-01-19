@@ -139,10 +139,15 @@ pub async fn shutdown_signal(server: &str) {
             rest_api::rest_types::RegisterVertiportPayload,
             rest_api::rest_types::RegisterVertipadPayload,
             rest_api::rest_types::RegisterAssetGroupPayload,
+            Location,
             Aircraft,
             Vertiport,
             Vertipad,
             AssetGroup,
+            AssetStatus,
+            Basics,
+            OrderedFloat32,
+            OrderedFloat64,
         )
     ),
     tags(
