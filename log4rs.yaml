@@ -5,16 +5,16 @@ appenders:
     encoder:
       # https://medium.com/nikmas-group-rust/advanced-logging-in-rust-with-log4rs-2d712bb322de
       pattern: "{d(%Y-%m-%d %H:%M:%S)} | {({l}):5.5} | {f}:{L} — {m}{n}"
-  grpc_requests:
+  rest_requests:
     kind: rolling_file
-    path: "log/grpc_requests.log"
+    path: "log/rest_requests.log"
     policy:
       trigger:
         kind: size
         limit: 20mb
       roller:
         kind: fixed_window
-        pattern: logs/grpc_requests_{}.gz
+        pattern: logs/rest_requests_{}.gz
         count: 5
         base: 1
     encoder:
@@ -26,7 +26,12 @@ root:
     - stdout
 
 loggers:
-  app::grpc:
+  app::req:
     level: info
     appenders:
-      - grpc_requests
+      - stdout
+      - rest_requests
+    additive: false
+
+  app::grpc:
+    level: warn
