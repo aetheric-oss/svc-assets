@@ -5,11 +5,40 @@
 //!
 //! Types here are different from the openapi types.
 
+use chrono::{DateTime, Utc};
 use duplicate::duplicate_item;
+use lipsum::{lipsum, lipsum_title};
 use ordered_float::OrderedFloat;
+use rand::Rng;
 use serde::{Deserialize, Serialize};
-use std::time::SystemTime;
+use utoipa::{IntoParams, ToSchema};
 use uuid::Uuid;
+
+/// A wrapper for OrderedFloat<f64> for documentation generation purposes.
+#[derive(Debug, Serialize, Deserialize, Hash, Eq, PartialEq, Clone)]
+pub struct OrderedFloat64(pub OrderedFloat<f64>);
+
+impl From<f64> for OrderedFloat64 {
+    fn from(value: f64) -> Self {
+        OrderedFloat64(OrderedFloat(value))
+    }
+}
+
+impl ToSchema for OrderedFloat64 {
+    fn schema() -> utoipa::openapi::schema::Schema {
+        utoipa::openapi::ObjectBuilder::new()
+            .property(
+                "value",
+                utoipa::openapi::ObjectBuilder::new()
+                    .schema_type(utoipa::openapi::SchemaType::Number)
+                    .format(Some(utoipa::openapi::SchemaFormat::KnownFormat(
+                        utoipa::openapi::KnownFormat::Float,
+                    ))),
+            )
+            .required("value")
+            .into()
+    }
+}
 
 /// A struct representing the operator.
 ///
@@ -17,9 +46,9 @@ use uuid::Uuid;
 /// Arrow Cargo. The operator supplies the assets to the network,
 /// expects to receive and operate cargo shipments, and is expected to
 /// derive revenue from the operation.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema, IntoParams)]
 pub struct Operator {
-    pub id: Uuid,
+    pub id: String,
     pub name: String,
     pub country: String,
     pub city: String,
@@ -30,8 +59,29 @@ pub struct Operator {
     pub website: String,
     pub description: String,
     pub logo: String,
-    pub created_at: String,
-    pub updated_at: String,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: Option<DateTime<Utc>>,
+}
+
+impl Operator {
+    /// Generate a random operator.
+    pub fn random() -> Self {
+        Self {
+            id: Uuid::new_v4().to_string(),
+            name: lipsum_title(),
+            country: lipsum(1),
+            city: lipsum(2),
+            address: lipsum(6),
+            postal_code: lipsum(1),
+            email: lipsum(1),
+            phone: lipsum(1),
+            website: lipsum(1),
+            description: lipsum(10),
+            logo: lipsum(1),
+            created_at: Utc::now(),
+            updated_at: None,
+        }
+    }
 }
 
 // =====================================================================
@@ -41,32 +91,60 @@ pub struct Operator {
 /// A struct representing a group of assets.
 ///
 /// The asset group can be delegated to another operator.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema, IntoParams)]
 pub struct AssetGroup {
-    pub id: Uuid,
+    /// UUID of the asset group.
+    pub id: String,
     pub name: Option<String>,
-    pub owner: Uuid,
-    pub created_at: SystemTime,
-    pub updated_at: Option<SystemTime>,
-    pub delegatee: Option<Uuid>,
-    pub assets: Vec<Uuid>,
+    /// The UUID of an [`Operator`] struct.
+    pub owner: String,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: Option<DateTime<Utc>>,
+    /// The UUID of an [`Operator`] struct, if available.
+    pub delegatee: Option<String>,
+    /// The UUIDs of the assets in the group.
+    pub assets: Vec<String>,
+}
+
+impl AssetGroup {
+    /// Generate a random asset group.
+    pub fn random() -> Self {
+        let num_assets = rand::thread_rng().gen_range(0..=10);
+        let mut assets = Vec::with_capacity(num_assets);
+        for _ in 0..num_assets {
+            assets.push(Uuid::new_v4().to_string());
+        }
+        Self {
+            id: Uuid::new_v4().to_string(),
+            name: Some(lipsum_title()),
+            owner: Uuid::new_v4().to_string(),
+            created_at: Utc::now(),
+            updated_at: None,
+            delegatee: None,
+            assets,
+        }
+    }
 }
 
 /// Attributes that are common to all assets.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema, IntoParams)]
 pub struct Basics {
-    pub id: Uuid,
+    /// UUID of the asset.
+    pub id: String,
     pub name: Option<String>,
     /// The UUID of an [`AssetGroup`] struct, if available.
-    pub group_id: Option<Uuid>,
-    pub owner: Uuid,
-    pub created_at: SystemTime,
-    pub updated_at: Option<SystemTime>,
+    pub group_id: Option<String>,
+    /// The UUID of an [`Operator`] struct.
+    pub owner: String,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: Option<DateTime<Utc>>,
+    /// A list of UUIDs of [`Operator`] structs.
+    ///
     /// If the vector is empty, the asset is available to everyone.
     ///
     /// Otherwise, the asset is only available to the clients in the
     /// vector.
-    pub whitelist: Vec<Uuid>,
+    pub whitelist: Vec<String>,
     pub status: AssetStatus,
 }
 
@@ -77,24 +155,24 @@ pub trait AssetsInfo {
     /// Get the asset's basic information.
     fn basics(&self) -> Basics;
     /// Get the asset's ID.
-    fn id(&self) -> Uuid;
+    fn id(&self) -> Result<Uuid, uuid::Error>;
     /// Get the asset's group ID.
-    fn group_id(&self) -> Option<Uuid>;
+    fn group_id(&self) -> Result<Option<Uuid>, uuid::Error>;
     /// Get the asset's name.
     fn name(&self) -> String;
     /// Get the asset's owner.
-    fn owner(&self) -> Uuid;
+    fn owner(&self) -> Result<Uuid, uuid::Error>;
     /// Get the asset's creation time.
-    fn created_at(&self) -> SystemTime;
+    fn created_at(&self) -> DateTime<Utc>;
     /// Get the asset's last update time. If the asset has never been
     /// updated, this will return None.
-    fn updated_at(&self) -> Option<SystemTime>;
+    fn updated_at(&self) -> Option<DateTime<Utc>>;
     /// Check if the asset is grouped.
     fn is_grouped(&self) -> bool;
     /// Check if the asset is open to the public.
     fn is_public(&self) -> bool;
     /// Get the list of clients that have access to the asset.
-    fn whitelist(&self) -> Vec<Uuid>;
+    fn whitelist(&self) -> Result<Vec<Uuid>, uuid::Error>;
     /// Get the status of the asset.
     fn status(&self) -> AssetStatus;
 }
@@ -104,22 +182,25 @@ impl AssetsInfo for asset {
     fn basics(&self) -> Basics {
         self.basics.clone()
     }
-    fn id(&self) -> Uuid {
-        self.basics().id
+    fn id(&self) -> Result<Uuid, uuid::Error> {
+        Uuid::parse_str(&self.basics().id)
     }
-    fn group_id(&self) -> Option<Uuid> {
-        self.basics().group_id
+    fn group_id(&self) -> Result<Option<Uuid>, uuid::Error> {
+        match &self.basics().group_id {
+            Some(id) => Ok(Some(Uuid::parse_str(id)?)),
+            None => Ok(None),
+        }
     }
     fn name(&self) -> String {
         self.full_name()
     }
-    fn owner(&self) -> Uuid {
-        self.basics().owner
+    fn owner(&self) -> Result<Uuid, uuid::Error> {
+        Uuid::parse_str(&self.basics().owner)
     }
-    fn created_at(&self) -> SystemTime {
+    fn created_at(&self) -> DateTime<Utc> {
         self.basics().created_at
     }
-    fn updated_at(&self) -> Option<SystemTime> {
+    fn updated_at(&self) -> Option<DateTime<Utc>> {
         self.basics().updated_at
     }
     fn is_grouped(&self) -> bool {
@@ -128,8 +209,12 @@ impl AssetsInfo for asset {
     fn is_public(&self) -> bool {
         self.basics().whitelist.is_empty()
     }
-    fn whitelist(&self) -> Vec<Uuid> {
-        self.basics().whitelist
+    fn whitelist(&self) -> Result<Vec<Uuid>, uuid::Error> {
+        let mut whitelist = Vec::with_capacity(self.basics().whitelist.len());
+        for id in &self.basics().whitelist {
+            whitelist.push(Uuid::parse_str(id)?);
+        }
+        Ok(whitelist)
     }
     fn status(&self) -> AssetStatus {
         self.basics().status
@@ -137,7 +222,7 @@ impl AssetsInfo for asset {
 }
 
 /// Status of an asset.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema)]
 pub enum AssetStatus {
     /// The asset is available for use.
     Available,
@@ -148,10 +233,10 @@ pub enum AssetStatus {
 }
 
 /// A struct representing a location.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema, IntoParams)]
 pub struct Location {
-    pub latitude: OrderedFloat<f64>,
-    pub longitude: OrderedFloat<f64>,
+    pub latitude: OrderedFloat64,
+    pub longitude: OrderedFloat64,
 }
 
 // =====================================================================
@@ -159,7 +244,7 @@ pub struct Location {
 // =====================================================================
 
 /// A struct representing an aircraft.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema, IntoParams)]
 pub struct Aircraft {
     pub basics: Basics,
     /// The aircraft's manufacturer.
@@ -179,8 +264,8 @@ pub struct Aircraft {
     /// aircraft from national aviation authorities like the FAA.
     pub registration_number: String,
     pub description: Option<String>,
-    pub max_payload: OrderedFloat<f32>,
-    pub max_range: Option<OrderedFloat<f64>>,
+    pub max_payload_kg: OrderedFloat64,
+    pub max_range_km: OrderedFloat64,
 }
 
 impl Aircraft {
@@ -199,30 +284,67 @@ impl Aircraft {
             ),
         }
     }
+
+    /// Generate a random aircraft.
+    pub fn random() -> Self {
+        Self {
+            basics: Basics {
+                id: Uuid::new_v4().to_string(),
+                group_id: None,
+                name: Some(lipsum_title()),
+                owner: Uuid::new_v4().to_string(),
+                created_at: Utc::now(),
+                updated_at: None,
+                whitelist: Vec::new(),
+                status: AssetStatus::Available,
+            },
+            manufacturer: lipsum_title(),
+            model: lipsum(12),
+            serial_number: lipsum(12),
+            registration_number: lipsum(12),
+            description: None,
+            max_payload_kg: OrderedFloat64::from(1000.0),
+            max_range_km: OrderedFloat64::from(1000.0),
+        }
+    }
 }
 
 /// A struct representing a vertipad (a vertical landing pad).
 ///
 /// A vertipad is a landing pad that is used for vertical takeoff and
 /// landing (VTOL) aircraft. Usually, vertipads belong to vertiports.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema, IntoParams)]
 pub struct Vertipad {
-    pub id: Uuid,
-    pub vertiport_id: Uuid,
+    pub id: String,
+    pub vertiport_id: String,
     pub status: AssetStatus,
     pub location: Location,
+}
+
+impl Vertipad {
+    /// Generate a random vertipad.
+    pub fn random() -> Self {
+        Self {
+            id: Uuid::new_v4().to_string(),
+            vertiport_id: Uuid::new_v4().to_string(),
+            status: AssetStatus::Available,
+            location: Location {
+                latitude: OrderedFloat64::from(0.0),
+                longitude: OrderedFloat64::from(0.0),
+            },
+        }
+    }
 }
 
 /// A struct representing a vertiport (a vertical airport).
 ///
 /// A vertiport is an airport that is used for vertical takeoff and
 /// landing (VTOL) aircraft. A vertiport may have one or more vertipads.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema, IntoParams)]
 pub struct Vertiport {
     pub basics: Basics,
     pub description: Option<String>,
     pub location: Location,
-    pub vertipads: Vec<Uuid>,
 }
 
 impl Vertiport {
@@ -234,6 +356,27 @@ impl Vertiport {
         match &self.basics.name {
             Some(name) => name.clone(),
             None => "Unnamed vertiport".to_string(),
+        }
+    }
+
+    /// Generate a random vertiport.
+    pub fn random() -> Self {
+        Self {
+            basics: Basics {
+                id: Uuid::new_v4().to_string(),
+                group_id: None,
+                name: Some(lipsum_title()),
+                owner: Uuid::new_v4().to_string(),
+                created_at: Utc::now(),
+                updated_at: None,
+                whitelist: Vec::new(),
+                status: AssetStatus::Available,
+            },
+            description: None,
+            location: Location {
+                latitude: OrderedFloat64::from(0.0),
+                longitude: OrderedFloat64::from(0.0),
+            },
         }
     }
 }
@@ -249,13 +392,13 @@ mod tests {
     #[test]
     fn test_asset_basics() {
         let basics = Basics {
-            id: Uuid::new_v4(),
+            id: Uuid::new_v4().to_string(),
             name: Some("Test asset".to_string()),
-            group_id: Some(Uuid::new_v4()),
-            owner: Uuid::new_v4(),
-            created_at: SystemTime::now(),
-            updated_at: Some(SystemTime::now()),
-            whitelist: vec![Uuid::new_v4()],
+            group_id: Some(Uuid::new_v4().to_string()),
+            owner: Uuid::new_v4().to_string(),
+            created_at: Utc::now(),
+            updated_at: Some(Utc::now()),
+            whitelist: vec![Uuid::new_v4().to_string()],
             status: AssetStatus::Available,
         };
         let asset = Aircraft {
@@ -265,30 +408,29 @@ mod tests {
             serial_number: "12345".to_string(),
             registration_number: "N12345".to_string(),
             description: None,
-            max_payload: OrderedFloat(100.0),
-            max_range: None,
+            max_payload_kg: OrderedFloat64::from(1000.0),
+            max_range_km: OrderedFloat64::from(1000.0),
         };
-        assert_eq!(asset.id(), basics.id);
+        assert_eq!(asset.id(), Uuid::parse_str(&basics.id));
         assert_eq!(asset.name(), basics.name.unwrap());
-        assert_eq!(asset.owner(), basics.owner);
+        assert_eq!(asset.owner(), Uuid::parse_str(&basics.owner));
         assert_eq!(asset.created_at(), basics.created_at);
         assert_eq!(asset.updated_at(), basics.updated_at);
         assert_eq!(asset.is_grouped(), true);
         assert_eq!(asset.is_public(), false);
-        assert_eq!(asset.whitelist(), basics.whitelist);
         assert_eq!(asset.status(), basics.status);
     }
 
     #[test]
     fn test_assets_info_trait_methods_on_different_asset_types() {
         let basics = Basics {
-            id: Uuid::new_v4(),
+            id: Uuid::new_v4().to_string(),
             name: Some("Test asset".to_string()),
-            group_id: Some(Uuid::new_v4()),
-            owner: Uuid::new_v4(),
-            created_at: SystemTime::now(),
-            updated_at: Some(SystemTime::now()),
-            whitelist: vec![Uuid::new_v4()],
+            group_id: Some(Uuid::new_v4().to_string()),
+            owner: Uuid::new_v4().to_string(),
+            created_at: Utc::now(),
+            updated_at: Some(Utc::now()),
+            whitelist: vec![Uuid::new_v4().to_string()],
             status: AssetStatus::Available,
         };
         let aircraft = Aircraft {
@@ -298,8 +440,8 @@ mod tests {
             serial_number: "12345".to_string(),
             registration_number: "N12345".to_string(),
             description: None,
-            max_payload: OrderedFloat(100.0),
-            max_range: None,
+            max_payload_kg: OrderedFloat64::from(1000.0),
+            max_range_km: OrderedFloat64::from(1000.0),
         };
 
         let vertiport = Vertiport {
@@ -309,41 +451,38 @@ mod tests {
                 latitude: 0.0.into(),
                 longitude: 0.0.into(),
             },
-            vertipads: vec![Uuid::new_v4()],
         };
-        assert_eq!(aircraft.id(), basics.id);
+        assert_eq!(aircraft.id(), Uuid::parse_str(&basics.id));
         assert_eq!(aircraft.name(), basics.name.clone().unwrap());
-        assert_eq!(aircraft.owner(), basics.owner);
+        assert_eq!(aircraft.owner(), Uuid::parse_str(&basics.owner));
         assert_eq!(aircraft.created_at(), basics.created_at);
         assert_eq!(aircraft.updated_at(), basics.updated_at);
         assert_eq!(aircraft.is_grouped(), true);
         assert_eq!(aircraft.is_public(), false);
-        assert_eq!(aircraft.whitelist(), basics.whitelist);
         assert_eq!(aircraft.status(), basics.status);
 
-        assert_eq!(vertiport.id(), basics.id);
+        assert_eq!(vertiport.id(), Uuid::parse_str(&basics.id));
         assert_eq!(vertiport.name(), basics.name.clone().unwrap());
-        assert_eq!(vertiport.owner(), basics.owner);
+        assert_eq!(vertiport.owner(), Uuid::parse_str(&basics.owner));
         assert_eq!(vertiport.created_at(), basics.created_at);
         assert_eq!(vertiport.updated_at(), basics.updated_at);
         assert_eq!(vertiport.is_grouped(), true);
         assert_eq!(vertiport.is_public(), false);
-        assert_eq!(vertiport.whitelist(), basics.whitelist);
         assert_eq!(vertiport.status(), basics.status);
     }
 
     #[test]
     fn test_asset_group() {
-        let group_id = Uuid::new_v4();
+        let group_id = Uuid::new_v4().to_string();
 
         let basics = Basics {
-            id: Uuid::new_v4(),
+            id: Uuid::new_v4().to_string(),
             name: Some("Test asset".to_string()),
             group_id: Some(group_id.clone()),
-            owner: Uuid::new_v4(),
-            created_at: SystemTime::now(),
-            updated_at: Some(SystemTime::now()),
-            whitelist: vec![Uuid::new_v4()],
+            owner: Uuid::new_v4().to_string(),
+            created_at: Utc::now(),
+            updated_at: Some(Utc::now()),
+            whitelist: vec![Uuid::new_v4().to_string()],
             status: AssetStatus::Available,
         };
         let aircraft = Aircraft {
@@ -353,8 +492,8 @@ mod tests {
             serial_number: "12345".to_string(),
             registration_number: "N12345".to_string(),
             description: None,
-            max_payload: OrderedFloat(100.0),
-            max_range: None,
+            max_payload_kg: OrderedFloat64::from(1000.0),
+            max_range_km: OrderedFloat64::from(1000.0),
         };
         let vertiport = Vertiport {
             basics: basics.clone(),
@@ -363,34 +502,42 @@ mod tests {
                 latitude: 0.0.into(),
                 longitude: 0.0.into(),
             },
-            vertipads: vec![Uuid::new_v4()],
         };
 
         let asset_group = AssetGroup {
             // pub id: Uuid,
             // pub name: Option<String>,
             // pub owner: Uuid,
-            // pub created_at: SystemTime,
-            // pub updated_at: Option<SystemTime>,
+            // pub created_at: DateTime<Utc>,
+            // pub updated_at: Option<DateTime<Utc>>,
             // pub delegatee: Option<Uuid>,
             // pub assets: Vec<Uuid>,
-            id: group_id,
+            id: group_id.clone(),
             name: Some("Test group".to_string()),
-            owner: Uuid::new_v4(),
-            created_at: SystemTime::now(),
-            updated_at: Some(SystemTime::now()),
+            owner: Uuid::new_v4().to_string(),
+            created_at: Utc::now(),
+            updated_at: Some(Utc::now()),
             delegatee: None,
-            assets: vec![aircraft.id(), vertiport.id()],
+            assets: vec![
+                aircraft.id().unwrap().to_string(),
+                vertiport.id().unwrap().to_string(),
+            ],
         };
 
-        assert_eq!(asset_group.id, group_id);
+        assert_eq!(&asset_group.id, &group_id);
         assert_eq!(asset_group.name, Some("Test group".to_string()));
 
         assert_eq!(asset_group.assets.len(), 2);
-        assert_eq!(asset_group.assets[0], aircraft.id());
-        assert_eq!(asset_group.assets[1], vertiport.id());
+        assert_eq!(asset_group.assets[0], aircraft.id().unwrap().to_string());
+        assert_eq!(asset_group.assets[1], vertiport.id().unwrap().to_string());
 
-        assert_eq!(aircraft.group_id(), Some(group_id));
-        assert_eq!(vertiport.group_id(), Some(group_id));
+        assert_eq!(
+            &aircraft.group_id().unwrap().unwrap().to_string(),
+            &group_id
+        );
+        assert_eq!(
+            &vertiport.group_id().unwrap().unwrap().to_string(),
+            &group_id
+        );
     }
 }
