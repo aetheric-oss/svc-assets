@@ -143,6 +143,10 @@ pub async fn shutdown_signal(server: &str) {
             Vertiport,
             Vertipad,
             AssetGroup,
+            AssetStatus,
+            Basics,
+            Location,
+            OrderedFloat64,
         )
     ),
     tags(

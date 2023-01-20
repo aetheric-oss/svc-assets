@@ -41,7 +41,7 @@ tokio                   = { version = "1.20", features = ["full"] }
 tokio-util              = "0.7"
 tonic                   = "0.8"
 tonic-health            = "0.7"
-utoipa                  = { version = "2.1", features = ["axum_extras"] }
+utoipa                  = { version = "2.1", features = ["axum_extras", "chrono"] }
 uuid                    = { version = "1.2", features = ["v4", "serde"] }
 
 

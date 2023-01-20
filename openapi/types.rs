@@ -1,4 +1,3 @@
-use ordered_float::OrderedFloat;
 use serde::{Deserialize, Serialize};
 use utoipa::{IntoParams, ToSchema};
 
@@ -30,8 +29,8 @@ pub struct RegisterAircraftPayload {
     /// aircraft from national aviation authorities like the FAA.
     pub registration_number: String,
     pub description: Option<String>,
-    pub max_payload_kg: OrderedFloat<f32>,
-    pub max_range_km: Option<OrderedFloat<f64>>,
+    pub max_payload_kg: f64,
+    pub max_range_km: f64,
 }
 
 /// Request to create a vertiport.

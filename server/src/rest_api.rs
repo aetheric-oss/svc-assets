@@ -4,11 +4,10 @@
 pub mod rest_types {
     include!("../../openapi/types.rs");
 }
-use std::time::SystemTime;
-
 pub use rest_types::*;
 
 use axum::{extract::Path, Extension, Json};
+use chrono::Utc;
 use hyper::StatusCode;
 use uuid::Uuid;
 
@@ -17,10 +16,10 @@ use crate::{
     req_debug,
     structs::Aircraft,
     structs::AssetsInfo,
-    structs::Operator,
     structs::Vertipad,
     structs::Vertiport,
     structs::{AssetGroup, Basics},
+    structs::{Operator, OrderedFloat64},
 };
 
 //===========================================================
@@ -399,7 +398,7 @@ pub async fn register_aircraft(
             group_id: payload.group_id,
             owner: payload.owner,
             whitelist: payload.whitelist,
-            created_at: SystemTime::now(),
+            created_at: Utc::now(),
             updated_at: None,
             status: payload.status,
         },
@@ -408,8 +407,8 @@ pub async fn register_aircraft(
         serial_number: payload.serial_number,
         registration_number: payload.registration_number,
         description: payload.description,
-        max_payload_kg: payload.max_payload_kg,
-        max_range_km: payload.max_range_km,
+        max_payload_kg: OrderedFloat64::from(payload.max_payload_kg),
+        max_range_km: OrderedFloat64::from(payload.max_range_km),
     };
 
     // Get Client
@@ -459,7 +458,7 @@ pub async fn register_vertiport(
             group_id: payload.group_id,
             owner: payload.owner,
             whitelist: payload.whitelist,
-            created_at: SystemTime::now(),
+            created_at: Utc::now(),
             updated_at: None,
             status: payload.status,
         },
@@ -564,7 +563,7 @@ pub async fn register_asset_group(
         id: Uuid::new_v4().to_string(),
         name: payload.name,
         owner: payload.owner,
-        created_at: SystemTime::now(),
+        created_at: Utc::now(),
         updated_at: None,
         delegatee: None,
         assets: payload.assets,
