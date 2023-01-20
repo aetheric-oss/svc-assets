@@ -38,7 +38,7 @@ See the High-Level ICD for common interfaces.
 
 | File Location | Description |
 --- | ---
-TODO: `server/src/api_rest.rs` | Implements the REST endpoints.
+[`server/src/rest_api.rs`](../server/src/rest_api.rs) | Implements the REST endpoints.
 
 ### Authentication
 
