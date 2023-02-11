@@ -1,8 +1,9 @@
 //! This module contains the GrpcClients struct which is used to
 //! manage the gRPC clients for the various microservices.
 
-pub use svc_storage_client_grpc::client::{
-    vertiport_rpc_client::VertiportRpcClient, SearchFilter, VertiportData,
+pub use svc_storage_client_grpc::{
+    VehicleClient as VehicleRpcClient, VertipadClient as VertipadRpcClient,
+    VertiportClient as VertiportRpcClient,
 };
 
 use futures::lock::Mutex;
@@ -15,7 +16,9 @@ use crate::{grpc_debug, grpc_error, grpc_info};
 #[derive(Clone, Debug)]
 pub struct GrpcClients {
     //TODO
-    pub storage: GrpcClient<VertiportRpcClient<Channel>>,
+    pub storage_vertiport: GrpcClient<VertiportRpcClient<Channel>>,
+    pub storage_vertipad: GrpcClient<VertipadRpcClient<Channel>>,
+    pub storage_vehicle: GrpcClient<VehicleRpcClient<Channel>>,
 }
 
 #[derive(Debug, Clone)]
@@ -96,10 +99,80 @@ impl GrpcClient<VertiportRpcClient<Channel>> {
     }
 }
 
+impl GrpcClient<VertipadRpcClient<Channel>> {
+    pub async fn get_client(&mut self) -> Option<VertipadRpcClient<Channel>> {
+        grpc_debug!("(get_client) storage::vertiport entry");
+
+        let arc = Arc::clone(&self.inner);
+        let mut client = arc.lock().await;
+
+        if client.is_none() {
+            grpc_info!(
+                "(grpc) connecting to svc-storage vertiport server at {}",
+                self.address.clone()
+            );
+            let client_option = match VertipadRpcClient::connect(self.address.clone()).await {
+                Ok(s) => Some(s),
+                Err(e) => {
+                    grpc_error!(
+                        "(grpc) couldn't connect to svc-storage vertiport server at {}; {}",
+                        self.address,
+                        e
+                    );
+                    None
+                }
+            };
+
+            *client = client_option;
+        }
+
+        client.clone()
+    }
+}
+
+impl GrpcClient<VehicleRpcClient<Channel>> {
+    pub async fn get_client(&mut self) -> Option<VehicleRpcClient<Channel>> {
+        grpc_debug!("(get_client) storage::vertiport entry");
+
+        let arc = Arc::clone(&self.inner);
+        let mut client = arc.lock().await;
+
+        if client.is_none() {
+            grpc_info!(
+                "(grpc) connecting to svc-storage vertiport server at {}",
+                self.address.clone()
+            );
+            let client_option = match VehicleRpcClient::connect(self.address.clone()).await {
+                Ok(s) => Some(s),
+                Err(e) => {
+                    grpc_error!(
+                        "(grpc) couldn't connect to svc-storage vertiport server at {}; {}",
+                        self.address,
+                        e
+                    );
+                    None
+                }
+            };
+
+            *client = client_option;
+        }
+
+        client.clone()
+    }
+}
+
 impl GrpcClients {
     pub fn default() -> Self {
         GrpcClients {
-            storage: GrpcClient::<VertiportRpcClient<Channel>>::new(
+            storage_vertiport: GrpcClient::<VertiportRpcClient<Channel>>::new(
+                "STORAGE_HOST_GRPC",
+                "STORAGE_PORT_GRPC",
+            ),
+            storage_vertipad: GrpcClient::<VertipadRpcClient<Channel>>::new(
+                "STORAGE_HOST_GRPC",
+                "STORAGE_PORT_GRPC",
+            ),
+            storage_vehicle: GrpcClient::<VehicleRpcClient<Channel>>::new(
                 "STORAGE_HOST_GRPC",
                 "STORAGE_PORT_GRPC",
             ),
