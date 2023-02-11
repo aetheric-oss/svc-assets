@@ -5,22 +5,34 @@
 //!
 //! Types here are different from the openapi types.
 
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, TimeZone, Utc};
 use duplicate::duplicate_item;
 use lipsum::{lipsum, lipsum_title};
 use ordered_float::OrderedFloat;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
+use svc_storage_client_grpc::vertipad::Object as VertipadObject;
+use svc_storage_client_grpc::{
+    vehicle::Object as VehicleObject, vertiport::Object as VertiportObject,
+};
+// use svc_storage_client_grpc::vehicle::VehicleType;
 use utoipa::{IntoParams, ToSchema};
 use uuid::Uuid;
 
 /// A wrapper for OrderedFloat<f64> for documentation generation purposes.
-#[derive(Debug, Serialize, Deserialize, Hash, Eq, PartialEq, Clone)]
+#[derive(Debug, Serialize, Deserialize, Hash, Eq, PartialEq, Clone, Copy)]
 pub struct OrderedFloat64(pub OrderedFloat<f64>);
 
 impl From<f64> for OrderedFloat64 {
     fn from(value: f64) -> Self {
         OrderedFloat64(OrderedFloat(value))
+    }
+}
+
+impl OrderedFloat64 {
+    /// Convert the value to a f64.
+    pub fn to_f64(self) -> f64 {
+        self.0.into_inner()
     }
 }
 
@@ -233,7 +245,7 @@ pub enum AssetStatus {
 }
 
 /// A struct representing a location.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema, IntoParams)]
+#[derive(Clone, Debug, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema, IntoParams)]
 pub struct Location {
     pub latitude: OrderedFloat64,
     pub longitude: OrderedFloat64,
@@ -266,6 +278,8 @@ pub struct Aircraft {
     pub description: Option<String>,
     pub max_payload_kg: OrderedFloat64,
     pub max_range_km: OrderedFloat64,
+    pub last_maintenance: Option<DateTime<Utc>>,
+    pub next_maintenance: Option<DateTime<Utc>>,
 }
 
 impl Aircraft {
@@ -285,6 +299,7 @@ impl Aircraft {
         }
     }
 
+    #[allow(dead_code)]
     /// Generate a random aircraft.
     pub fn random() -> Self {
         Self {
@@ -305,7 +320,55 @@ impl Aircraft {
             description: None,
             max_payload_kg: OrderedFloat64::from(1000.0),
             max_range_km: OrderedFloat64::from(1000.0),
+            last_maintenance: None,
+            next_maintenance: None,
         }
+    }
+
+    pub fn from(storage_vehicle: VehicleObject) -> Result<Aircraft, String> {
+        let data = storage_vehicle.data;
+        if data.is_none() {
+            return Err("Vehicle data is missing".to_string());
+        }
+        let data = data.unwrap();
+
+        Ok(Aircraft {
+            basics: Basics {
+                id: storage_vehicle.id,
+                group_id: data.asset_group_id,
+                name: None,
+                owner: Uuid::new_v4().to_string(),
+                created_at: Utc::now(),
+                updated_at: None,
+                whitelist: Vec::new(),
+                status: AssetStatus::Available,
+            },
+            manufacturer: "Arrow".to_string(),
+            model: data.vehicle_model_id,
+            serial_number: data.serial_number,
+            registration_number: data.registration_number,
+            description: data.description,
+            max_payload_kg: 0.0.into(),
+            max_range_km: 0.0.into(),
+            last_maintenance: if data.last_maintenance.is_some() {
+                Some(
+                    Utc.timestamp_opt(data.last_maintenance.unwrap().seconds, 0)
+                        .single()
+                        .unwrap(),
+                )
+            } else {
+                None
+            },
+            next_maintenance: if data.next_maintenance.is_some() {
+                Some(
+                    Utc.timestamp_opt(data.next_maintenance.unwrap().seconds, 0)
+                        .single()
+                        .unwrap(),
+                )
+            } else {
+                None
+            },
+        })
     }
 }
 
@@ -317,21 +380,42 @@ impl Aircraft {
 pub struct Vertipad {
     pub id: String,
     pub vertiport_id: String,
-    pub status: AssetStatus,
+    pub enabled: bool,
+    pub occupied: bool,
     pub location: Location,
 }
 
 impl Vertipad {
+    #[allow(dead_code)]
     /// Generate a random vertipad.
     pub fn random() -> Self {
         Self {
             id: Uuid::new_v4().to_string(),
             vertiport_id: Uuid::new_v4().to_string(),
-            status: AssetStatus::Available,
+            enabled: true,
+            occupied: false,
             location: Location {
                 latitude: OrderedFloat64::from(0.0),
                 longitude: OrderedFloat64::from(0.0),
             },
+        }
+    }
+
+    pub fn from(vertipad: VertipadObject) -> Result<Vertipad, String> {
+        let data = vertipad.data;
+        if let Some(data) = data {
+            Ok(Vertipad {
+                id: vertipad.id,
+                vertiport_id: data.vertiport_id,
+                enabled: data.enabled,
+                occupied: data.occupied,
+                location: Location {
+                    latitude: OrderedFloat64::from(data.latitude),
+                    longitude: OrderedFloat64::from(data.longitude),
+                },
+            })
+        } else {
+            Err("Vertipad data is missing".to_string())
         }
     }
 }
@@ -359,6 +443,7 @@ impl Vertiport {
         }
     }
 
+    #[allow(dead_code)]
     /// Generate a random vertiport.
     pub fn random() -> Self {
         Self {
@@ -377,6 +462,31 @@ impl Vertiport {
                 latitude: OrderedFloat64::from(0.0),
                 longitude: OrderedFloat64::from(0.0),
             },
+        }
+    }
+
+    pub fn from(storage_vertiport: VertiportObject) -> Result<Vertiport, String> {
+        let data = storage_vertiport.data;
+        if let Some(data) = data {
+            Ok(Vertiport {
+                basics: Basics {
+                    id: storage_vertiport.id,
+                    group_id: None,
+                    name: Some("Vertiport".to_string()),
+                    owner: Uuid::new_v4().to_string(),
+                    created_at: Utc::now(),
+                    updated_at: None,
+                    whitelist: Vec::new(),
+                    status: AssetStatus::Available,
+                },
+                description: Some(data.description),
+                location: Location {
+                    latitude: OrderedFloat64::from(data.latitude),
+                    longitude: OrderedFloat64::from(data.longitude),
+                },
+            })
+        } else {
+            Err("Vertiport data is missing".to_string())
         }
     }
 }
@@ -410,6 +520,8 @@ mod tests {
             description: None,
             max_payload_kg: OrderedFloat64::from(1000.0),
             max_range_km: OrderedFloat64::from(1000.0),
+            last_maintenance: None,
+            next_maintenance: None,
         };
         assert_eq!(asset.id(), Uuid::parse_str(&basics.id));
         assert_eq!(asset.name(), basics.name.unwrap());
@@ -442,6 +554,8 @@ mod tests {
             description: None,
             max_payload_kg: OrderedFloat64::from(1000.0),
             max_range_km: OrderedFloat64::from(1000.0),
+            last_maintenance: None,
+            next_maintenance: None,
         };
 
         let vertiport = Vertiport {
@@ -494,6 +608,8 @@ mod tests {
             description: None,
             max_payload_kg: OrderedFloat64::from(1000.0),
             max_range_km: OrderedFloat64::from(1000.0),
+            last_maintenance: None,
+            next_maintenance: None,
         };
         let vertiport = Vertiport {
             basics: basics.clone(),
