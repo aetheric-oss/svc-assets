@@ -1,7 +1,6 @@
+use crate::structs::{AssetStatus, Location};
 use serde::{Deserialize, Serialize};
 use utoipa::{IntoParams, ToSchema};
-
-use crate::structs::{AssetStatus, Location};
 
 /// Request to create an aircraft.
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema, IntoParams)]
@@ -31,6 +30,8 @@ pub struct RegisterAircraftPayload {
     pub description: Option<String>,
     pub max_payload_kg: f64,
     pub max_range_km: f64,
+    pub last_maintenance: Option<String>,
+    pub next_maintenance: Option<String>,
 }
 
 /// Request to create a vertiport.
@@ -49,9 +50,12 @@ pub struct RegisterVertiportPayload {
 /// Request to create a vertipad.
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema, IntoParams)]
 pub struct RegisterVertipadPayload {
+    pub name: Option<String>,
     pub vertiport_id: String,
     pub status: AssetStatus,
     pub location: Location,
+    pub enabled: bool,
+    pub occupied: bool,
 }
 
 /// Request to create an asset group.
@@ -62,4 +66,47 @@ pub struct RegisterAssetGroupPayload {
     pub owner: String,
     /// A list of UUIDs of assets.
     pub assets: Vec<String>,
+}
+
+/// Request to update an aircraft.
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema, IntoParams)]
+pub struct UpdateAircraftPayload {
+    pub id: String,
+    /// The UUID of the model.
+    pub vehicle_model_id: Option<String>,
+    pub last_vertiport_id: Option<Option<String>>,
+    pub serial_number: Option<String>,
+    pub registration_number: Option<String>,
+    pub description: Option<Option<String>>,
+    pub asset_group_id: Option<Option<String>>,
+    pub schedule: Option<Option<String>>,
+    pub last_maintenance: Option<Option<String>>,
+    pub next_maintenance: Option<Option<String>>,
+    pub mask: Vec<String>,
+}
+
+/// Request to update a vertiport.
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema, IntoParams)]
+pub struct UpdateVertiportPayload {
+    pub id: String,
+    pub name: Option<String>,
+    pub description: Option<String>,
+    pub latitude: Option<f64>,
+    pub longitude: Option<f64>,
+    pub schedule: Option<Option<String>>,
+    pub mask: Vec<String>,
+}
+
+/// Request to update a vertipad.
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema, IntoParams)]
+pub struct UpdateVertipadPayload {
+    pub id: String,
+    pub vertiport_id: Option<String>,
+    pub name: Option<String>,
+    pub latitude: Option<f64>,
+    pub longitude: Option<f64>,
+    pub enabled: Option<bool>,
+    pub occupied: Option<bool>,
+    pub schedule: Option<Option<String>>,
+    pub mask: Vec<String>,
 }
