@@ -220,18 +220,12 @@ pub async fn rest_server(grpc_clients: GrpcClients) {
             routing::post(rest_api::register_asset_group),
         )
         // PUT endpoints
+        .route("/assets/aircraft", routing::put(rest_api::update_aircraft))
         .route(
-            "/assets/aircraft/:id",
-            routing::put(rest_api::update_aircraft),
-        )
-        .route(
-            "/assets/vertiports/:id",
+            "/assets/vertiports",
             routing::put(rest_api::update_vertiport),
         )
-        .route(
-            "/assets/vertipads/:id",
-            routing::put(rest_api::update_vertipad),
-        )
+        .route("/assets/vertipads", routing::put(rest_api::update_vertipad))
         .route(
             "/assets/groups/:id",
             routing::put(rest_api::update_asset_group),
