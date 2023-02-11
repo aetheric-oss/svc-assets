@@ -38,7 +38,7 @@ fn is_uuid(s: &str) -> bool {
 /// Get info about an operator by id.
 #[utoipa::path(
     get,
-    path = "/operators/{id}",
+    path = "/assets/operators/{id}",
     tag = "svc-assets",
     responses(
         (status = 200, description = "Operator found in database"),
@@ -75,7 +75,7 @@ pub async fn get_operator(
 //-----------------------------------------------------------
 #[utoipa::path(
     get,
-    path = "/operators/{id}/assets",
+    path = "/assets/operators/{id}/assets",
     tag = "svc-assets",
     responses(
         (status = 200, description = "Assets found from database for operator {id}"),
@@ -115,7 +115,7 @@ pub async fn get_all_assets(
 /// Returns a list of grouped asset ids.
 #[utoipa::path(
     get,
-    path = "/operators/{id}/grouped",
+    path = "/assets/operators/{id}/grouped",
     tag = "svc-assets",
     responses(
         (status = 200, description = "Grouped assets found from database for operator {id}"),
@@ -150,7 +150,7 @@ pub async fn get_all_grouped_assets(
 /// Get all grouped assets delegated to an operator.
 #[utoipa::path(
     get,
-    path = "/operators/{id}/grouped/delegated-to",
+    path = "/assets/operators/{id}/grouped/delegated-to",
     tag = "svc-assets",
     responses(
         (status = 200, description = "Grouped assets delegated to operator {id} found from database"),
@@ -185,7 +185,7 @@ pub async fn get_all_grouped_assets_delegated_to(
 /// Get all grouped assets delegated from an operator.
 #[utoipa::path(
     get,
-    path = "/operators/{id}/grouped/delegated-from",
+    path = "/assets/operators/{id}/grouped/delegated-from",
     tag = "svc-assets",
     responses(
         (status = 200, description = "Grouped assets delegated from operator {id} found from database"),
@@ -224,7 +224,7 @@ pub async fn get_all_grouped_assets_delegated_from(
 /// Get an [`Aircraft`] by its id.
 #[utoipa::path(
     get,
-    path = "/aircraft/{id}",
+    path = "/assets/aircraft/{id}",
     tag = "svc-assets",
     responses(
         (status = 200, description = "Aircraft {id} found from database"),
@@ -261,7 +261,7 @@ pub async fn get_aircraft_by_id(
 /// Get an [`Vertipad`] by its id.
 #[utoipa::path(
     get,
-    path = "/vertipads/{id}",
+    path = "/assets/vertipads/{id}",
     tag = "svc-assets",
     responses(
         (status = 200, description = "Vertipad {id} found from database"),
@@ -298,7 +298,7 @@ pub async fn get_vertipad_by_id(
 /// Get an [`Vertiport`] by its id.
 #[utoipa::path(
     get,
-    path = "/vertiports/{id}",
+    path = "/assets/vertiports/{id}",
     tag = "svc-assets",
     responses(
         (status = 200, description = "Vertiport {id} found from database"),
@@ -376,7 +376,7 @@ pub async fn get_asset_group_by_id(
 /// Register an [`Aircraft`] in the database.
 #[utoipa::path(
     post,
-    path = "/aircraft",
+    path = "/assets/aircraft",
     tag = "svc-assets",
     request_body=RegisterAircraftPayload,
     responses(
@@ -437,7 +437,7 @@ pub async fn register_aircraft(
 /// Register an [`Vertiport`] in the database.
 #[utoipa::path(
     post,
-    path = "/vertiports",
+    path = "/assets/vertiports",
     tag = "svc-assets",
     request_body=RegisterVertiportPayload,
     responses(
@@ -495,7 +495,7 @@ pub async fn register_vertiport(
 /// Also inserts the vertipad into the vertiport's vertipad list.
 #[utoipa::path(
     post,
-    path = "/vertipads",
+    path = "/assets/vertipads",
     tag = "svc-assets",
     request_body=RegisterVertipadPayload,
     responses(
@@ -604,7 +604,7 @@ pub async fn register_asset_group(
 /// This will update the aircraft's information.
 #[utoipa::path(
     put,
-    path = "/aircraft/{id}",
+    path = "/assets/aircraft/{id}",
     tag = "svc-assets",
     request_body=Aircraft,
     responses(
@@ -655,7 +655,7 @@ pub async fn update_aircraft(
 /// perform batch add/remove of vertipads.
 #[utoipa::path(
     put,
-    path = "/vertiports/{id}",
+    path = "/assets/vertiports/{id}",
     tag = "svc-assets",
     request_body=Vertiport,
     responses(
@@ -701,7 +701,7 @@ pub async fn update_vertiport(
 /// Update/modify a [`Vertipad`] in the database.
 #[utoipa::path(
     put,
-    path = "/vertipads/{id}",
+    path = "/assets/vertipads/{id}",
     tag = "svc-assets",
     request_body=Vertipad,
     responses(
@@ -793,7 +793,7 @@ pub async fn update_asset_group(
 /// Remove a [`Aircraft`] from the database.
 #[utoipa::path(
     delete,
-    path = "/aircraft/{id}",
+    path = "/assets/aircraft/{id}",
     tag = "svc-assets",
     responses(
         (status = 200, description = "Aircraft removed from database"),
@@ -838,7 +838,7 @@ pub async fn remove_aircraft(
 /// Remove a [`Vertipad`] from the database.
 #[utoipa::path(
     delete,
-    path = "/vertipads/{id}",
+    path = "/assets/vertipads/{id}",
     tag = "svc-assets",
     responses(
         (status = 200, description = "Vertipad removed from database"),
@@ -883,7 +883,7 @@ pub async fn remove_vertipad(
 /// Remove a [`Vertiport`] from the database.
 #[utoipa::path(
     delete,
-    path = "/vertiports/{id}",
+    path = "/assets/vertiports/{id}",
     tag = "svc-assets",
     responses(
         (status = 200, description = "Vertiport removed from database"),
