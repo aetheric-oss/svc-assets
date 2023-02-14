@@ -13,6 +13,7 @@ use axum::{extract::Path, Extension, Json};
 use chrono::Utc;
 use hyper::StatusCode;
 use svc_storage_client_grpc::{
+    client::AdvancedSearchFilter,
     client::Id,
     vehicle::{Data, UpdateObject},
     vertipad::{Data as VertipadData, UpdateObject as VertipadUpdateObject},
@@ -74,6 +75,133 @@ pub async fn get_operator(
 }
 
 //-----------------------------------------------------------
+// R2 DEMO
+//-----------------------------------------------------------
+
+#[utoipa::path(
+    post,
+    path = "/assets/demo/aircraft",
+    tag = "svc-assets",
+    responses(
+        (status = 200, description = "Assets successfully found"),
+        (status = 503, description = "Could not connect to other microservice dependencies")
+    ),
+)]
+/// Get all aircraft from the database.
+pub async fn get_all_aircraft(
+    Extension(mut grpc_clients): Extension<GrpcClients>,
+) -> Result<Json<Vec<Aircraft>>, (StatusCode, String)> {
+    let filter = AdvancedSearchFilter::search_is_not_null(String::from("deleted_at"));
+    let vehicle_client_option = grpc_clients.storage_vehicle.get_client().await;
+    if vehicle_client_option.is_none() {
+        let error_msg = "svc-storage unavailable.".to_string();
+        req_error!("(get_all_aircraft) {}", &error_msg);
+        return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
+    }
+
+    let mut vehicle_client = vehicle_client_option.unwrap();
+
+    let vehicle_response = vehicle_client.search(filter.clone()).await;
+
+    if vehicle_response.is_err() {
+        let error_msg = "svc-storage unavailable.".to_string();
+        req_error!("(get_all_aircraft) {}", &error_msg);
+        return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
+    }
+    let mut vehicles = vehicle_response.unwrap().into_inner().list;
+
+    let mut assets = Vec::new();
+
+    for vehicle in vehicles.drain(..) {
+        assets.push(Aircraft::from(vehicle).unwrap());
+    }
+
+    Ok(Json(assets))
+}
+
+#[utoipa::path(
+    post,
+    path = "/assets/demo/vertiports",
+    tag = "svc-assets",
+    responses(
+        (status = 200, description = "Assets successfully found"),
+        (status = 503, description = "Could not connect to other microservice dependencies")
+    ),
+)]
+/// Get all vertiports from the database.
+pub async fn get_all_vertiports(
+    Extension(mut grpc_clients): Extension<GrpcClients>,
+) -> Result<Json<Vec<Vertiport>>, (StatusCode, String)> {
+    let filter = AdvancedSearchFilter::search_is_not_null(String::from("deleted_at"));
+    let vertiport_client_option = grpc_clients.storage_vertiport.get_client().await;
+    if vertiport_client_option.is_none() {
+        let error_msg = "svc-storage unavailable.".to_string();
+        req_error!("(get_all_vertiports) {}", &error_msg);
+        return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
+    }
+
+    let mut vertiport_client = vertiport_client_option.unwrap();
+
+    let vertiport_response = vertiport_client.search(filter.clone()).await;
+
+    if vertiport_response.is_err() {
+        let error_msg = "svc-storage unavailable.".to_string();
+        req_error!("(get_all_vertiports) {}", &error_msg);
+        return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
+    }
+    let mut vertiports = vertiport_response.unwrap().into_inner().list;
+
+    let mut assets = Vec::new();
+
+    for vertiport in vertiports.drain(..) {
+        assets.push(Vertiport::from(vertiport).unwrap());
+    }
+
+    Ok(Json(assets))
+}
+
+#[utoipa::path(
+    post,
+    path = "/assets/demo/vertipads",
+    tag = "svc-assets",
+    responses(
+        (status = 200, description = "Assets successfully found"),
+        (status = 503, description = "Could not connect to other microservice dependencies")
+    ),
+)]
+/// Get all vertipads from the database.
+pub async fn get_all_vertipads(
+    Extension(mut grpc_clients): Extension<GrpcClients>,
+) -> Result<Json<Vec<Vertipad>>, (StatusCode, String)> {
+    let filter = AdvancedSearchFilter::search_is_not_null(String::from("deleted_at"));
+    let vertipad_client_option = grpc_clients.storage_vertipad.get_client().await;
+    if vertipad_client_option.is_none() {
+        let error_msg = "svc-storage unavailable.".to_string();
+        req_error!("(get_all_vertipads) {}", &error_msg);
+        return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
+    }
+
+    let mut vertipad_client = vertipad_client_option.unwrap();
+
+    let vertipad_response = vertipad_client.search(filter.clone()).await;
+
+    if vertipad_response.is_err() {
+        let error_msg = "svc-storage unavailable.".to_string();
+        req_error!("(get_all_vertipads) {}", &error_msg);
+        return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
+    }
+    let mut vertipads = vertipad_response.unwrap().into_inner().list;
+
+    let mut assets = Vec::new();
+
+    for vertipad in vertipads.drain(..) {
+        assets.push(Vertipad::from(vertipad).unwrap());
+    }
+
+    Ok(Json(assets))
+}
+
+//-----------------------------------------------------------
 // Get assets by operator
 //-----------------------------------------------------------
 #[utoipa::path(
@@ -91,7 +219,7 @@ pub async fn get_operator(
     )
 )]
 /// Get all assets belonging to an operator.
-pub async fn get_all_assets(
+pub async fn get_all_assets_by_operator(
     Extension(mut _grpc_clients): Extension<GrpcClients>,
     Path(operator_id): Path<String>,
 ) -> Result<Json<Vec<Uuid>>, (StatusCode, String)> {
