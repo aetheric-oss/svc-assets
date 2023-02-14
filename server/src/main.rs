@@ -112,7 +112,10 @@ pub async fn shutdown_signal(server: &str) {
 #[openapi(
     paths(
         rest_api::get_operator,
-        rest_api::get_all_assets,
+        rest_api::get_all_aircraft,
+        rest_api::get_all_vertiports,
+        rest_api::get_all_vertipads,
+        rest_api::get_all_assets_by_operator,
         rest_api::get_all_grouped_assets,
         rest_api::get_all_grouped_assets_delegated_to,
         rest_api::get_all_grouped_assets_delegated_from,
@@ -171,8 +174,20 @@ pub async fn rest_server(grpc_clients: GrpcClients) {
             routing::get(rest_api::get_operator),
         )
         .route(
+            "/assets/demo/aircraft",
+            routing::get(rest_api::get_all_aircraft),
+        )
+        .route(
+            "/assets/demo/vertiports",
+            routing::get(rest_api::get_all_vertiports),
+        )
+        .route(
+            "/assets/demo/vertipads",
+            routing::get(rest_api::get_all_vertipads),
+        )
+        .route(
             "/assets/operators/:id/assets",
-            routing::get(rest_api::get_all_assets),
+            routing::get(rest_api::get_all_assets_by_operator),
         )
         .route(
             "/assets/operators/:id/grouped",
