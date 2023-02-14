@@ -15,7 +15,6 @@ use crate::{grpc_debug, grpc_error, grpc_info};
 
 #[derive(Clone, Debug)]
 pub struct GrpcClients {
-    //TODO
     pub storage_vertiport: GrpcClient<VertiportRpcClient<Channel>>,
     pub storage_vertipad: GrpcClient<VertipadRpcClient<Channel>>,
     pub storage_vehicle: GrpcClient<VehicleRpcClient<Channel>>,
@@ -65,101 +64,53 @@ impl<T> GrpcClient<T> {
     }
 }
 
-// TODO Figure out how to collapse these three implementations for each client into
-//   one generic impl. VertiportRpcClient does not simply impl a trait,
-//   it wraps the tonic::client::Grpc<T> type so it's a bit tricky
-impl GrpcClient<VertiportRpcClient<Channel>> {
-    pub async fn get_client(&mut self) -> Option<VertiportRpcClient<Channel>> {
-        grpc_debug!("(get_client) storage::vertiport entry");
+macro_rules! grpc_client {
+    ( $client: ident, $name: expr ) => {
+        impl GrpcClient<$client<Channel>> {
+            pub async fn get_client(&mut self) -> Option<$client<Channel>> {
+                grpc_debug!("(get_client) storage::{} entry", $name);
 
-        let arc = Arc::clone(&self.inner);
-        let mut client = arc.lock().await;
+                let arc = Arc::clone(&self.inner);
 
-        if client.is_none() {
-            grpc_info!(
-                "(grpc) connecting to svc-storage vertiport server at {}",
-                self.address.clone()
-            );
-            let client_option = match VertiportRpcClient::connect(self.address.clone()).await {
-                Ok(s) => Some(s),
-                Err(e) => {
-                    grpc_error!(
-                        "(grpc) couldn't connect to svc-storage vertiport server at {}; {}",
-                        self.address,
-                        e
-                    );
-                    None
+                // if already connected, return the client
+                let client = arc.lock().await;
+                if client.is_some() {
+                    return client.clone();
                 }
-            };
 
-            *client = client_option;
+                grpc_debug!(
+                    "(grpc) connecting to {} server at {}",
+                    $name,
+                    self.address.clone()
+                );
+                let result = $client::connect(self.address.clone()).await;
+                match result {
+                    Ok(client) => {
+                        grpc_info!(
+                            "(grpc) success: connected to {} server at {}",
+                            $name,
+                            self.address.clone()
+                        );
+                        Some(client)
+                    }
+                    Err(e) => {
+                        grpc_error!(
+                            "(grpc) couldn't connect to {} server at {}; {}",
+                            $name,
+                            self.address,
+                            e
+                        );
+                        None
+                    }
+                }
+            }
         }
-
-        client.clone()
-    }
+    };
 }
 
-impl GrpcClient<VertipadRpcClient<Channel>> {
-    pub async fn get_client(&mut self) -> Option<VertipadRpcClient<Channel>> {
-        grpc_debug!("(get_client) storage::vertiport entry");
-
-        let arc = Arc::clone(&self.inner);
-        let mut client = arc.lock().await;
-
-        if client.is_none() {
-            grpc_info!(
-                "(grpc) connecting to svc-storage vertiport server at {}",
-                self.address.clone()
-            );
-            let client_option = match VertipadRpcClient::connect(self.address.clone()).await {
-                Ok(s) => Some(s),
-                Err(e) => {
-                    grpc_error!(
-                        "(grpc) couldn't connect to svc-storage vertiport server at {}; {}",
-                        self.address,
-                        e
-                    );
-                    None
-                }
-            };
-
-            *client = client_option;
-        }
-
-        client.clone()
-    }
-}
-
-impl GrpcClient<VehicleRpcClient<Channel>> {
-    pub async fn get_client(&mut self) -> Option<VehicleRpcClient<Channel>> {
-        grpc_debug!("(get_client) storage::vertiport entry");
-
-        let arc = Arc::clone(&self.inner);
-        let mut client = arc.lock().await;
-
-        if client.is_none() {
-            grpc_info!(
-                "(grpc) connecting to svc-storage vertiport server at {}",
-                self.address.clone()
-            );
-            let client_option = match VehicleRpcClient::connect(self.address.clone()).await {
-                Ok(s) => Some(s),
-                Err(e) => {
-                    grpc_error!(
-                        "(grpc) couldn't connect to svc-storage vertiport server at {}; {}",
-                        self.address,
-                        e
-                    );
-                    None
-                }
-            };
-
-            *client = client_option;
-        }
-
-        client.clone()
-    }
-}
+grpc_client!(VehicleRpcClient, "aircraft");
+grpc_client!(VertipadRpcClient, "vertipad");
+grpc_client!(VertiportRpcClient, "vertiport");
 
 impl GrpcClients {
     pub fn default() -> Self {
