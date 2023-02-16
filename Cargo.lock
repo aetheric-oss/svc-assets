@@ -1675,7 +1675,7 @@ dependencies = [
 [[package]]
 name = "svc-storage-client-grpc"
 version = "0.9.0-develop.10"
-source = "git+https://github.com/Arrow-air/svc-storage?tag=v0.9.0-develop.10#061a5ab76f308dd3815974adfb9359043a63b555"
+source = "git+https://github.com/Arrow-air/svc-storage?tag=v0.9.0-develop.10#1c36777f2163bd8b6b67d1dfb15792c786793215"
 dependencies = [
  "geo-types",
  "num-derive",
@@ -1684,6 +1684,7 @@ dependencies = [
  "prost",
  "prost-types",
  "tonic",
+ "tonic-build",
  "uuid",
 ]
 
