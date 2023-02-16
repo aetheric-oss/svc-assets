@@ -68,7 +68,62 @@ For detailed sequence diagrams regarding request handlers, see [REST Handlers](#
 None
 
 ## REST Handlers
-:construction: The `svc-assets` current handles REST requests locally.
-However, these requests will require interaction with `svc-storage`.
-This section will abe completed once the server finishes `svc-storage`
-integration. 
+You can think of `svc-assets` as a client-facing wrapper for
+`svc-storage`. Clients make REST requests to `svc-assets`, the
+microservice will then parse payloads and make RPC calls to
+`svc-storage`. The `svc-assets` microservice will then process and
+return responses returned from `svc-storage`.
+
+This is a process followed by most of the endpoints of `svc-assets` that
+perform CRUD operations. The only possible exception is the delegation
+process, which has not been implemented yet.
+
+The service returns either a list of assets or a single asset, or a
+string indicating the uuid of the asset created/updated/deleted.
+
+**Nominal**:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Client
+    participant svc-assets
+    participant svc-storage
+    Client->>svc-assets: (REST) GET | POST | PUT | DELETE /assets/.../{id}
+    svc-assets-->>svc-assets: connect to svc-storage
+    svc-assets->>svc-storage: (GRPC REQ) get_by_id(id) | insert(...) | update(...) | delete(...)
+    svc-storage->>svc-assets: (GRPC RES) <asset(s) | string>
+    svc-assets->>Client: (200 OK) <asset(s) | string>
+```
+
+
+
+**Off-Nominal**: Failed to connect to `svc-storage`
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Client
+    participant svc-assets
+    participant svc-storage
+    Client->>svc-assets: (REST) GET | POST | PUT | DELETE /assets/.../{id}
+    svc-assets-->>svc-assets: connect to svc-storage
+    note over svc-assets: failed to connect to svc-storage
+    svc-assets->>Client: (503 SERVICE UNAVAILABLE)
+```
+
+**Off-Nominal**:  Request to `svc-storage` failed
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Client
+    participant svc-assets
+    participant svc-storage
+    Client->>svc-assets: (REST) GET | POST | PUT | DELETE /assets/.../{id}
+    svc-assets-->>svc-assets: connect to svc-storage
+    svc-assets->>svc-storage: (GRPC REQ) get_by_id(id) | insert(...) | update(...) | delete(...) 
+    svc-storage->>svc-assets: (GRPC RES) ERROR
+    svc-assets->>Client: (500 INTERNAL_SERVER_ERROR)
+```
+
