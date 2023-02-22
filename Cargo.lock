@@ -1678,8 +1678,8 @@ dependencies = [
 
 [[package]]
 name = "svc-storage-client-grpc"
-version = "0.9.0-develop.10"
-source = "git+https://github.com/Arrow-air/svc-storage?tag=v0.9.0-develop.10#1c36777f2163bd8b6b67d1dfb15792c786793215"
+version = "0.9.0-develop.14"
+source = "git+https://github.com/Arrow-air/svc-storage?tag=v0.9.0-develop.14#ccf69d9d2a920585b872b7142873b1c6018d7504"
 dependencies = [
  "geo-types",
  "num-derive",
