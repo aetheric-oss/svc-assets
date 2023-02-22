@@ -12,13 +12,14 @@ pub use rest_types::*;
 use axum::{extract::Path, Extension, Json};
 use chrono::Utc;
 use hyper::StatusCode;
-use svc_storage_client_grpc::{
-    client::AdvancedSearchFilter,
-    client::Id,
+use svc_storage_client_grpc::{AdvancedSearchFilter, Id};
+
+use svc_storage_client_grpc::resources::{
     vehicle::{Data, UpdateObject},
     vertipad::{Data as VertipadData, UpdateObject as VertipadUpdateObject},
     vertiport::{Data as VertiportData, UpdateObject as VertiportUpdateObject},
 };
+
 use uuid::Uuid;
 
 use crate::{
@@ -713,7 +714,7 @@ pub async fn register_vertiport(
             description: payload.description.unwrap_or_else(|| "N/A".to_string()),
             latitude: payload.location.latitude.to_f64(),
             longitude: payload.location.longitude.to_f64(),
-            schedule: None,
+            schedule: Some("".to_string()),
         }))
         .await
     {
@@ -771,7 +772,7 @@ pub async fn register_vertipad(
             vertiport_id: payload.vertiport_id.clone(),
             latitude: payload.location.latitude.to_f64(),
             longitude: payload.location.longitude.to_f64(),
-            schedule: None,
+            schedule: Some("".to_string()),
             enabled: payload.enabled,
             occupied: payload.occupied,
         }))
