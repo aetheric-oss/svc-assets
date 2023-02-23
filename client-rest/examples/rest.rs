@@ -59,6 +59,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             last_maintenance: None,
             name: None,
             next_maintenance: None,
+            last_vertiport_id: None,
         };
         let data_str = serde_json::to_string(&data).unwrap();
         let uri = format!("{}/assets/aircraft", url);
