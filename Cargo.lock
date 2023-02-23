@@ -1683,7 +1683,7 @@ dependencies = [
 
 [[package]]
 name = "svc-assets-client-rest"
-version = "0.3.0-develop.10"
+version = "0.1.0"
 dependencies = [
  "chrono",
  "hyper",
@@ -1696,8 +1696,8 @@ dependencies = [
 
 [[package]]
 name = "svc-storage-client-grpc"
-version = "0.9.0-develop.14"
-source = "git+https://github.com/Arrow-air/svc-storage?tag=v0.9.0-develop.14#ccf69d9d2a920585b872b7142873b1c6018d7504"
+version = "0.9.0-develop.15"
+source = "git+https://github.com/Arrow-air/svc-storage?tag=v0.9.0-develop.15#28de9256fea809b1175655f351b1ee1d28cdcd78"
 dependencies = [
  "geo-types",
  "num-derive",

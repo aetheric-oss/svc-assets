@@ -281,6 +281,7 @@ pub struct Aircraft {
     pub max_range_km: OrderedFloat64,
     pub last_maintenance: Option<DateTime<Utc>>,
     pub next_maintenance: Option<DateTime<Utc>>,
+    pub last_vertiport_id: Option<String>,
 }
 
 impl Aircraft {
@@ -323,6 +324,7 @@ impl Aircraft {
             max_range_km: OrderedFloat64::from(1000.0),
             last_maintenance: None,
             next_maintenance: None,
+            last_vertiport_id: Some(Uuid::new_v4().to_string()),
         }
     }
 
@@ -369,6 +371,7 @@ impl Aircraft {
             } else {
                 None
             },
+            last_vertiport_id: data.last_vertiport_id,
         })
     }
 }
@@ -523,6 +526,7 @@ mod tests {
             max_range_km: OrderedFloat64::from(1000.0),
             last_maintenance: None,
             next_maintenance: None,
+            last_vertiport_id: None,
         };
         assert_eq!(asset.id(), Uuid::parse_str(&basics.id));
         assert_eq!(asset.name(), basics.name.unwrap());
@@ -557,6 +561,7 @@ mod tests {
             max_range_km: OrderedFloat64::from(1000.0),
             last_maintenance: None,
             next_maintenance: None,
+            last_vertiport_id: None,
         };
 
         let vertiport = Vertiport {
@@ -611,6 +616,7 @@ mod tests {
             max_range_km: OrderedFloat64::from(1000.0),
             last_maintenance: None,
             next_maintenance: None,
+            last_vertiport_id: None,
         };
         let vertiport = Vertiport {
             basics: basics.clone(),
