@@ -87,6 +87,7 @@ pub struct RegisterAircraftPayload {
     pub max_range_km: f64,
     pub last_maintenance: Option<String>,
     pub next_maintenance: Option<String>,
+    pub last_vertiport_id: Option<String>
 }
 
 /// Request to create a vertiport.
@@ -133,7 +134,7 @@ pub struct UpdateAircraftPayload {
     pub id: String,
     /// The UUID of the model.
     pub vehicle_model_id: Option<String>,
-    pub last_vertiport_id: Option<Option<String>>,
+    pub last_vertiport_id: Option<String>,
     pub serial_number: Option<String>,
     pub registration_number: Option<String>,
     pub description: Option<Option<String>>,

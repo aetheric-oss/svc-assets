@@ -638,30 +638,30 @@ pub async fn register_aircraft(
     }
     let mut client = client_option.unwrap();
 
-    match client
-        .insert(tonic::Request::new(Data {
-            last_vertiport_id: None,
-            vehicle_model_id: Uuid::new_v4().to_string(),
-            serial_number: payload.serial_number,
-            registration_number: payload.registration_number,
-            description: payload.description,
-            asset_group_id: None,
-            schedule: None,
-            last_maintenance: if let Some(last_maintenance) = payload.last_maintenance {
-                let last_maintenance_timezone = Timestamp::from_str(&last_maintenance);
-                Some(last_maintenance_timezone.unwrap())
-            } else {
-                None
-            },
-            next_maintenance: if let Some(next_maintenance) = payload.next_maintenance {
-                let next_maintenance_timezone = Timestamp::from_str(&next_maintenance);
-                Some(next_maintenance_timezone.unwrap())
-            } else {
-                None
-            },
-        }))
-        .await
-    {
+    let data = Data {
+        last_vertiport_id: payload.last_vertiport_id,
+        vehicle_model_id: Uuid::new_v4().to_string(),
+        serial_number: payload.serial_number,
+        registration_number: payload.registration_number,
+        description: payload.name, // TODO add nickname column to storage
+        asset_group_id: None,
+        schedule: None,
+        last_maintenance: if let Some(last_maintenance) = payload.last_maintenance {
+            let last_maintenance_timezone = Timestamp::from_str(&last_maintenance);
+            Some(last_maintenance_timezone.unwrap())
+        } else {
+            None
+        },
+        next_maintenance: if let Some(next_maintenance) = payload.next_maintenance {
+            let next_maintenance_timezone = Timestamp::from_str(&next_maintenance);
+            Some(next_maintenance_timezone.unwrap())
+        } else {
+            None
+        },
+    };
+
+    let result = client.insert(tonic::Request::new(data)).await;
+    match result {
         Ok(res) => {
             req_info!(
                 "(register_aircraft) successfully registered aircraft {:?}.",
@@ -907,9 +907,7 @@ pub async fn update_aircraft(
         .update(tonic::Request::new(UpdateObject {
             id: vehicle_id.clone(),
             data: Some(Data {
-                last_vertiport_id: payload
-                    .last_vertiport_id
-                    .unwrap_or(vehicle.last_vertiport_id),
+                last_vertiport_id: payload.last_vertiport_id,
                 vehicle_model_id: payload.vehicle_model_id.unwrap_or(vehicle.vehicle_model_id),
                 serial_number: payload.serial_number.unwrap_or(vehicle.serial_number),
                 registration_number: payload
