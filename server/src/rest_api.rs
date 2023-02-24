@@ -79,7 +79,7 @@ pub async fn get_operator(
 //-----------------------------------------------------------
 
 #[utoipa::path(
-    post,
+    get,
     path = "/assets/demo/aircraft",
     tag = "svc-assets",
     responses(
@@ -120,7 +120,7 @@ pub async fn get_all_aircraft(
 }
 
 #[utoipa::path(
-    post,
+    get,
     path = "/assets/demo/vertiports",
     tag = "svc-assets",
     responses(
@@ -161,7 +161,7 @@ pub async fn get_all_vertiports(
 }
 
 #[utoipa::path(
-    post,
+    get,
     path = "/assets/demo/vertipads",
     tag = "svc-assets",
     responses(

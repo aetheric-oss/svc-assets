@@ -1,8 +1,63 @@
-use crate::structs::{AssetStatus, Location};
+use ordered_float::OrderedFloat;
 use serde::{Deserialize, Serialize};
 use utoipa::{IntoParams, ToSchema};
 
+/// A wrapper for `OrderedFloat<f64>` for documentation generation purposes.
+#[derive(Debug, Serialize, Deserialize, Hash, Eq, PartialEq, Clone, Copy)]
+pub struct OrderedFloat64(pub OrderedFloat<f64>);
+#[allow(missing_docs)]
+impl From<f64> for OrderedFloat64 {
+    fn from(value: f64) -> Self {
+        OrderedFloat64(OrderedFloat(value))
+    }
+}
+
+impl OrderedFloat64 {
+    /// Convert the value to a f64.
+    pub fn to_f64(self) -> f64 {
+        self.0.into_inner()
+    }
+}
+
+#[allow(missing_docs)]
+impl ToSchema for OrderedFloat64 {
+    fn schema() -> utoipa::openapi::schema::Schema {
+        utoipa::openapi::ObjectBuilder::new()
+            .property(
+                "value",
+                utoipa::openapi::ObjectBuilder::new()
+                    .schema_type(utoipa::openapi::SchemaType::Number)
+                    .format(Some(utoipa::openapi::SchemaFormat::KnownFormat(
+                        utoipa::openapi::KnownFormat::Float,
+                    ))),
+            )
+            .required("value")
+            .into()
+    }
+}
+
+#[allow(missing_docs, missing_copy_implementations)]
+/// Status of an asset.
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema)]
+pub enum AssetStatus {
+    /// The asset is available for use.
+    Available,
+    /// The asset is unavailable for use.
+    Unavailable,
+    /// The asset is only available for emergencies.
+    Emergency,
+}
+
+/// A struct representing a location.
+#[allow(missing_docs, missing_copy_implementations)]
+#[derive(Clone, Debug, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema, IntoParams)]
+pub struct Location {
+    pub latitude: OrderedFloat64,
+    pub longitude: OrderedFloat64,
+}
+
 /// Request to create an aircraft.
+#[allow(missing_docs, missing_copy_implementations)]
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema, IntoParams)]
 pub struct RegisterAircraftPayload {
     pub name: Option<String>,
@@ -35,6 +90,7 @@ pub struct RegisterAircraftPayload {
 }
 
 /// Request to create a vertiport.
+#[allow(missing_docs, missing_copy_implementations)]
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema, IntoParams)]
 pub struct RegisterVertiportPayload {
     pub name: Option<String>,
@@ -48,6 +104,7 @@ pub struct RegisterVertiportPayload {
 }
 
 /// Request to create a vertipad.
+#[allow(missing_docs, missing_copy_implementations)]
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema, IntoParams)]
 pub struct RegisterVertipadPayload {
     pub name: Option<String>,
@@ -59,6 +116,7 @@ pub struct RegisterVertipadPayload {
 }
 
 /// Request to create an asset group.
+#[allow(missing_docs, missing_copy_implementations)]
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema, IntoParams)]
 pub struct RegisterAssetGroupPayload {
     pub name: Option<String>,
@@ -69,6 +127,7 @@ pub struct RegisterAssetGroupPayload {
 }
 
 /// Request to update an aircraft.
+#[allow(missing_docs, missing_copy_implementations)]
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema, IntoParams)]
 pub struct UpdateAircraftPayload {
     pub id: String,
@@ -86,6 +145,7 @@ pub struct UpdateAircraftPayload {
 }
 
 /// Request to update a vertiport.
+#[allow(missing_docs, missing_copy_implementations)]
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema, IntoParams)]
 pub struct UpdateVertiportPayload {
     pub id: String,
@@ -98,6 +158,7 @@ pub struct UpdateVertiportPayload {
 }
 
 /// Request to update a vertipad.
+#[allow(missing_docs, missing_copy_implementations)]
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema, IntoParams)]
 pub struct UpdateVertipadPayload {
     pub id: String,
