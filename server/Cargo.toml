@@ -7,7 +7,7 @@ keywords    = ["vtol", "server", "assets"]                                 # max
 license     = "BUSL-1.1"
 name        = "svc-assets"
 repository  = "https://github.com/Arrow-air/svc-assets"
-version     = "0.3.0-develop.7"
+version     = "0.3.0-develop.8"
 
 categories = [
   "aerospace::drones",
