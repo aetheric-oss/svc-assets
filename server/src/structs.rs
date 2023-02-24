@@ -4,6 +4,7 @@
 //! completion.
 //!
 //! Types here are different from the openapi types.
+#![allow(dead_code)]
 
 use chrono::{DateTime, TimeZone, Utc};
 use duplicate::duplicate_item;
@@ -19,7 +20,7 @@ use svc_storage_client_grpc::{
 use utoipa::{IntoParams, ToSchema};
 use uuid::Uuid;
 
-/// A wrapper for OrderedFloat<f64> for documentation generation purposes.
+/// A wrapper for `OrderedFloat<f64>` for documentation generation purposes.
 #[derive(Debug, Serialize, Deserialize, Hash, Eq, PartialEq, Clone, Copy)]
 pub struct OrderedFloat64(pub OrderedFloat<f64>);
 
