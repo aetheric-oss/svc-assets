@@ -22,8 +22,8 @@ use svc_storage_client_grpc::{
 use uuid::Uuid;
 
 use crate::{
-    grpc_clients::GrpcClients, req_debug, req_error, structs::Aircraft, structs::AssetGroup,
-    structs::Operator, structs::Vertipad, structs::Vertiport,
+    grpc_clients::GrpcClients, req_debug, req_error, req_info, structs::Aircraft,
+    structs::AssetGroup, structs::Operator, structs::Vertipad, structs::Vertiport,
 };
 
 //===========================================================
@@ -418,6 +418,7 @@ pub async fn get_aircraft_by_id(
         Ok(response) => {
             let vehicle = response.into_inner();
             let aircraft = Aircraft::from(vehicle);
+            req_info!("(get_aircraft_by_id) Aircraft found: {}", aircraft_id);
             if aircraft.is_err() {
                 let error_msg = format!(
                     "Error converting storage vehicle to aircraft: {}",
@@ -479,6 +480,10 @@ pub async fn get_vertipad_by_id(
         Ok(response) => {
             let vertipad = response.into_inner();
             let vertipad = Vertipad::from(vertipad);
+            req_info!(
+                "(get_vertipad_by_id) got vertipad from storage: {:?}",
+                &vertipad
+            );
             if vertipad.is_err() {
                 let error_msg = format!(
                     "Error converting storage vertipad to vertipad: {}",
@@ -539,6 +544,10 @@ pub async fn get_vertiport_by_id(
         Ok(response) => {
             let vertiport = response.into_inner();
             let vertiport = Vertiport::from(vertiport);
+            req_info!(
+                "(get_vertiport_by_id) Got vertiport from storage: {:?}",
+                &vertiport
+            );
             if vertiport.is_err() {
                 let error_msg = format!(
                     "Error converting storage vertiport to vertiport: {}",
@@ -623,7 +632,7 @@ pub async fn register_aircraft(
     let client_option = grpc_clients.storage_vehicle.get_client().await;
     if client_option.is_none() {
         let error_msg = "svc-storage unavailable.".to_string();
-        req_error!("(get_asset_group_by_id) {}", &error_msg);
+        req_error!("(register_aircraft) {}", &error_msg);
         return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
     }
     let mut client = client_option.unwrap();
@@ -653,7 +662,10 @@ pub async fn register_aircraft(
         .await
     {
         Ok(res) => {
-            println!("RESPONSE Vehicle Insert={:?}", res);
+            req_info!(
+                "(register_aircraft) successfully registered aircraft {:?}.",
+                res
+            );
             let vehicle_obj = res.into_inner().object;
             if let Some(vehicle_obj) = vehicle_obj {
                 Ok(vehicle_obj.id)
@@ -690,7 +702,7 @@ pub async fn register_vertiport(
     let client_option = grpc_clients.storage_vertiport.get_client().await;
     if client_option.is_none() {
         let error_msg = "svc-storage unavailable.".to_string();
-        req_error!("(get_asset_group_by_id) {}", &error_msg);
+        req_error!("(register_vertiport) {}", &error_msg);
         return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
     }
     let mut client = client_option.unwrap();
@@ -706,7 +718,10 @@ pub async fn register_vertiport(
         .await
     {
         Ok(res) => {
-            println!("RESPONSE Vertiport Insert={:?}", res);
+            req_info!(
+                "(register_vertiport) successfully registered vertiport {:?}",
+                res
+            );
             let vertiport_obj = res.into_inner().object;
             if let Some(vertiport_obj) = vertiport_obj {
                 Ok(vertiport_obj.id)
@@ -745,7 +760,7 @@ pub async fn register_vertipad(
     let client_option = grpc_clients.storage_vertipad.get_client().await;
     if client_option.is_none() {
         let error_msg = "svc-storage unavailable.".to_string();
-        req_error!("(get_asset_group_by_id) {}", &error_msg);
+        req_error!("(register_vertipad) {}", &error_msg);
         return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
     }
     let mut client = client_option.unwrap();
@@ -763,7 +778,10 @@ pub async fn register_vertipad(
         .await
     {
         Ok(res) => {
-            println!("RESPONSE Vertipad Insert={:?}", res);
+            req_info!(
+                "(register_vertipad) successfully registered vertipad {:?}",
+                res
+            );
             let vertipad_obj = res.into_inner().object;
             if let Some(vertipad_obj) = vertipad_obj {
                 Ok(vertipad_obj.id)
@@ -862,7 +880,7 @@ pub async fn update_aircraft(
     let client_option = grpc_clients.storage_vehicle.get_client().await;
     if client_option.is_none() {
         let error_msg = "svc-storage unavailable.".to_string();
-        req_error!("(get_asset_group_by_id) {}", &error_msg);
+        req_error!("(update_aircraft) {}", &error_msg);
         return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
     }
     let mut client = client_option.unwrap();
@@ -874,7 +892,7 @@ pub async fn update_aircraft(
         .await
     {
         Ok(res) => {
-            println!("RESPONSE Vehicle By ID={:?}", res);
+            req_info!("(update_aircraft) successfully got vehicle {:?}", res);
             res
         }
         Err(e) => {
@@ -936,7 +954,7 @@ pub async fn update_aircraft(
         .await
     {
         Ok(res) => {
-            println!("RESPONSE Vehicle Update={:?}", res);
+            req_info!("(update_aircraft) successfully updated vehicle {:?}", res);
             Ok(vehicle_id.clone())
         }
         Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
@@ -968,7 +986,7 @@ pub async fn update_vertiport(
     let client_option = grpc_clients.storage_vertiport.get_client().await;
     if client_option.is_none() {
         let error_msg = "svc-storage unavailable.".to_string();
-        req_error!("(get_asset_group_by_id) {}", &error_msg);
+        req_error!("(update_vertiport) {}", &error_msg);
         return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
     }
     let mut client = client_option.unwrap();
@@ -980,7 +998,7 @@ pub async fn update_vertiport(
         .await
     {
         Ok(res) => {
-            println!("RESPONSE Vertiport By ID={:?}", res);
+            req_info!("(update_vertiport) successfully got vertiport {:?}", res);
             res
         }
         Err(e) => {
@@ -1007,7 +1025,10 @@ pub async fn update_vertiport(
         .await
     {
         Ok(res) => {
-            println!("RESPONSE Vertiport Update={:?}", res);
+            req_info!(
+                "(update_vertiport) successfully updated vertiport {:?}",
+                res
+            );
             Ok(payload.id.clone())
         }
         Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
@@ -1035,7 +1056,7 @@ pub async fn update_vertipad(
     let client_option = grpc_clients.storage_vertipad.get_client().await;
     if client_option.is_none() {
         let error_msg = "svc-storage unavailable.".to_string();
-        req_error!("(get_asset_group_by_id) {}", &error_msg);
+        req_error!("(update_vertipad) {}", &error_msg);
         return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
     }
     let mut client = client_option.unwrap();
@@ -1047,7 +1068,7 @@ pub async fn update_vertipad(
         .await
     {
         Ok(res) => {
-            println!("RESPONSE Vertipad By ID={:?}", res);
+            req_info!("(update_vertipad) successfully got vertipad {:?}", res);
             res
         }
         Err(e) => {
@@ -1076,7 +1097,7 @@ pub async fn update_vertipad(
         .await
     {
         Ok(res) => {
-            println!("RESPONSE Vertipad Update={:?}", res);
+            req_info!("(update_vertipad) successfully updated vertipad {:?}", res);
             Ok(payload.id.clone())
         }
         Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
@@ -1156,7 +1177,7 @@ pub async fn remove_aircraft(
     let client_option = grpc_clients.storage_vehicle.get_client().await;
     if client_option.is_none() {
         let error_msg = "svc-storage unavailable.".to_string();
-        req_error!("(get_asset_group_by_id) {}", &error_msg);
+        req_error!("(remove_aircraft) {}", &error_msg);
         return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
     }
     let mut client = client_option.unwrap();
@@ -1166,7 +1187,7 @@ pub async fn remove_aircraft(
         .await
     {
         Ok(res) => {
-            println!("RESPONSE Vertipad Delete={:?}", res);
+            req_info!("(remove_aircraft) successfully removed aircraft {:?}", res);
             Ok(id)
         }
         Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
@@ -1196,7 +1217,7 @@ pub async fn remove_vertipad(
     let client_option = grpc_clients.storage_vertipad.get_client().await;
     if client_option.is_none() {
         let error_msg = "svc-storage unavailable.".to_string();
-        req_error!("(get_asset_group_by_id) {}", &error_msg);
+        req_error!("(remove_vertipad) {}", &error_msg);
         return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
     }
     let mut client = client_option.unwrap();
@@ -1206,7 +1227,7 @@ pub async fn remove_vertipad(
         .await
     {
         Ok(res) => {
-            println!("RESPONSE Vertipad Delete={:?}", res);
+            req_info!("(remove_vertipad) successfully removed vertipad {:?}", res);
             Ok(id)
         }
         Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
@@ -1236,7 +1257,7 @@ pub async fn remove_vertiport(
     let client_option = grpc_clients.storage_vertiport.get_client().await;
     if client_option.is_none() {
         let error_msg = "svc-storage unavailable.".to_string();
-        req_error!("(get_asset_group_by_id) {}", &error_msg);
+        req_error!("(remove_vertiport) {}", &error_msg);
         return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
     }
     let mut client = client_option.unwrap();
@@ -1246,7 +1267,10 @@ pub async fn remove_vertiport(
         .await
     {
         Ok(res) => {
-            println!("RESPONSE Vertiport Delete={:?}", res);
+            req_info!(
+                "(remove_vertiport) successfully removed vertiport {:?}",
+                res
+            );
             Ok(id)
         }
         Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
@@ -1289,7 +1313,7 @@ pub async fn remove_asset_group(
     // let _client_option = grpc_clients.storage.get_client().await;
     // if client_option.is_none() {
     //     let error_msg = "svc-storage unavailable.".to_string();
-    //     req_error!("(get_asset_group_by_id) {}", &error_msg);
+    //     req_error!("(remove_asset_group) {}", &error_msg);
     //     return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
     // }
     // let mut client = client_option.unwrap();
