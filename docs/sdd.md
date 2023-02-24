@@ -126,4 +126,3 @@ sequenceDiagram
     svc-storage->>svc-assets: (GRPC RES) ERROR
     svc-assets->>Client: (500 INTERNAL_SERVER_ERROR)
 ```
-

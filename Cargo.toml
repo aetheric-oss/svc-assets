@@ -1,2 +1,2 @@
 [workspace]
-members = ["server", "client-grpc"]
+members = ["server", "client-grpc", "client-rest"]
