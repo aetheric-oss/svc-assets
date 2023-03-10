@@ -26,7 +26,7 @@ pub struct GrpcClient<T> {
     address: String,
 }
 
-/// Returns a string in http://<host>:<port> format from provided
+/// Returns a string in http://host:port format from provided
 /// environment variables
 fn get_grpc_endpoint(env_host: &str, env_port: &str) -> String {
     debug!("(get_grpc_endpoint) entry");

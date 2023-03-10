@@ -61,7 +61,7 @@ pub struct Location {
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema, IntoParams)]
 pub struct RegisterAircraftPayload {
     pub name: Option<String>,
-    /// The UUID of an [`AssetGroup`] struct, if available.
+    /// The UUID of an [`crate::structs::AssetGroup`] struct, if available.
     pub group_id: Option<String>,
     pub owner: String,
     pub whitelist: Vec<String>,
@@ -95,7 +95,7 @@ pub struct RegisterAircraftPayload {
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema, IntoParams)]
 pub struct RegisterVertiportPayload {
     pub name: Option<String>,
-    /// The UUID of an [`AssetGroup`] struct, if available.
+    /// The UUID of an [`crate::structs::AssetGroup`] struct, if available.
     pub group_id: Option<String>,
     pub owner: String,
     pub whitelist: Vec<String>,
@@ -121,7 +121,7 @@ pub struct RegisterVertipadPayload {
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema, IntoParams)]
 pub struct RegisterAssetGroupPayload {
     pub name: Option<String>,
-    /// The UUID of an [`Operator`] struct, if available.
+    /// The UUID of an [`crate::structs::Operator`] struct, if available.
     pub owner: String,
     /// A list of UUIDs of assets.
     pub assets: Vec<String>,
