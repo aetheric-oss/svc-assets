@@ -568,7 +568,7 @@ pub async fn get_vertiport_by_id(
     }
 }
 
-/// Get an [`AssetGroup`] by its id.
+/// Get an [`crate::structs::AssetGroup`] by its id.
 #[utoipa::path(
     get,
     path = "/assets/groups/{id}",
@@ -801,7 +801,7 @@ pub async fn register_vertipad(
 // Group management
 //-----------------------------------------------------------
 
-/// Register an [`AssetGroup`] in the database.
+/// Register an [`crate::structs::AssetGroup`] in the database.
 #[utoipa::path(
     post,
     path = "/assets/groups",
@@ -1103,7 +1103,7 @@ pub async fn update_vertipad(
     }
 }
 
-/// Update/modify an [`AssetGroup`] in the database.
+/// Update/modify an [`crate::structs::AssetGroup`] in the database.
 #[utoipa::path(
     put,
     path = "/assets/groups/{id}",
@@ -1276,7 +1276,7 @@ pub async fn remove_vertiport(
     }
 }
 
-/// Remove an [`AssetGroup`] from the database.
+/// Remove an [`crate::structs::AssetGroup`] from the database.
 #[utoipa::path(
     delete,
     path = "/assets/groups/{id}",

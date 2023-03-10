@@ -109,11 +109,11 @@ pub struct AssetGroup {
     /// UUID of the asset group.
     pub id: String,
     pub name: Option<String>,
-    /// The UUID of an [`Operator`] struct.
+    /// The UUID of an [`crate::structs::Operator`] struct.
     pub owner: String,
     pub created_at: DateTime<Utc>,
     pub updated_at: Option<DateTime<Utc>>,
-    /// The UUID of an [`Operator`] struct, if available.
+    /// The UUID of an [`crate::structs::Operator`] struct, if available.
     pub delegatee: Option<String>,
     /// The UUIDs of the assets in the group.
     pub assets: Vec<String>,
@@ -145,13 +145,13 @@ pub struct Basics {
     /// UUID of the asset.
     pub id: String,
     pub name: Option<String>,
-    /// The UUID of an [`AssetGroup`] struct, if available.
+    /// The UUID of an [`crate::structs::AssetGroup`] struct, if available.
     pub group_id: Option<String>,
-    /// The UUID of an [`Operator`] struct.
+    /// The UUID of an [`crate::structs::Operator`] struct.
     pub owner: String,
     pub created_at: DateTime<Utc>,
     pub updated_at: Option<DateTime<Utc>>,
-    /// A list of UUIDs of [`Operator`] structs.
+    /// A list of UUIDs of [`crate::structs::Operator`] structs.
     ///
     /// If the vector is empty, the asset is available to everyone.
     ///
