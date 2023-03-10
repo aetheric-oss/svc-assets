@@ -1665,7 +1665,7 @@ dependencies = [
 
 [[package]]
 name = "svc-assets-client-rest"
-version = "0.3.0-develop.9"
+version = "0.1.0"
 dependencies = [
  "chrono",
  "hyper",

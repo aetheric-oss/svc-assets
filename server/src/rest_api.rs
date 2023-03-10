@@ -45,7 +45,7 @@ fn is_uuid(s: &str) -> bool {
     path = "/assets/operators/{id}",
     tag = "svc-assets",
     responses(
-        (status = 200, description = "Operator found in database"),
+        (status = 200, description = "Operator found in database", body = Operator),
         (status = 404, description = "Operator not found in database"),
         (status = 400, description = "Invalid operator id"),
         (status = 503, description = "Could not connect to other microservice dependencies")
@@ -83,7 +83,7 @@ pub async fn get_operator(
     path = "/assets/demo/aircraft",
     tag = "svc-assets",
     responses(
-        (status = 200, description = "Assets successfully found"),
+        (status = 200, description = "Assets successfully found", body = [Aircraft]),
         (status = 503, description = "Could not connect to other microservice dependencies")
     ),
 )]
@@ -124,7 +124,7 @@ pub async fn get_all_aircraft(
     path = "/assets/demo/vertiports",
     tag = "svc-assets",
     responses(
-        (status = 200, description = "Assets successfully found"),
+        (status = 200, description = "Assets successfully found", body = [Vertiport]),
         (status = 503, description = "Could not connect to other microservice dependencies")
     ),
 )]
@@ -165,7 +165,7 @@ pub async fn get_all_vertiports(
     path = "/assets/demo/vertipads",
     tag = "svc-assets",
     responses(
-        (status = 200, description = "Assets successfully found"),
+        (status = 200, description = "Assets successfully found", body = [Vertipad]),
         (status = 503, description = "Could not connect to other microservice dependencies")
     ),
 )]
@@ -209,7 +209,7 @@ pub async fn get_all_vertipads(
     path = "/assets/operators/{id}/assets",
     tag = "svc-assets",
     responses(
-        (status = 200, description = "Assets found from database for operator {id}"),
+        (status = 200, description = "Assets found from database for operator {id}", body = [String]),
         (status = 404, description = "Operator not found in database"),
         (status = 400, description = "Invalid operator id"),
         (status = 503, description = "Could not connect to other microservice dependencies")
@@ -273,7 +273,7 @@ pub async fn get_all_assets_by_operator(
     path = "/assets/operators/{id}/grouped",
     tag = "svc-assets",
     responses(
-        (status = 200, description = "Grouped assets found from database for operator {id}"),
+        (status = 200, description = "Grouped assets found from database for operator {id}", body = [String]),
         (status = 404, description = "Operator not found in database"),
         (status = 400, description = "Invalid operator id"),
         (status = 503, description = "Could not connect to other microservice dependencies")
@@ -308,7 +308,7 @@ pub async fn get_all_grouped_assets(
     path = "/assets/operators/{id}/grouped/delegated-to",
     tag = "svc-assets",
     responses(
-        (status = 200, description = "Grouped assets delegated to operator {id} found from database"),
+        (status = 200, description = "Grouped assets delegated to operator {id} found from database", body = [String]),
         (status = 404, description = "Operator not found in database"),
         (status = 400, description = "Invalid operator id"),
         (status = 503, description = "Could not connect to other microservice dependencies")
@@ -343,7 +343,7 @@ pub async fn get_all_grouped_assets_delegated_to(
     path = "/assets/operators/{id}/grouped/delegated-from",
     tag = "svc-assets",
     responses(
-        (status = 200, description = "Grouped assets delegated from operator {id} found from database"),
+        (status = 200, description = "Grouped assets delegated from operator {id} found from database", body = [String]),
         (status = 404, description = "Operator not found in database"),
         (status = 400, description = "Invalid operator id"),
         (status = 503, description = "Could not connect to other microservice dependencies")
@@ -382,7 +382,7 @@ pub async fn get_all_grouped_assets_delegated_from(
     path = "/assets/aircraft/{id}",
     tag = "svc-assets",
     responses(
-        (status = 200, description = "Aircraft {id} found from database"),
+        (status = 200, description = "Aircraft {id} found from database", body = Aircraft),
         (status = 404, description = "Aircraft not found in database"),
         (status = 400, description = "Invalid aircraft id"),
         (status = 503, description = "Could not connect to other microservice dependencies")
@@ -444,7 +444,7 @@ pub async fn get_aircraft_by_id(
     path = "/assets/vertipads/{id}",
     tag = "svc-assets",
     responses(
-        (status = 200, description = "Vertipad {id} found from database"),
+        (status = 200, description = "Vertipad {id} found from database", body = Vertipad),
         (status = 404, description = "Vertipad not found in database"),
         (status = 400, description = "Invalid vertipad id"),
         (status = 503, description = "Could not connect to other microservice dependencies")
@@ -509,7 +509,7 @@ pub async fn get_vertipad_by_id(
     path = "/assets/vertiports/{id}",
     tag = "svc-assets",
     responses(
-        (status = 200, description = "Vertiport {id} found from database"),
+        (status = 200, description = "Vertiport {id} found from database", body = Vertiport),
         (status = 404, description = "Vertiport not found in database"),
         (status = 400, description = "Invalid vertiport id"),
         (status = 503, description = "Could not connect to other microservice dependencies")
@@ -573,7 +573,7 @@ pub async fn get_vertiport_by_id(
     path = "/assets/groups/{id}",
     tag = "svc-assets",
     responses(
-        (status = 200, description = "Asset group {id} found from database"),
+        (status = 200, description = "Asset group {id} found from database", body = AssetGroup),
         (status = 404, description = "Asset group not found in database"),
         (status = 400, description = "Invalid asset group id"),
         (status = 503, description = "Could not connect to other microservice dependencies")
@@ -617,7 +617,7 @@ pub async fn get_asset_group_by_id(
     tag = "svc-assets",
     request_body=RegisterAircraftPayload,
     responses(
-        (status = 200, description = "Aircraft registered in database"),
+        (status = 200, description = "Aircraft registered in database; a UUID is returned", body = String),
         (status = 422, description = "Request body is invalid format"),
         (status = 503, description = "Could not connect to other microservice dependencies")
     )
@@ -687,7 +687,7 @@ pub async fn register_aircraft(
     tag = "svc-assets",
     request_body=RegisterVertiportPayload,
     responses(
-        (status = 200, description = "Vertiport registered in database"),
+        (status = 200, description = "Vertiport registered in database; a UUID is returned", body = String),
         (status = 422, description = "Request body is invalid format"),
         (status = 503, description = "Could not connect to other microservice dependencies")
     )
@@ -745,7 +745,7 @@ pub async fn register_vertiport(
     tag = "svc-assets",
     request_body=RegisterVertipadPayload,
     responses(
-        (status = 200, description = "Vertipad registered in database"),
+        (status = 200, description = "Vertipad registered in database; a UUID is returned", body = String),
         (status = 422, description = "Request body is invalid format"),
         (status = 503, description = "Could not connect to other microservice dependencies")
     )
@@ -807,7 +807,7 @@ pub async fn register_vertipad(
     tag = "svc-assets",
     request_body=RegisterAssetGroupPayload,
     responses(
-        (status = 200, description = "AssetGroup registered in database"),
+        (status = 200, description = "AssetGroup registered in database; a UUID is returned", body = String),
         (status = 422, description = "Request body is invalid format"),
         (status = 503, description = "Could not connect to other microservice dependencies")
     )
@@ -862,9 +862,9 @@ pub async fn register_asset_group(
     put,
     path = "/assets/aircraft",
     tag = "svc-assets",
-    request_body=Aircraft,
+    request_body=UpdateAircraftPayload,
     responses(
-        (status = 200, description = "Aircraft updated in database"),
+        (status = 200, description = "Aircraft updated in database; a UUID is returned", body = String),
         (status = 422, description = "Request body is invalid format"),
         (status = 503, description = "Could not connect to other microservice dependencies")
     )
@@ -969,9 +969,9 @@ pub async fn update_aircraft(
     put,
     path = "/assets/vertiports",
     tag = "svc-assets",
-    request_body=Vertiport,
+    request_body=UpdateVertiportPayload,
     responses(
-        (status = 200, description = "Vertiport updated in database"),
+        (status = 200, description = "Vertiport updated in database; a UUID is returned", body = String),
         (status = 422, description = "Request body is invalid format"),
         (status = 503, description = "Could not connect to other microservice dependencies")
     )
@@ -1040,9 +1040,9 @@ pub async fn update_vertiport(
     put,
     path = "/assets/vertipads",
     tag = "svc-assets",
-    request_body=Vertipad,
+    request_body=UpdateVertipadPayload,
     responses(
-        (status = 200, description = "Vertipad updated in database"),
+        (status = 200, description = "Vertipad updated in database; a UUID is returned", body = String),
         (status = 422, description = "Request body is invalid format"),
         (status = 503, description = "Could not connect to other microservice dependencies")
     )
@@ -1111,7 +1111,7 @@ pub async fn update_vertipad(
     tag = "svc-assets",
     request_body=AssetGroup,
     responses(
-        (status = 200, description = "AssetGroup updated in database"),
+        (status = 200, description = "AssetGroup updated in database; a UUID is returned", body = String),
         (status = 422, description = "Request body is invalid format"),
         (status = 503, description = "Could not connect to other microservice dependencies")
     ),
@@ -1160,7 +1160,7 @@ pub async fn update_asset_group(
     path = "/assets/aircraft/{id}",
     tag = "svc-assets",
     responses(
-        (status = 200, description = "Aircraft removed from database"),
+        (status = 200, description = "Aircraft removed from database; a UUID is returned", body = String),
         (status = 503, description = "Could not connect to other microservice dependencies")
     ),
     params(
@@ -1200,7 +1200,7 @@ pub async fn remove_aircraft(
     path = "/assets/vertipads/{id}",
     tag = "svc-assets",
     responses(
-        (status = 200, description = "Vertipad removed from database"),
+        (status = 200, description = "Vertipad removed from database; a UUID is returned", body = String),
         (status = 503, description = "Could not connect to other microservice dependencies")
     ),
     params(
@@ -1240,7 +1240,7 @@ pub async fn remove_vertipad(
     path = "/assets/vertiports/{id}",
     tag = "svc-assets",
     responses(
-        (status = 200, description = "Vertiport removed from database"),
+        (status = 200, description = "Vertiport removed from database; a UUID is returned", body = String),
         (status = 503, description = "Could not connect to other microservice dependencies")
     ),
     params(
@@ -1283,7 +1283,7 @@ pub async fn remove_vertiport(
     path = "/assets/groups/{id}",
     tag = "svc-assets",
     responses(
-        (status = 200, description = "AssetGroup removed from database"),
+        (status = 200, description = "AssetGroup removed from database; a UUID is returned", body = String),
         (status = 503, description = "Could not connect to other microservice dependencies")
     ),
     params(
