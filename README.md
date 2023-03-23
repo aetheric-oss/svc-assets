@@ -12,7 +12,12 @@ Discord](https://img.shields.io/discord/853833144037277726?style=plastic)
 
 ## :telescope: Overview
 
-FIXME
+The `svc-assets` micro-service provides a comprehensive asset management
+solution for operators. It enables clients to perform various actions
+such as registering, updating, and grouping assets. Additionally, it
+facilitates the delegation of grouped assets from one operator to
+another. This service is accessible to existing systems through a REST
+API interface.
 
 Directory:
 - `server/src/`: Source Code and Unit Tests of the server

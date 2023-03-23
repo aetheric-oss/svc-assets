@@ -1,4 +1,28 @@
-//! gRPC server implementation
+//! <center>
+//! <img src="https://github.com/Arrow-air/tf-github/raw/main/src/templates/doc-banner-services.png" style="height:250px" />
+//! </center>
+//! <div align="center">
+//!     <a href="https://github.com/Arrow-air/svc-assets/releases">
+//!         <img src="https://img.shields.io/github/v/release/Arrow-air/svc-assets?sort=semver&color=green" alt="GitHub stable release (latest by date)">
+//!     </a>
+//!     <a href="https://github.com/Arrow-air/svc-assets/releases">
+//!         <img src="https://img.shields.io/github/v/release/Arrow-air/svc-assets?include_prereleases" alt="GitHub release (latest by date including pre-releases)">
+//!     </a>
+//!     <a href="https://github.com/Arrow-air/svc-assets/tree/main">
+//!         <img src="https://github.com/arrow-air/svc-assets/actions/workflows/rust_ci.yml/badge.svg?branch=main" alt="Rust Checks">
+//!     </a>
+//!     <a href="https://discord.com/invite/arrow">
+//!         <img src="https://img.shields.io/discord/853833144037277726?style=plastic" alt="Arrow DAO Discord">
+//!     </a>
+//!     <br><br>
+//! </div>
+//!
+//! The `svc-assets` micro-service provides a comprehensive asset
+//! management solution for operators. It enables clients to perform
+//! various actions such as registering, updating, and grouping assets.
+//! Additionally, it facilitates the delegation of grouped assets from
+//! one operator to another. This service is accessible to existing
+//! systems through a REST API interface.
 
 ///module svc_assets generated from svc-assets-grpc.proto
 pub mod svc_assets {

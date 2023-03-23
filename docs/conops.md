@@ -1,6 +1,6 @@
 # Concept of Operations - `svc-assets`
 
-DELEGATION: only allows for one level delegation. Only allows for asset
+Note on delegation: only allows for one level delegation. Only allows for asset
 group delegations. If user wants to delegate a single asset, a group
 must be created for this asset.
 
