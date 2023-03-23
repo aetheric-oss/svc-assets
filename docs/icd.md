@@ -46,7 +46,7 @@ See the High-Level ICD.
 
 ### Endpoints
 
-See [TODO](./) for REST endpoints documentation.
+See [here](https://arrowair.com/docs/documentation/services/api/rest/develop#tag/svc-assets) for REST endpoints documentation.
 
 ## gRPC
 
