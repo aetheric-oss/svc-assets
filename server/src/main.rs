@@ -173,6 +173,7 @@ pub async fn rest_server(grpc_clients: GrpcClients) {
         // .merge(SwaggerUi::new("/swagger-ui/*tail").url("/api-doc/openapi.json", ApiDoc::openapi()))
         .fallback(not_found.into_service())
         // GET endpoints
+        .route("/health", routing::get(rest_api::health_check))
         .route(
             "/assets/operators/:id",
             routing::get(rest_api::get_operator),

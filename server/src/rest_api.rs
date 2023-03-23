@@ -40,6 +40,55 @@ fn is_uuid(s: &str) -> bool {
 // REST API Implementations
 //===========================================================
 
+#[utoipa::path(
+    get,
+    path = "/health",
+    tag = "svc-assets",
+    responses(
+        (status = 200, description = "Service is healthy, all dependencies running."),
+        (status = 503, description = "Service is unhealthy, one or more dependencies unavailable.")
+    )
+)]
+pub async fn health_check(
+    Extension(mut grpc_clients): Extension<GrpcClients>,
+) -> Result<(), StatusCode> {
+    req_debug!("(health_check) entry.");
+
+    let mut ok = true;
+
+    let result = grpc_clients.storage_vertiport.get_client().await;
+    if result.is_none() {
+        let error_msg = "svc-storage: vertiport client unavailable.".to_string();
+        req_error!("(health_check) {}", &error_msg);
+        ok = false;
+    };
+
+    let result = grpc_clients.storage_vertipad.get_client().await;
+    if result.is_none() {
+        let error_msg = "svc-storage: vertipad client unavailable.".to_string();
+        req_error!("(health_check) {}", &error_msg);
+        ok = false;
+    };
+
+    let result = grpc_clients.storage_vehicle.get_client().await;
+    if result.is_none() {
+        let error_msg = "svc-storage: vehicle client unavailable.".to_string();
+        req_error!("(health_check) {}", &error_msg);
+        ok = false;
+    };
+
+    match ok {
+        true => {
+            req_info!("(health_check) healthy, all dependencies running.");
+            Ok(())
+        }
+        false => {
+            req_error!("(health_check) unhealthy, 1+ dependencies down.");
+            Err(StatusCode::SERVICE_UNAVAILABLE)
+        }
+    }
+}
+
 /// Get info about an operator by id.
 #[utoipa::path(
     get,
