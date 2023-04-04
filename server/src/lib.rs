@@ -5,10 +5,6 @@ use clap::Parser;
 pub mod config;
 pub mod grpc;
 
-// --------------------------------------------------
-// START REST SECTION
-// This section should be removed if there is no REST interface
-// --------------------------------------------------
 /// rest implementation module
 pub mod rest;
 
@@ -19,9 +15,6 @@ pub struct Cli {
     #[arg(long)]
     pub openapi: Option<String>,
 }
-// --------------------------------------------------
-// END REST SECTION
-// --------------------------------------------------
 
 /// Tokio signal handler that will wait for a user to press CTRL+C.
 /// This signal handler can be used in our [`axum::Server`] method `with_graceful_shutdown`

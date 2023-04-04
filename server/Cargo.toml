@@ -1,17 +1,15 @@
 [package]
 authors     = ["GoodluckH"]
 description = "Assets Service REST server"
-edition     = "2021"                                                       # Allowed values are 2015, 2018, 2021
-homepage    = "https://www.arrowair.com/docs/documentation/services/intro"
-keywords    = ["vtol", "server", "assets"]                                 # max 5
+keywords    = ["vtol", "server", "assets"] # max 5
 name        = "svc-assets"
-repository  = "https://github.com/Arrow-air/svc-assets"
 version     = "0.3.0-develop.11"
 
-categories = [
-  "aerospace::drones",
-  "aerospace::protocols",
-] # max 5 -- https://crates.io/category_slugs
+categories.workspace   = true
+edition.workspace      = true
+homepage.workspace     = true
+license-file.workspace = true
+repository.workspace   = true
 
 [features]
 vendored-openssl = ['openssl/vendored']

@@ -1,16 +1,16 @@
 [package]
 description = "Assets Service GRPC client"
-edition     = "2021"                                                       # Allowed values are 2015, 2018, 2021
-homepage    = "https://www.arrowair.com/docs/documentation/services/intro"
-keywords    = ["vtol", "client", "assets"]                                 # max 5
+keywords    = ["vtol", "client", "assets"] # max 5
 name        = "svc-assets-client-grpc"
-repository  = "https://github.com/Arrow-air/svc-assets"
 version     = "0.3.0-develop.11"
 
-categories = [
-  "aerospace::drones",
-  "aerospace::protocols",
-] # max 5 -- https://crates.io/category_slugs
+categories.workspace   = true
+edition.workspace      = true
+homepage.workspace     = true
+license-file.workspace = true
+repository.workspace   = true
+
+include = ["examples/**", "src/**"]
 
 [dependencies]
 prost       = "0.11"
