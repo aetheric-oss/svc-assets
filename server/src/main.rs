@@ -1,346 +1,45 @@
-//! <center>
-//! <img src="https://github.com/Arrow-air/tf-github/raw/main/src/templates/doc-banner-services.png" style="height:250px" />
-//! </center>
-//! <div align="center">
-//!     <a href="https://github.com/Arrow-air/svc-assets/releases">
-//!         <img src="https://img.shields.io/github/v/release/Arrow-air/svc-assets?sort=semver&color=green" alt="GitHub stable release (latest by date)">
-//!     </a>
-//!     <a href="https://github.com/Arrow-air/svc-assets/releases">
-//!         <img src="https://img.shields.io/github/v/release/Arrow-air/svc-assets?include_prereleases" alt="GitHub release (latest by date including pre-releases)">
-//!     </a>
-//!     <a href="https://github.com/Arrow-air/svc-assets/tree/main">
-//!         <img src="https://github.com/arrow-air/svc-assets/actions/workflows/rust_ci.yml/badge.svg?branch=main" alt="Rust Checks">
-//!     </a>
-//!     <a href="https://discord.com/invite/arrow">
-//!         <img src="https://img.shields.io/discord/853833144037277726?style=plastic" alt="Arrow DAO Discord">
-//!     </a>
-//!     <br><br>
-//! </div>
-//!
-//! The `svc-assets` micro-service provides a comprehensive asset
-//! management solution for operators. It enables clients to perform
-//! various actions such as registering, updating, and grouping assets.
-//! Additionally, it facilitates the delegation of grouped assets from
-//! one operator to another. This service is accessible to existing
-//! systems through a REST API interface.
-
-///module svc_assets generated from svc-assets-grpc.proto
-pub mod svc_assets {
-    #![allow(unused_qualifications, missing_docs)]
-    include!("grpc.rs");
-}
-
-mod rest_api;
-//TODO - replace this with database calls when ready
-mod grpc_clients;
-mod structs;
-#[macro_use]
-mod loggers;
-
-use axum::{extract::Extension, handler::Handler, response::IntoResponse, routing, Router};
+//! gRPC server implementation
 use clap::Parser;
-use grpc_clients::GrpcClients;
-use log::{info, warn};
-use structs::*;
-use svc_assets::svc_assets_rpc_server::{SvcAssetsRpc, SvcAssetsRpcServer};
-use svc_assets::{QueryIsReady, ReadyResponse};
-use tonic::{Request, Response, Status};
-use utoipa::OpenApi;
-
-///Implementation of gRPC endpoints
-#[derive(Debug, Default, Copy, Clone)]
-pub struct SvcAssetsImpl {}
-
-#[derive(Parser, Debug)]
-struct Cli {
-    /// Target file to write the OpenAPI Spec
-    #[arg(long)]
-    openapi: Option<String>,
-}
-
-#[tonic::async_trait]
-impl SvcAssetsRpc for SvcAssetsImpl {
-    /// Returns ready:true when service is available
-    async fn is_ready(
-        &self,
-        _request: Request<QueryIsReady>,
-    ) -> Result<Response<ReadyResponse>, Status> {
-        let response = ReadyResponse { ready: true };
-        Ok(Response::new(response))
-    }
-}
-
-/// Starts the grpc server for this microservice
-async fn grpc_server() {
-    // GRPC Server
-    let grpc_port = std::env::var("DOCKER_PORT_GRPC")
-        .unwrap_or_else(|_| "50051".to_string())
-        .parse::<u16>()
-        .unwrap_or(50051);
-
-    let addr = format!("[::]:{grpc_port}").parse().unwrap();
-    let imp = SvcAssetsImpl::default();
-    let (mut health_reporter, health_service) = tonic_health::server::health_reporter();
-    health_reporter
-        .set_serving::<SvcAssetsRpcServer<SvcAssetsImpl>>()
-        .await;
-
-    info!("(grpc) hosted at {}", addr);
-    tonic::transport::Server::builder()
-        .add_service(health_service)
-        .add_service(SvcAssetsRpcServer::new(imp))
-        .serve_with_shutdown(addr, shutdown_signal("grpc"))
-        .await
-        .unwrap();
-}
-
-//-----------------------------------------------------------
-// REST Server
-//-----------------------------------------------------------
-
-/// Responds a NOT_FOUND status and error string
-///
-/// # Examples
-///
-/// ```
-/// let app = Router::new()
-///         .fallback(not_found.into_service());
-/// ```
-pub async fn not_found(uri: axum::http::Uri) -> impl IntoResponse {
-    (
-        axum::http::StatusCode::NOT_FOUND,
-        format!("No route {}", uri),
-    )
-}
-
-/// Tokio signal handler that will wait for a user to press CTRL+C.
-/// We use this in our hyper `Server` method `with_graceful_shutdown`.
-///
-/// # Examples
-///
-/// ```
-/// Server::bind(&"0.0.0.0:8000".parse().unwrap())
-/// .serve(app.into_make_service())
-/// .with_graceful_shutdown(shutdown_signal())
-/// .await
-/// .unwrap();
-/// ```
-pub async fn shutdown_signal(server: &str) {
-    tokio::signal::ctrl_c()
-        .await
-        .expect("expect tokio signal ctrl-c");
-    warn!("({}) shutdown signal", server);
-}
-
-#[derive(OpenApi)]
-#[openapi(
-    paths(
-        rest_api::get_operator,
-        rest_api::get_all_aircraft,
-        rest_api::get_all_vertiports,
-        rest_api::get_all_vertipads,
-        rest_api::get_all_assets_by_operator,
-        rest_api::get_all_grouped_assets,
-        rest_api::get_all_grouped_assets_delegated_to,
-        rest_api::get_all_grouped_assets_delegated_from,
-        rest_api::get_aircraft_by_id,
-        rest_api::get_vertipad_by_id,
-        rest_api::get_vertiport_by_id,
-        rest_api::get_asset_group_by_id,
-        rest_api::register_aircraft,
-        rest_api::register_vertiport,
-        rest_api::register_vertipad,
-        rest_api::register_asset_group,
-        rest_api::update_aircraft,
-        rest_api::update_vertiport,
-        rest_api::update_vertipad,
-        rest_api::update_asset_group,
-        rest_api::remove_aircraft,
-        rest_api::remove_vertiport,
-        rest_api::remove_vertipad,
-        rest_api::remove_asset_group,
-    ),
-    components(
-        schemas(
-            rest_api::rest_types::RegisterAircraftPayload,
-            rest_api::rest_types::RegisterVertiportPayload,
-            rest_api::rest_types::RegisterVertipadPayload,
-            rest_api::rest_types::RegisterAssetGroupPayload,
-            rest_api::rest_types::UpdateAircraftPayload,
-            rest_api::rest_types::UpdateVertiportPayload,
-            rest_api::rest_types::UpdateVertipadPayload,
-            Operator,
-            Aircraft,
-            Vertiport,
-            Vertipad,
-            AssetGroup,
-            AssetStatus,
-            Basics,
-            Location,
-            OrderedFloat64,
-        )
-    ),
-    tags(
-        (name = "svc-assets", description = "svc-assets API")
-    )
-)]
-struct ApiDoc;
-
-/// Starts the REST API server for this microservice
-pub async fn rest_server(grpc_clients: GrpcClients) {
-    let rest_port = std::env::var("DOCKER_PORT_REST")
-        .unwrap_or_else(|_| "8000".to_string())
-        .parse::<u16>()
-        .unwrap_or(8000);
-
-    let app = Router::new()
-        // .merge(SwaggerUi::new("/swagger-ui/*tail").url("/api-doc/openapi.json", ApiDoc::openapi()))
-        .fallback(not_found.into_service())
-        // GET endpoints
-        .route("/health", routing::get(rest_api::health_check))
-        .route(
-            "/assets/operators/:id",
-            routing::get(rest_api::get_operator),
-        )
-        .route(
-            "/assets/demo/aircraft",
-            routing::get(rest_api::get_all_aircraft),
-        )
-        .route(
-            "/assets/demo/vertiports",
-            routing::get(rest_api::get_all_vertiports),
-        )
-        .route(
-            "/assets/demo/vertipads",
-            routing::get(rest_api::get_all_vertipads),
-        )
-        .route(
-            "/assets/operators/:id/assets",
-            routing::get(rest_api::get_all_assets_by_operator),
-        )
-        .route(
-            "/assets/operators/:id/grouped",
-            routing::get(rest_api::get_all_grouped_assets),
-        )
-        .route(
-            "/assets/operators/:id/grouped/delegated-to",
-            routing::get(rest_api::get_all_grouped_assets_delegated_to),
-        )
-        .route(
-            "/assets/operators/:id/grouped/delegated-from",
-            routing::get(rest_api::get_all_grouped_assets_delegated_from),
-        )
-        .route(
-            "/assets/aircraft/:id",
-            routing::get(rest_api::get_aircraft_by_id),
-        )
-        .route(
-            "/assets/vertipads/:id",
-            routing::get(rest_api::get_vertipad_by_id),
-        )
-        .route(
-            "/assets/vertiports/:id",
-            routing::get(rest_api::get_vertiport_by_id),
-        )
-        .route(
-            "/assets/groups/:id",
-            routing::get(rest_api::get_asset_group_by_id),
-        )
-        // POST endpoints
-        .route(
-            "/assets/aircraft",
-            routing::post(rest_api::register_aircraft),
-        )
-        .route(
-            "/assets/vertiports",
-            routing::post(rest_api::register_vertiport),
-        )
-        .route(
-            "/assets/vertipads",
-            routing::post(rest_api::register_vertipad),
-        )
-        .route(
-            "/assets/groups",
-            routing::post(rest_api::register_asset_group),
-        )
-        // PUT endpoints
-        .route("/assets/aircraft", routing::put(rest_api::update_aircraft))
-        .route(
-            "/assets/vertiports",
-            routing::put(rest_api::update_vertiport),
-        )
-        .route("/assets/vertipads", routing::put(rest_api::update_vertipad))
-        .route(
-            "/assets/groups/:id",
-            routing::put(rest_api::update_asset_group),
-        )
-        // DELETE endpoints
-        .route(
-            "/assets/aircraft/:id",
-            routing::delete(rest_api::remove_aircraft),
-        )
-        .route(
-            "/assets/vertiports/:id",
-            routing::delete(rest_api::remove_vertiport),
-        )
-        .route(
-            "/assets/vertipads/:id",
-            routing::delete(rest_api::remove_vertipad),
-        )
-        .route(
-            "/assets/groups/:id",
-            routing::delete(rest_api::remove_asset_group),
-        )
-        .layer(Extension(grpc_clients)); // Extension layer must be last
-
-    let address = format!("[::]:{rest_port}").parse().unwrap();
-    info!("(rest) hosted at {:?}", address);
-    axum::Server::bind(&address)
-        .serve(app.into_make_service())
-        .with_graceful_shutdown(shutdown_signal("rest"))
-        .await
-        .unwrap();
-}
-
-/// Create OpenAPI3 Specification File
-fn generate_openapi_spec(target: &str) -> Result<(), Box<dyn std::error::Error>> {
-    let output = ApiDoc::openapi()
-        .to_pretty_json()
-        .expect("(ERROR) unable to write openapi specification to json.");
-
-    std::fs::write(target, output).expect("(ERROR) unable to write json string to file.");
-
-    Ok(())
-}
+use dotenv::dotenv;
+use log::info;
+use svc_assets::config::Config;
+use svc_assets::grpc;
+use svc_assets::rest;
+use svc_assets::Cli;
 
 ///Main entry point: starts gRPC Server on specified address and port
 #[tokio::main]
+#[cfg(not(tarpaulin_include))]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Allow option to only generate the spec file to a given location
-    let args = Cli::parse();
-    if let Some(target) = args.openapi {
-        return generate_openapi_spec(&target);
-    }
-
-    // Initialize logger
+    // Will use default config settings if no environment vars are found.
+    let config = Config::from_env().unwrap_or_default();
+    dotenv().ok();
     {
-        let log_cfg: &str = "log4rs.yaml";
+        let log_cfg: &str = config.log_config.as_str();
         if let Err(e) = log4rs::init_file(log_cfg, Default::default()) {
-            println!("(logger) could not parse {}. {}", log_cfg, e);
-            panic!();
+            panic!("(logger) could not parse {}. {}", log_cfg, e);
         }
     }
 
-    // Start GRPC Server
-    tokio::spawn(grpc_server());
+    // --------------------------------------------------
+    // START REST SECTION
+    // This section should be removed if there is no REST interface
+    // --------------------------------------------------
+    // Allow option to only generate the spec file to a given location
+    // locally: cargo run -- --api ./out/$(PACKAGE_NAME)-openapi.json
+    // or `make rust-openapi` and `make rust-validate-openapi`
+    let args = Cli::parse();
+    if let Some(target) = args.openapi {
+        return rest::generate_openapi_spec(&target);
+    }
 
-    // Wait for other GRPC Servers
-    let grpc_clients = GrpcClients::default();
+    tokio::spawn(rest::server::rest_server(config.clone()));
+    // --------------------------------------------------
+    // END REST SECTION
+    // --------------------------------------------------
 
-    // Start REST API
-    rest_server(grpc_clients).await;
+    let _ = tokio::spawn(grpc::server::grpc_server(config)).await;
 
-    info!("Successful shutdown.");
-
+    info!("Server shutdown.");
     Ok(())
 }

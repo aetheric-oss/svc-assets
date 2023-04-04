@@ -1,5 +1,6 @@
 //! This module contains the GrpcClients struct which is used to
 //! manage the gRPC clients for the various microservices.
+#![allow(missing_docs)]
 
 pub use svc_storage_client_grpc::{
     VehicleClient as VehicleRpcClient, VertipadClient as VertipadRpcClient,
@@ -7,7 +8,6 @@ pub use svc_storage_client_grpc::{
 };
 
 use futures::lock::Mutex;
-use log::{debug, error};
 use std::sync::Arc;
 pub use tonic::transport::Channel;
 
@@ -29,32 +29,35 @@ pub struct GrpcClient<T> {
 /// Returns a string in http://host:port format from provided
 /// environment variables
 fn get_grpc_endpoint(env_host: &str, env_port: &str) -> String {
-    debug!("(get_grpc_endpoint) entry");
+    grpc_debug!("(get_grpc_endpoint) entry");
     let port = match std::env::var(env_port) {
         Ok(s) => s,
         Err(_) => {
-            error!("(env) {} undefined.", env_port);
+            grpc_error!("(env) {} undefined.", env_port);
             "".to_string()
         }
     };
     let host = match std::env::var(env_host) {
         Ok(s) => s,
         Err(_) => {
-            error!("(env) {} undefined.", env_host);
+            grpc_error!("(env) {} undefined.", env_host);
             "".to_string()
         }
     };
-
-    format!("http://{host}:{port}")
+    let full = format!("http://{host}:{port}");
+    grpc_info!("(get_grpc_endpoint) full address: {}", full);
+    full
 }
 
 impl<T> GrpcClient<T> {
+    /// Invalidates a gRPC client by setting it to [`None`]
     pub async fn invalidate(&mut self) {
         let arc = Arc::clone(&self.inner);
         let mut client = arc.lock().await;
         *client = None;
     }
 
+    /// Creates a new gRPC client object
     pub fn new(env_host: &str, env_port: &str) -> Self {
         let opt: Option<T> = None;
         GrpcClient {
@@ -112,8 +115,8 @@ grpc_client!(VehicleRpcClient, "aircraft");
 grpc_client!(VertipadRpcClient, "vertipad");
 grpc_client!(VertiportRpcClient, "vertiport");
 
-impl GrpcClients {
-    pub fn default() -> Self {
+impl Default for GrpcClients {
+    fn default() -> Self {
         GrpcClients {
             storage_vertiport: GrpcClient::<VertiportRpcClient<Channel>>::new(
                 "STORAGE_HOST_GRPC",

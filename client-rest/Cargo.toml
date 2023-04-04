@@ -1,7 +1,15 @@
 [package]
-edition = "2021"
-name    = "svc-assets-client-rest"
-version = "0.1.0"
+description = "Arrow Storage service REST client"
+name        = "svc-assets-client-rest"
+version     = "0.1.0"
+
+categories.workspace   = true
+edition.workspace      = true
+homepage.workspace     = true
+license-file.workspace = true
+repository.workspace   = true
+
+include = ["examples/**", "src/**"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
