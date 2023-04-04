@@ -5,6 +5,7 @@
 //!
 //! Types here are different from the openapi types.
 #![allow(dead_code)]
+#![allow(missing_docs)]
 
 use chrono::{DateTime, TimeZone, Utc};
 use duplicate::duplicate_item;
@@ -235,7 +236,7 @@ impl AssetsInfo for asset {
 }
 
 /// Status of an asset.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema)]
 pub enum AssetStatus {
     /// The asset is available for use.
     Available,

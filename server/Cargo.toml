@@ -4,7 +4,6 @@ description = "Assets Service REST server"
 edition     = "2021"                                                       # Allowed values are 2015, 2018, 2021
 homepage    = "https://www.arrowair.com/docs/documentation/services/intro"
 keywords    = ["vtol", "server", "assets"]                                 # max 5
-license     = "BUSL-1.1"
 name        = "svc-assets"
 repository  = "https://github.com/Arrow-air/svc-assets"
 version     = "0.3.0-develop.11"
@@ -18,11 +17,13 @@ categories = [
 vendored-openssl = ['openssl/vendored']
 
 [dependencies]
+anyhow        = "1.0"
 axum          = "0.5"
 cargo-husky   = "1"
 chrono        = { version = "0.4", features = ["serde"] }
 clap          = { version = "4.0", features = ["derive"] }
 config        = "0.13"
+dotenv        = "0.15"
 duplicate     = "0.4"
 futures       = "0.3"
 hyper         = "0.14"

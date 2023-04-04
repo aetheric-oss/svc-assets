@@ -2,7 +2,7 @@
 
 use std::env;
 #[allow(unused_qualifications, missing_docs)]
-use svc_assets_client_grpc::client::{svc_assets_rpc_client::SvcAssetsRpcClient, QueryIsReady};
+use svc_assets_client_grpc::client::{rpc_service_client::RpcServiceClient, ReadyRequest};
 
 /// Provide endpoint url to use
 pub fn get_grpc_endpoint() -> String {
@@ -30,12 +30,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         grpc_endpoint
     );
 
-    let mut client = SvcAssetsRpcClient::connect(grpc_endpoint).await?;
+    let mut client = RpcServiceClient::connect(grpc_endpoint).await?;
 
     println!("Client created");
 
     let response = client
-        .is_ready(tonic::Request::new(QueryIsReady {}))
+        .is_ready(tonic::Request::new(ReadyRequest {}))
         .await?;
 
     println!("RESPONSE={:?}", response.into_inner());

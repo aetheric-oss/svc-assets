@@ -38,3 +38,4 @@ Goodluck
 lipsum
 utoipa
 autonumber
+dotenv
