@@ -4,6 +4,7 @@ keywords    = ["vtol", "client", "assets"] # max 5
 name        = "svc-assets-client-grpc"
 version     = "0.3.0-develop.11"
 
+authors.workspace      = true
 categories.workspace   = true
 edition.workspace      = true
 homepage.workspace     = true

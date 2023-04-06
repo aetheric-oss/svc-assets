@@ -14,8 +14,19 @@ async fn evaluate(
             let tmp = r.status() == expected_code;
             ok &= tmp;
 
-            let body = hyper::body::to_bytes(r.into_body()).await.unwrap();
-            String::from_utf8(body.to_vec()).unwrap()
+            match hyper::body::to_bytes(r.into_body()).await {
+                Ok(b) => match String::from_utf8(b.to_vec()) {
+                    Ok(s) => s,
+                    Err(e) => {
+                        ok = false;
+                        return (ok, e.to_string());
+                    }
+                },
+                Err(e) => {
+                    ok = false;
+                    return (ok, e.to_string());
+                }
+            }
         }
         Err(e) => {
             ok = false;
@@ -61,14 +72,26 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             next_maintenance: None,
             last_vertiport_id: None,
         };
-        let data_str = serde_json::to_string(&data).unwrap();
+        let data_str = match serde_json::to_string(&data) {
+            Ok(s) => s,
+            Err(e) => {
+                println!("Error: {}", e);
+                return Ok(());
+            }
+        };
         let uri = format!("{}/assets/aircraft", url);
-        let req = Request::builder()
+        let req = match Request::builder()
             .method(Method::POST)
             .uri(uri.clone())
             .header("content-type", "application/json")
             .body(Body::from(data_str))
-            .unwrap();
+        {
+            Ok(r) => r,
+            Err(e) => {
+                println!("Error: {}", e);
+                return Ok(());
+            }
+        };
 
         let resp = client.request(req).await;
         let (success, result_str) = evaluate(resp, StatusCode::OK).await;
@@ -80,12 +103,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // DELETE /assets/aircraft/{aircraft_id}
     {
         let uri = format!("{}/assets/aircraft/{}", url, aircraft_id);
-        let req = Request::builder()
+        let req = match Request::builder()
             .method(Method::DELETE)
             .uri(uri.clone())
             .header("content-type", "application/json")
             .body(Body::empty())
-            .unwrap();
+        {
+            Ok(r) => r,
+            Err(e) => {
+                println!("Error: {}", e);
+                return Ok(());
+            }
+        };
 
         let resp = client.request(req).await;
         let (success, result_str) = evaluate(resp, StatusCode::OK).await;

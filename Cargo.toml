@@ -2,6 +2,7 @@
 members = ["server", "client-grpc", "client-rest"]
 
 [workspace.package]
+authors      = ["GoodluckH"]
 edition      = "2021"
 homepage     = "https://www.arrowair.com/docs/documentation/services/intro"
 license-file = "LICENSE"

@@ -53,7 +53,7 @@ pub async fn grpc_server(config: Config) {
     let full_grpc_addr: SocketAddr = match format!("[::]:{}", grpc_port).parse() {
         Ok(addr) => addr,
         Err(e) => {
-            grpc_error!("Failed to parse gRPC address: {}", e);
+            grpc_error!("(grpc_server) Failed to parse gRPC address: {}", e);
             return;
         }
     };
@@ -74,7 +74,7 @@ pub async fn grpc_server(config: Config) {
     {
         Ok(_) => grpc_info!("gRPC server running at: {}.", full_grpc_addr),
         Err(e) => {
-            grpc_error!("could not start gRPC server: {}", e);
+            grpc_error!("(grpc_server) could not start gRPC server: {}", e);
         }
     };
 }

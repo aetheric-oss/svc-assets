@@ -262,7 +262,7 @@ pub struct Aircraft {
     pub basics: Basics,
     /// The aircraft's manufacturer.
     ///
-    /// TODO: For now we can just say "Boeing", "Airbus", etc. Later, we
+    /// TODO R3/4: For now we can just say "Boeing", "Airbus", etc. Later, we
     /// can a struct for this and store the manufacturer's name, logo,
     /// etc.
     pub manufacturer: String,
@@ -333,7 +333,10 @@ impl Aircraft {
         if data.is_none() {
             return Err("Vehicle data is missing".to_string());
         }
-        let data = data.unwrap();
+        let data = match data {
+            Some(data) => data,
+            None => return Err("Vehicle data is missing".to_string()),
+        };
 
         Ok(Aircraft {
             basics: Basics {

@@ -68,7 +68,7 @@ pub struct RegisterAircraftPayload {
     pub status: AssetStatus,
     /// The aircraft's manufacturer.
     ///
-    /// TODO: For now we can just say "Boeing", "Airbus", etc. Later, we
+    /// TODO R3/4: For now we can just say "Boeing", "Airbus", etc. Later, we
     /// can a struct for this and store the manufacturer's name, logo,
     /// etc.
     pub manufacturer: String,
@@ -87,7 +87,7 @@ pub struct RegisterAircraftPayload {
     pub max_range_km: f64,
     pub last_maintenance: Option<String>,
     pub next_maintenance: Option<String>,
-    pub last_vertiport_id: Option<String>
+    pub last_vertiport_id: Option<String>,
 }
 
 /// Request to create a vertiport.

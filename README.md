@@ -2,6 +2,8 @@
 
 # `svc-assets`
 
+![GitHub stable release (latest by
+date)](https://img.shields.io/github/v/release/Arrow-air/svc-assets?sort=semver&color=green)
 ![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/Arrow-air/svc-assets?include_prereleases)
 ![Sanity Checks](https://github.com/arrow-air/svc-assets/actions/workflows/sanity_checks.yml/badge.svg?branch=main)
 ![Rust Checks](https://github.com/arrow-air/svc-assets/actions/workflows/rust_ci.yml/badge.svg?branch=main)

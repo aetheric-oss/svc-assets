@@ -21,10 +21,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
-    // --------------------------------------------------
-    // START REST SECTION
-    // This section should be removed if there is no REST interface
-    // --------------------------------------------------
     // Allow option to only generate the spec file to a given location
     // locally: cargo run -- --api ./out/$(PACKAGE_NAME)-openapi.json
     // or `make rust-openapi` and `make rust-validate-openapi`
@@ -34,9 +30,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     tokio::spawn(rest::server::rest_server(config.clone()));
-    // --------------------------------------------------
-    // END REST SECTION
-    // --------------------------------------------------
 
     let _ = tokio::spawn(grpc::server::grpc_server(config)).await;
 
