@@ -2,7 +2,7 @@
 description = "Assets Service REST server"
 keywords    = ["vtol", "server", "assets"] # max 5
 name        = "svc-assets"
-version     = "0.3.0-develop.11"
+version     = "0.4.0"
 
 authors.workspace      = true
 categories.workspace   = true
