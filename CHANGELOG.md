@@ -1,3 +1,44 @@
+## [Release 0.4.0](https://github.com/Arrow-air/svc-assets/releases/tag/v0.4.0)
+
+### ✨ Features
+
+-  **types:** add local structs for assets (#2) ([`7770fec`](https://github.com/Arrow-air/svc-assets/commit/7770fec9cf68e2cc23ec7fec057bb89a04e953a7))
+-  **REST:** implement endpoints (#3) ([`1489feb`](https://github.com/Arrow-air/svc-assets/commit/1489feb2642c49132ed7ea19c414fe9aba0562eb))
+- migrate assets from local struct to svc-storage ([`114e30a`](https://github.com/Arrow-air/svc-assets/commit/114e30aed39019217fa6d211314bf77767081893))
+-  **demo:** add demo endpoints for getting all assets ([`16418bd`](https://github.com/Arrow-air/svc-assets/commit/16418bdedd7e2a566c6ecbfecc38790f9fb36c37))
+- update svc-storage dependency ([`973eae1`](https://github.com/Arrow-air/svc-assets/commit/973eae1665be4ab5b9e5cb1f63ba7c3b5928badf))
+- add health endpoint ([`30d420e`](https://github.com/Arrow-air/svc-assets/commit/30d420eaee77a795c990613beb59edd69097a4e3))
+
+### 🐛 Fixes
+
+-  **rest:** add tag to utoipa paths ([`44819a4`](https://github.com/Arrow-air/svc-assets/commit/44819a4995b2aaf76622c019ff85cb17432d35e5))
+- add `assets` as REST path prefix ([`4bdb9ed`](https://github.com/Arrow-air/svc-assets/commit/4bdb9ed3748d00d1b9f7ea8283543ba1ed884375))
+- address wrong function names in error messages ([`b511af0`](https://github.com/Arrow-air/svc-assets/commit/b511af00e27aa2614aedf545e8fccbba77c45a85))
+-  **openapi:** correct OpenAPI docs ([`ac287ab`](https://github.com/Arrow-air/svc-assets/commit/ac287aba372362488310495901ad28941468f947))
+- address review comments ([`4428782`](https://github.com/Arrow-air/svc-assets/commit/4428782e670f74e05fb753342bf5365399d11255))
+
+### 🔥 Refactorings
+
+- remove repeated grpc client impls and fix storage version ([`40b39ec`](https://github.com/Arrow-air/svc-assets/commit/40b39ec5a30bb787b483b31b8101d22a4a64d45c))
+- refactor file structure ([`22c12df`](https://github.com/Arrow-air/svc-assets/commit/22c12df9f15efb012b68d31cfb2ca6a2d8347af6))
+- flatten code structure ([`75a9e0e`](https://github.com/Arrow-air/svc-assets/commit/75a9e0e9ad3ffef9f27e3b44da1fda4e9f61bda8))
+
+### 🛠 Maintenance
+
+- terraform provisioned file changes ([`f758947`](https://github.com/Arrow-air/svc-assets/commit/f75894705e8477e1a8e7be42eb94ad38ddb4e605))
+- rename template placeholders (#1) ([`7871ce6`](https://github.com/Arrow-air/svc-assets/commit/7871ce6ee3718edee026678e50c1b3dadaffdffc))
+-  **cargo:** use release tags for arrow dependencies ([`acfec83`](https://github.com/Arrow-air/svc-assets/commit/acfec831ffb678e83c9dd3dc176298f96fe006e7))
+- add client-rest ([`5ab7308`](https://github.com/Arrow-air/svc-assets/commit/5ab730855b2a87a9fce1b00c3da93a1343475931))
+- add last_vertiport_id to assets openapi ([`bfa2b2a`](https://github.com/Arrow-air/svc-assets/commit/bfa2b2aebc4920bfcc31a639baab85ae9b794b6a))
+- fix some rust-doc warnings ([`335b73b`](https://github.com/Arrow-air/svc-assets/commit/335b73b093c52155dc0c37505bd99042bd917990))
+- clean up for r2 review ([`89be61e`](https://github.com/Arrow-air/svc-assets/commit/89be61efdc5237eca70db9e67e4fd418301fabf3))
+
+### 📚 Documentation
+
+- publish CONOPS, ICD and SDD (#4) ([`226c2da`](https://github.com/Arrow-air/svc-assets/commit/226c2da11a4874ad3797b33556826624067cfa0d))
+-  **SDD:** add mermaid sequence diagram ([`b63e150`](https://github.com/Arrow-air/svc-assets/commit/b63e150e0aeb7f148dd03b71e2b011ada50a51d0))
+- link endpoints to official website ([`f1555c8`](https://github.com/Arrow-air/svc-assets/commit/f1555c83bac15486e9794d51c7ef17814e8749c1))
+
 ## [Release 0.2.0-develop.2](https://github.com/Arrow-air/svc-template-rust/releases/tag/v0.2.0-develop.2)
 
 ### 🛠 Maintenance
