@@ -775,6 +775,30 @@ pub async fn register_aircraft(
         }
     };
 
+    let last_maintenance = match payload.last_maintenance {
+        Some(str) => match Timestamp::from_str(&str) {
+            Ok(ts) => Some(ts),
+            Err(e) => {
+                let error_msg = format!("Error converting last_maintenance to Timestamp: {}", e);
+                rest_error!("(register_aircraft) {}", &error_msg);
+                return Err((StatusCode::INTERNAL_SERVER_ERROR, error_msg));
+            }
+        },
+        _ => None,
+    };
+
+    let next_maintenance = match payload.next_maintenance {
+        Some(str) => match Timestamp::from_str(&str) {
+            Ok(ts) => Some(ts),
+            Err(e) => {
+                let error_msg = format!("Error converting next_maintenance to Timestamp: {}", e);
+                rest_error!("(register_aircraft) {}", &error_msg);
+                return Err((StatusCode::INTERNAL_SERVER_ERROR, error_msg));
+            }
+        },
+        _ => None,
+    };
+
     let data = Data {
         last_vertiport_id: payload.last_vertiport_id,
         vehicle_model_id: Uuid::new_v4().to_string(),
@@ -783,32 +807,8 @@ pub async fn register_aircraft(
         description: payload.name, // TODO R3/4 add nickname column to storage
         asset_group_id: None,
         schedule: None,
-        last_maintenance: if let Some(last_maintenance) = payload.last_maintenance {
-            match Timestamp::from_str(&last_maintenance) {
-                Ok(last_maintenance_timezone) => Some(last_maintenance_timezone),
-                Err(e) => {
-                    let error_msg =
-                        format!("Error converting last_maintenance to Timestamp: {}", e);
-                    rest_error!("(register_aircraft) {}", &error_msg);
-                    return Err((StatusCode::INTERNAL_SERVER_ERROR, error_msg));
-                }
-            }
-        } else {
-            None
-        },
-        next_maintenance: if let Some(next_maintenance) = payload.next_maintenance {
-            match Timestamp::from_str(&next_maintenance) {
-                Ok(next_maintenance_timezone) => Some(next_maintenance_timezone),
-                Err(e) => {
-                    let error_msg =
-                        format!("Error converting next_maintenance to Timestamp: {}", e);
-                    rest_error!("(register_aircraft) {}", &error_msg);
-                    return Err((StatusCode::INTERNAL_SERVER_ERROR, error_msg));
-                }
-            }
-        } else {
-            None
-        },
+        last_maintenance,
+        next_maintenance,
     };
 
     let result = client.insert(tonic::Request::new(data)).await;
