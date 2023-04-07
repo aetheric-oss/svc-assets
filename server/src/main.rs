@@ -1,56 +1,38 @@
 //! gRPC server implementation
-
-///module svc_storage generated from svc-storage.proto
-pub mod svc_template_rust {
-    #![allow(unused_qualifications, missing_docs)]
-    include!("grpc.rs");
-}
-
-use svc_template_rust::template_rust_rpc_server::{TemplateRustRpc, TemplateRustRpcServer};
-use svc_template_rust::{QueryIsReady, ReadyResponse};
-use tonic::{transport::Server, Request, Response, Status};
-
-///Implementation of gRPC endpoints
-#[derive(Debug, Default, Copy, Clone)]
-pub struct TemplateRustImpl {}
-
-#[tonic::async_trait]
-impl TemplateRustRpc for TemplateRustImpl {
-    /// Returns ready:true when service is available
-    async fn is_ready(
-        &self,
-        _request: Request<QueryIsReady>,
-    ) -> Result<Response<ReadyResponse>, Status> {
-        let response = ReadyResponse { ready: true };
-        Ok(Response::new(response))
-    }
-}
+use clap::Parser;
+use dotenv::dotenv;
+use log::info;
+use svc_assets::config::Config;
+use svc_assets::grpc;
+use svc_assets::rest;
+use svc_assets::Cli;
 
 ///Main entry point: starts gRPC Server on specified address and port
 #[tokio::main]
+#[cfg(not(tarpaulin_include))]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // GRPC Server
-    let grpc_port = std::env::var("DOCKER_PORT_GRPC")
-        .unwrap_or_else(|_| "50051".to_string())
-        .parse::<u16>()
-        .unwrap_or(50051);
+    // Will use default config settings if no environment vars are found.
+    let config = Config::from_env().unwrap_or_default();
+    dotenv().ok();
+    {
+        let log_cfg: &str = config.log_config.as_str();
+        if let Err(e) = log4rs::init_file(log_cfg, Default::default()) {
+            panic!("(logger) could not parse {}. {}", log_cfg, e);
+        }
+    }
 
-    let full_grpc_addr = format!("[::]:{}", grpc_port).parse()?;
+    // Allow option to only generate the spec file to a given location
+    // locally: cargo run -- --api ./out/$(PACKAGE_NAME)-openapi.json
+    // or `make rust-openapi` and `make rust-validate-openapi`
+    let args = Cli::parse();
+    if let Some(target) = args.openapi {
+        return rest::generate_openapi_spec(&target);
+    }
 
-    let (mut health_reporter, health_service) = tonic_health::server::health_reporter();
-    let imp = TemplateRustImpl::default();
-    health_reporter
-        .set_serving::<TemplateRustRpcServer<TemplateRustImpl>>()
-        .await;
+    tokio::spawn(rest::server::rest_server(config.clone()));
 
-    //start server
-    println!("Starting gRPC server at: {}", full_grpc_addr);
-    Server::builder()
-        .add_service(health_service)
-        .add_service(TemplateRustRpcServer::new(imp))
-        .serve(full_grpc_addr)
-        .await?;
-    println!("gRPC server running at: {}", full_grpc_addr);
+    let _ = tokio::spawn(grpc::server::grpc_server(config)).await;
 
+    info!("Server shutdown.");
     Ok(())
 }

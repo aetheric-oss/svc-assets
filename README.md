@@ -1,24 +1,25 @@
 ![Arrow Banner](https://github.com/Arrow-air/.github/raw/main/profile/assets/arrow_v2_twitter-banner_neu.png)
 
-# MODULE_NAME Service
+# `svc-assets`
 
-*TODO after cloning:*
-
-1. *Replace the repository name for each:*
-
-![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/Arrow-air/svc-template?include_prereleases)
-![Sanity Checks](https://github.com/arrow-air/svc-template-rust/actions/workflows/sanity_checks.yml/badge.svg?branch=main)
-![Rust Checks](https://github.com/arrow-air/svc-template-rust/actions/workflows/rust_ci.yml/badge.svg?branch=main)
-![Python Flake8](https://github.com/arrow-air/svc-template-rust/actions/workflows/python_ci.yml/badge.svg?branch=main)
+![GitHub stable release (latest by
+date)](https://img.shields.io/github/v/release/Arrow-air/svc-assets?sort=semver&color=green)
+![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/Arrow-air/svc-assets?include_prereleases)
+![Sanity Checks](https://github.com/arrow-air/svc-assets/actions/workflows/sanity_checks.yml/badge.svg?branch=main)
+![Rust Checks](https://github.com/arrow-air/svc-assets/actions/workflows/rust_ci.yml/badge.svg?branch=main)
+![Python Flake8](https://github.com/arrow-air/svc-assets/actions/workflows/python_ci.yml/badge.svg?branch=main)
 ![Arrow DAO
 Discord](https://img.shields.io/discord/853833144037277726?style=plastic)
 
-2. *Grep for 'template' in all files, replace with name of this service*
-3. *Remove this and previous numbered bullets*
 
 ## :telescope: Overview
 
-FIXME
+The `svc-assets` micro-service provides a comprehensive asset management
+solution for operators. It enables clients to perform various actions
+such as registering, updating, and grouping assets. Additionally, it
+facilitates the delegation of grouped assets from one operator to
+another. This service is accessible to existing systems through a REST
+API interface.
 
 Directory:
 - `server/src/`: Source Code and Unit Tests of the server
@@ -113,7 +114,7 @@ Learn more about us:
 
 ## LICENSE Notice
 
-Please note that svc-template is under BUSL license until the Change Date, currently the earlier of two years from the release date. Exceptions to the license may be specified by Arrow Governance via Additional Use Grants, which can, for example, allow svc-template to be deployed for certain production uses. Please reach out to Arrow DAO to request a DAO vote for exceptions to the license, or to move up the Change Date.
+Please note that svc-assets is under BUSL license until the Change Date, currently the earlier of two years from the release date. Exceptions to the license may be specified by Arrow Governance via Additional Use Grants, which can, for example, allow svc-assets to be deployed for certain production uses. Please reach out to Arrow DAO to request a DAO vote for exceptions to the license, or to move up the Change Date.
 
 ## :exclamation: Treatment of `Cargo.lock`
 If you are building a non-end product like a library, include `Cargo.lock` in `.gitignore`.
