@@ -1,23 +1,22 @@
+![Arrow Banner](https://github.com/Arrow-air/tf-github/raw/main/src/templates/doc-banner-services.png)
+
 # Software Design Document (SDD) - `svc-assets` 
 
-<center>
-
-<img src="https://github.com/Arrow-air/tf-github/raw/main/src/templates/doc-banner-services.png" style="height:250px" />
-
-</center>
-
-## Overview
+## :telescope: Overview
 
 This document details the software implementation of `svc-assets`.
 
 This service is responsible for managing operators' assets.
 
-Attribute | Description
---- | ---
-Status | Draft
-Stuckee | [@GoodluckH](https://github.com/GoodluckH)
+### Metadata
 
-## Related Documents
+| Attribute     | Description                                                       |
+| ------------- |-------------------------------------------------------------------|
+| Maintainer(s) | [Services Team](https://github.com/orgs/Arrow-air/teams/services) |
+| Stuckee       | [@GoodluckH](https://github.com/GoodluckH)                        |
+| Status        | Draft                                                             |
+
+## :books: Related Documents
 
 Document | Description
 --- | ---
@@ -27,14 +26,14 @@ Document | Description
 [Concept of Operations - `svc-assets`](./conops.md) | Defines the motivation and duties of this microservice.
 [Interface Control Document (ICD) - `svc-assets`](./icd.md) | Defines the inputs and outputs of this microservice.
 
-## Module Attributes
+## :dna: Module Attributes
 
 Attribute | Applies | Explanation
 --- | --- | ---
 Safety Critical | No | The module does not have direct impact on human safety.
 Realtime | Yes | The module tracks the real-time availability of assets.
 
-## Logic 
+## :gear: Logic
 
 ### Initialization
 
@@ -49,6 +48,7 @@ The REST server expects the following environment variables to be set:
 
 The GRPC server expects the following environment variables to be set:
 - `DOCKER_PORT_GRPC` (default: `50051`)
+
 ### Control Loop
 
 As a REST and GRPC server, this service awaits requests and executes handlers.
@@ -57,17 +57,21 @@ Some handlers **require** the following environment variables to be set:
 - `STORAGE_HOST_GRPC`
 - `STORAGE_PORT_GRPC`
 
-This information allows `svc-assets` to connect to other microservices to obtain information requested by the client.
+This information allows `svc-assets` to connect to other microservices to obtain
+information requested by the client.
 
-:exclamation: These environment variables will *not* default to anything if not found. In this case, requests involving the handler will result in a `503 SERVICE UNAVAILABLE`.
+:exclamation: These environment variables will *not* default to anything if not
+found. In this case, requests involving the handler will result in a `503
+SERVICE UNAVAILABLE`.
 
-For detailed sequence diagrams regarding request handlers, see [REST Handlers](#rest-handlers).
+For detailed sequence diagrams regarding request handlers, see [REST
+Handlers](#mailbox-rest-handlers).
 
 ### Cleanup
 
 None
 
-## REST Handlers
+## :mailbox: REST Handlers
 You can think of `svc-assets` as a client-facing wrapper for
 `svc-storage`. Clients make REST requests to `svc-assets`, the
 microservice will then parse payloads and make RPC calls to
@@ -95,8 +99,6 @@ sequenceDiagram
     svc-storage->>svc-assets: (GRPC RES) <asset(s) | string>
     svc-assets->>Client: (200 OK) <asset(s) | string>
 ```
-
-
 
 **Off-Nominal**: Failed to connect to `svc-storage`
 
