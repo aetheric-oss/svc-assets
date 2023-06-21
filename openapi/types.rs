@@ -1,44 +1,11 @@
-use ordered_float::OrderedFloat;
 use serde::{Deserialize, Serialize};
 use utoipa::{IntoParams, ToSchema};
 
-/// A wrapper for `OrderedFloat<f64>` for documentation generation purposes.
-#[derive(Debug, Serialize, Deserialize, Hash, Eq, PartialEq, Clone, Copy)]
-pub struct OrderedFloat64(pub OrderedFloat<f64>);
-#[allow(missing_docs)]
-impl From<f64> for OrderedFloat64 {
-    fn from(value: f64) -> Self {
-        OrderedFloat64(OrderedFloat(value))
-    }
-}
+pub use svc_storage_client_grpc::resources::{vehicle, vertipad, vertiport};
+pub use svc_storage_client_grpc::{GeoLineString, GeoPoint, GeoPolygon};
 
-impl OrderedFloat64 {
-    /// Convert the value to a f64.
-    pub fn to_f64(self) -> f64 {
-        self.0.into_inner()
-    }
-}
-
-#[allow(missing_docs)]
-impl ToSchema for OrderedFloat64 {
-    fn schema() -> utoipa::openapi::schema::Schema {
-        utoipa::openapi::ObjectBuilder::new()
-            .property(
-                "value",
-                utoipa::openapi::ObjectBuilder::new()
-                    .schema_type(utoipa::openapi::SchemaType::Number)
-                    .format(Some(utoipa::openapi::SchemaFormat::KnownFormat(
-                        utoipa::openapi::KnownFormat::Float,
-                    ))),
-            )
-            .required("value")
-            .into()
-    }
-}
-
-#[allow(missing_docs, missing_copy_implementations)]
-/// Status of an asset.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema)]
+/// Status of an Asset.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema)]
 pub enum AssetStatus {
     /// The asset is available for use.
     Available,
@@ -48,23 +15,22 @@ pub enum AssetStatus {
     Emergency,
 }
 
-/// A struct representing a location.
-#[allow(missing_docs, missing_copy_implementations)]
-#[derive(Clone, Debug, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema, IntoParams)]
-pub struct Location {
-    pub latitude: OrderedFloat64,
-    pub longitude: OrderedFloat64,
-}
-
-/// Request to create an aircraft.
-#[allow(missing_docs, missing_copy_implementations)]
+/// Request to create an Aircraft.
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema, IntoParams)]
 pub struct RegisterAircraftPayload {
+    /// Optional vehicle name
+    ///
+    /// Will be constructed based on model registration_number if not set
     pub name: Option<String>,
-    /// The UUID of an [`crate::structs::AssetGroup`] struct, if available.
-    pub group_id: Option<String>,
+    /// The UUID of an AssetGroup, if available.
+    pub asset_group_id: Option<String>,
+    /// optional RRULE data string to indicate the vehicle's available days and hours
+    pub schedule: Option<Option<String>>,
+    /// The UUID of an Operator, if available.
     pub owner: String,
+    /// List of UUIDs which are allowed to use this vehicle
     pub whitelist: Vec<String>,
+    /// The Vehicle's Asset status
     pub status: AssetStatus,
     /// The aircraft's manufacturer.
     ///
@@ -72,7 +38,9 @@ pub struct RegisterAircraftPayload {
     /// can a struct for this and store the manufacturer's name, logo,
     /// etc.
     pub manufacturer: String,
-    pub model: String,
+    /// vehicle_model_id UUID v4, can be used to collect additional vehicle_model information
+    pub vehicle_model_id: String,
+    /// the vehicle's unique serial_number given at the factory
     pub serial_number: String,
     /// The aircraft's registration number.
     ///
@@ -82,93 +50,104 @@ pub struct RegisterAircraftPayload {
     /// the aircraft that can be used to look up information about the
     /// aircraft from national aviation authorities like the FAA.
     pub registration_number: String,
+    /// optional additional description of the vehicle
     pub description: Option<String>,
+    /// TODO R4: Should be part of vehicle model data
     pub max_payload_kg: f64,
+    /// TODO R4: Should be part of vehicle model data
     pub max_range_km: f64,
+    /// optional date of vehicle's last maintenance
     pub last_maintenance: Option<String>,
+    /// optional date  of vehicle's next planned maintenance
     pub next_maintenance: Option<String>,
+    /// optional id UUID v4 of the last reported vertiport it landed at
     pub last_vertiport_id: Option<String>,
 }
 
-/// Request to create a vertiport.
-#[allow(missing_docs, missing_copy_implementations)]
-#[derive(Debug, Clone, Serialize, Deserialize, ToSchema, IntoParams)]
-pub struct RegisterVertiportPayload {
-    pub name: Option<String>,
-    /// The UUID of an [`crate::structs::AssetGroup`] struct, if available.
-    pub group_id: Option<String>,
-    pub owner: String,
-    pub whitelist: Vec<String>,
-    pub status: AssetStatus,
-    pub description: Option<String>,
-    pub location: Location,
-}
-
-/// Request to create a vertipad.
-#[allow(missing_docs, missing_copy_implementations)]
-#[derive(Debug, Clone, Serialize, Deserialize, ToSchema, IntoParams)]
-pub struct RegisterVertipadPayload {
-    pub name: Option<String>,
-    pub vertiport_id: String,
-    pub status: AssetStatus,
-    pub location: Location,
-    pub enabled: bool,
-    pub occupied: bool,
-}
-
-/// Request to create an asset group.
-#[allow(missing_docs, missing_copy_implementations)]
+/// Request to create an Asset Group.
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema, IntoParams)]
 pub struct RegisterAssetGroupPayload {
+    /// Optional identification name of the asset group
     pub name: Option<String>,
-    /// The UUID of an [`crate::structs::Operator`] struct, if available.
+    /// The UUID of an Operator, if available.
     pub owner: String,
     /// A list of UUIDs of assets.
     pub assets: Vec<String>,
 }
 
-/// Request to update an aircraft.
-#[allow(missing_docs, missing_copy_implementations)]
+/// Request to update an Aircraft.
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema, IntoParams)]
 pub struct UpdateAircraftPayload {
+    /// The UUID v4 of the Aircraft to update.
     pub id: String,
-    /// The UUID of the model.
+    /// The vehicle_model_id UUID v4, can be used to collect additional vehicle_model information.
     pub vehicle_model_id: Option<String>,
+    /// Optional id UUID v4 of the last reported Vertiport it landed at.
     pub last_vertiport_id: Option<String>,
+    /// The Aircraft's unique serial_number given at the factory.
     pub serial_number: Option<String>,
+    /// The Aircraft's registration number.
+    ///
+    /// In the US, this is the N number.
+    ///
+    /// This is a unique identifier for
+    /// the aircraft that can be used to look up information about the
+    /// aircraft from national aviation authorities like the FAA.
     pub registration_number: Option<String>,
+    /// Optional additional description of the Aircraft.
     pub description: Option<Option<String>>,
+    /// The UUID of an AssetGroup, if available.
     pub asset_group_id: Option<Option<String>>,
+    /// Optional RRULE data string to indicate the Aircraft's available days and hours.
     pub schedule: Option<Option<String>>,
+    /// Optional date of Aircraft's last maintenance.
     pub last_maintenance: Option<Option<String>>,
+    /// Optional date of Aircraft's next planned maintenance.
     pub next_maintenance: Option<Option<String>>,
+    /// List of fields that should be updated.
+    ///
+    /// If any other fields are provided, they will be ignored.
     pub mask: Vec<String>,
 }
 
-/// Request to update a vertiport.
-#[allow(missing_docs, missing_copy_implementations)]
+/// Request to update a Vertiport.
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema, IntoParams)]
 pub struct UpdateVertiportPayload {
+    /// The UUID v4 of the Vertiport to update.
     pub id: String,
+    /// Identification name of the Vertiport.
     pub name: Option<String>,
+    /// Additional description of the Vertiport.
     pub description: Option<String>,
-    pub latitude: Option<f64>,
-    pub longitude: Option<f64>,
+    /// Geographical area location of the Vertiport.
+    pub geo_location: Option<GeoPolygon>,
+    /// Optional RRULE data string to indicate the Vertiport's available days and hours.
     pub schedule: Option<Option<String>>,
+    /// List of fields that should be updated.
+    ///
+    /// If any other fields are provided, they will be ignored.
     pub mask: Vec<String>,
 }
 
-/// Request to update a vertipad.
-#[allow(missing_docs, missing_copy_implementations)]
+/// Request to update a Vertipad.
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema, IntoParams)]
 pub struct UpdateVertipadPayload {
+    /// The UUID v4 of the Vertipad to update.
     pub id: String,
+    /// The UUID v4 of the Vertiport the Vertipad is located at.
     pub vertiport_id: Option<String>,
+    /// Identification name of the Vertipad.
     pub name: Option<String>,
-    pub latitude: Option<f64>,
-    pub longitude: Option<f64>,
+    /// Geographical location of the Vertipad.
+    pub geo_location: Option<GeoPoint>,
+    /// Indicates if the Vertipad is in business.
     pub enabled: Option<bool>,
+    /// Indicates if the Vertipad is currently occupied.
     pub occupied: Option<bool>,
+    /// Optional RRULE data string to indicate the Vertipad's available days and hours.
     pub schedule: Option<Option<String>>,
+    /// List of fields that should be updated.
+    ///
+    /// If any other fields are provided, they will be ignored.
     pub mask: Vec<String>,
 }
