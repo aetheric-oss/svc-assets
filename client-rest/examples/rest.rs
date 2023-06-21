@@ -2,75 +2,75 @@
 
 use hyper::{Body, Client, Method, Request, Response};
 use hyper::{Error, StatusCode};
+use lib_common::grpc::get_endpoint_from_env;
 use svc_assets_client_rest::types::*;
 
-async fn evaluate(
-    resp: Result<Response<Body>, Error>,
-    expected_code: StatusCode,
-) -> (bool, String) {
-    let mut ok = true;
-    let result_str: String = match resp {
-        Ok(r) => {
-            let tmp = r.status() == expected_code;
-            ok &= tmp;
-
-            match hyper::body::to_bytes(r.into_body()).await {
-                Ok(b) => match String::from_utf8(b.to_vec()) {
-                    Ok(s) => s,
-                    Err(e) => {
-                        ok = false;
-                        return (ok, e.to_string());
-                    }
-                },
-                Err(e) => {
-                    ok = false;
-                    return (ok, e.to_string());
-                }
-            }
-        }
+fn check_body(bytes: &hyper::body::Bytes) -> String {
+    match String::from_utf8(bytes.to_vec()) {
+        Ok(s) => s,
         Err(e) => {
-            ok = false;
-            e.to_string()
+            println!("Could not read string from bytes: {}", e);
+            String::from("")
         }
-    };
-
-    (ok, result_str)
+    }
 }
 
-#[allow(unused_assignments)]
+async fn evaluate(response: Result<Response<Body>, Error>, expected_code: StatusCode) -> String {
+    let Ok(response) = response else {
+        println!("Response was an Err() type: {:?}", response.as_ref().unwrap_err());
+        println!("{:?}", response);
+        return String::from("");
+    };
+
+    let status = response.status();
+
+    if status != expected_code {
+        println!("expected code: {}, actual: {}", expected_code, status);
+        println!("{:?}", response);
+        return String::from("");
+    }
+
+    let str = match hyper::body::to_bytes(response.into_body()).await {
+        Ok(b) => check_body(&b),
+        Err(e) => {
+            println!("Could not get bytes from response body: {}", e);
+            return String::from("");
+        }
+    };
+    println!("{} (body: {})", status.to_string(), str);
+
+    str
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("NOTE: Ensure the server is running, or this example will fail.");
 
-    let rest_port = std::env::var("HOST_PORT_REST").unwrap_or_else(|_| "8004".to_string());
+    let (host, port) = get_endpoint_from_env("SERVER_HOSTNAME", "SERVER_PORT_REST");
+    let url = format!("http://{host}:{port}");
 
-    // let host_port = env!("HOST_PORT");
-    let url = format!("http://0.0.0.0:{rest_port}");
-    let mut ok = true;
+    println!("Rest endpoint set to [{url}].");
+
     let client = Client::builder()
         .pool_idle_timeout(std::time::Duration::from_secs(10))
         .build_http();
 
-    let mut aircraft_id = String::new();
+    let aircraft_id: String;
 
     // POST /assets/aircraft
     {
-        let data = RegisterAircraftPayload {
-            manufacturer: "Elroy".to_string(),
-            model: "Jet".to_string(),
-            max_payload_kg: 1000.0,
-            max_range_km: 1000.0,
-            owner: "123".to_string(),
+        let data = vehicle::Data {
+            vehicle_model_id: "Jet".to_string(),
             registration_number: "N2133423".to_string(),
             serial_number: "1234".to_string(),
-            status: AssetStatus::Available,
-            whitelist: vec![],
             description: None,
-            group_id: None,
-            last_maintenance: None,
-            name: None,
+            last_maintenance: Some(chrono::Utc::now().into()),
             next_maintenance: None,
             last_vertiport_id: None,
+            created_at: None,
+            updated_at: None,
+            asset_group_id: None,
+            schedule: None,
         };
         let data_str = match serde_json::to_string(&data) {
             Ok(s) => s,
@@ -79,6 +79,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 return Ok(());
             }
         };
+        println!("Post data: {}", data_str);
         let uri = format!("{}/assets/aircraft", url);
         let req = match Request::builder()
             .method(Method::POST)
@@ -94,10 +95,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         };
 
         let resp = client.request(req).await;
-        let (success, result_str) = evaluate(resp, StatusCode::OK).await;
-        ok &= success;
-        aircraft_id = result_str.clone();
-        println!("{}: {}", uri, result_str);
+        let result_str = evaluate(resp, StatusCode::OK).await;
+        aircraft_id = result_str;
+        println!("Aircraft created: {}", aircraft_id);
     }
 
     // DELETE /assets/aircraft/{aircraft_id}
@@ -117,16 +117,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         };
 
         let resp = client.request(req).await;
-        let (success, result_str) = evaluate(resp, StatusCode::OK).await;
-        ok &= success;
-
-        println!("{}: {}", uri, result_str);
-    }
-
-    if ok {
-        println!("\u{1F9c1} All endpoints responded!");
-    } else {
-        eprintln!("\u{2620} Errors");
+        evaluate(resp, StatusCode::OK).await;
     }
 
     Ok(())

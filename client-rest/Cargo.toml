@@ -1,7 +1,8 @@
 [package]
-description = "Arrow Storage service REST client"
+description = "Arrow assets service REST client"
+keywords    = ["vtol", "client", "rest", "assets"] # max 5
 name        = "svc-assets-client-rest"
-version     = "0.1.0"
+version     = "0.4.0"
 
 authors.workspace      = true
 categories.workspace   = true
@@ -10,19 +11,21 @@ homepage.workspace     = true
 license-file.workspace = true
 repository.workspace   = true
 
-include = ["examples/**", "src/**"]
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
 chrono        = { version = "0.4", features = ["serde"] }
 ordered-float = { version = "3.4", features = ["serde"] }
 serde         = "1.0"
 serde_json    = "1.0"
 
+[dependencies.lib-common]
+features = ["grpc"]
+git      = "https://github.com/Arrow-air/lib-common.git"
+tag      = "v0.1.1-develop.2"
 
-[[example]]
-name = "rest"
+# Get Geo types from storage client
+[dependencies.svc-storage-client-grpc]
+git = "https://github.com/Arrow-air/svc-storage"
+tag = "v0.10.1-develop.16"
 
 [dev-dependencies]
 hyper = { version = "0.14", features = ["full"] }
@@ -30,4 +33,7 @@ tokio = { version = "1.20", features = ["full"] }
 
 [dependencies.utoipa]
 features = ["axum_extras", "chrono"]
-version  = "2.2"
+version  = "3.3"
+
+[[example]]
+name = "rest"
