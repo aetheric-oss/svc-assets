@@ -3,7 +3,7 @@
 ///generates .rs files in src directory
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let proto_dir = "../proto";
-    let proto_file = &format!("{}/svc-assets-grpc.proto", proto_dir);
+    let proto_file = &format!("{}/grpc.proto", proto_dir);
 
     let server_config = tonic_build::configure()
         .type_attribute("ReadyRequest", "#[derive(Eq, Copy)]")
@@ -11,6 +11,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let client_config = server_config.clone();
 
     client_config
+        .client_mod_attribute("grpc", "#[cfg(not(tarpaulin_include))]")
         .build_server(false)
         .out_dir("../client-grpc/src/")
         .compile(&[proto_file], &[proto_dir])?;
