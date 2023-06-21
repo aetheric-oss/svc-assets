@@ -1,6 +1,6 @@
 [package]
-description = "Assets Service GRPC client"
-keywords    = ["vtol", "client", "assets"] # max 5
+description = "Arrow assets service gRPC client"
+keywords    = ["vtol", "client", "grpc", "assets"] # max 5
 name        = "svc-assets-client-grpc"
 version     = "0.4.0"
 
@@ -11,15 +11,50 @@ homepage.workspace     = true
 license-file.workspace = true
 repository.workspace   = true
 
-include = ["examples/**", "src/**"]
+[features]
+dev       = ["mock", "tokio"]
+test_util = ["mock", "stub_backends"]
+# Will add a 'mock' module for the enabled resources, providing access to mock data generation functions
+mock = []
+# Will use a stubbed server connection, only use for tests!
+stub_backends = [
+  "svc-assets/stub_server",
+  "lib-common/grpc_mock",
+  "tower",
+  "tokio",
+]
+# Will implement stub functions for the client, only use for tests!
+stub_client = ["svc-assets"]
 
 [dependencies]
+cfg-if      = "1.0"
+log         = { version = "0.4" }
 prost       = "0.11"
 prost-types = "0.11"
+svc-assets  = { path = "../server", optional = true }
 tonic       = "0.8"
+tower       = { version = "0.4", optional = true }
+
+[dependencies.lib-common]
+features = ["grpc"]
+git      = "https://github.com/Arrow-air/lib-common.git"
+tag      = "v0.1.1-develop.2"
+
+[dependencies.tokio]
+features = ["macros", "rt-multi-thread"]
+optional = true
+version  = "1.28"
+
+[dependencies.utoipa]
+version = "3.0"
 
 [dev-dependencies]
-tokio = { version = "1.0", features = ["macros", "rt-multi-thread"] }
+logtest = "2.0"
+
+# Make sure we enable the 'mock_services' features when running tests
+[dev-dependencies.svc-assets-client-grpc]
+features = ["dev"]
+path     = "."
 
 [[example]]
 name = "grpc"

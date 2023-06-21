@@ -1,6 +1,6 @@
 [package]
-description = "Assets Service REST server"
-keywords    = ["vtol", "server", "assets"] # max 5
+description = "Arrow Assets Service gRPC and REST servers"
+keywords    = ["vtol", "server", "grpc", "rest", "template"] # max 5
 name        = "svc-assets"
 version     = "0.4.0"
 
@@ -12,12 +12,27 @@ license-file.workspace = true
 repository.workspace   = true
 
 [features]
-vendored-openssl = ['openssl/vendored']
+default          = []
+dev              = ["mock"]
+test_util        = ["mock", "stub_backends"]
+vendored-openssl = ["openssl/vendored"]
+# Will add a 'mock' module for the enabled resources, providing access to mock data generation functions
+mock = ["svc-storage-client-grpc/mock"]
+# Will use a stubbed backend connection, only use for tests!
+stub_backends = [
+  "svc-storage-client-grpc/stub_client",
+  "svc-storage-client-grpc/stub_backends",
+]
+# Will implement stub functions for the server, only use for tests!
+stub_server = ["test_util"]
+# Only added to support client-grpc feature when running tests
+stub_client = ["stub_backends"]
 
 [dependencies]
 anyhow        = "1.0"
 axum          = "0.5"
 cargo-husky   = "1"
+cfg-if        = "1.0"
 chrono        = { version = "0.4", features = ["serde"] }
 clap          = { version = "4.0", features = ["derive"] }
 config        = "0.13"
@@ -25,26 +40,32 @@ dotenv        = "0.15"
 duplicate     = "0.4"
 futures       = "0.3"
 hyper         = "0.14"
+lapin         = "2.1"
+lib-common    = { git = "https://github.com/Arrow-air/lib-common.git", tag = "v0.1.1-develop.2" }
 lipsum        = "0.8"
 log           = "0.4"
+mavlink       = "0.11"
 openssl       = "0.10"
-ordered-float = { version = "3.4", features = ["serde"] }
+packed_struct = "0.10"
 prost         = "0.11"
 prost-build   = "0.11"
 prost-types   = "0.11"
 rand          = { version = "0.8" }
 serde         = "1.0"
 serde_json    = "1.0"
-tokio         = { version = "1.20", features = ["full"] }
+snafu         = "0.7"
+tokio         = { version = "1.28", features = ["full"] }
 tokio-util    = "0.7"
 tonic         = "0.8"
-tonic-health  = "0.7"
-utoipa        = { version = "2.1", features = ["axum_extras", "chrono"] }
-uuid          = { version = "1.2", features = ["v4", "serde"] }
+tonic-health  = "0.8"
+tower         = { version = "0.4", features = ["limit"] }
+tower-http    = { version = "0.4", features = ["cors", "trace"] }
+uuid          = { version = "1.2", features = ["serde"] }
 
 [dependencies.svc-storage-client-grpc]
-git = "https://github.com/Arrow-air/svc-storage"
-tag = "v0.10.0"
+features = ["vehicle", "vertiport", "vertipad"]
+git      = "https://github.com/Arrow-air/svc-storage"
+tag      = "v0.10.1-develop.16"
 
 [dependencies.log4rs]
 features = [
@@ -55,10 +76,22 @@ features = [
 ]
 version = "1.2"
 
+[dependencies.utoipa]
+features = ["axum_extras", "chrono"]
+version  = "3.3"
+
+[dev-dependencies]
+logtest = "2.0"
+
 [dev-dependencies.cargo-husky]
 default-features = false          # Disable features which are enabled by default
 features         = ["user-hooks"]
 version          = "1"
+
+# Make sure we enable the required modules when running tests
+[dev-dependencies.svc-assets]
+features = ["dev"]
+path     = "."
 
 [build-dependencies]
 tonic-build = "0.8"
