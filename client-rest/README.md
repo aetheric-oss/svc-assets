@@ -1,6 +1,6 @@
 ![Arrow Banner](https://github.com/Arrow-air/tf-github/raw/main/src/templates/doc-banner-services.png)
 
-# svc-assets gRPC Client
+# svc-assets REST Service
 
 ![GitHub stable release (latest by date)](https://img.shields.io/github/v/release/Arrow-air/svc-assets?sort=semver&color=green) ![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/Arrow-air/svc-assets?include_prereleases) [![Coverage Status](https://coveralls.io/repos/github/Arrow-air/svc-assets/badge.svg?branch=develop)](https://coveralls.io/github/Arrow-air/svc-assets)
 ![Sanity Checks](https://github.com/arrow-air/svc-assets/actions/workflows/sanity_checks.yml/badge.svg?branch=develop) ![Python PEP8](https://github.com/arrow-air/svc-assets/actions/workflows/python_ci.yml/badge.svg?branch=develop) ![Rust Checks](https://github.com/arrow-air/svc-assets/actions/workflows/rust_ci.yml/badge.svg?branch=develop) 
@@ -8,4 +8,4 @@
 
 ## Overview
 
-Exposes svc-assets gRPC client functions
+Exposes svc-assets REST API functions

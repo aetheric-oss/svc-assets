@@ -1,22 +1,20 @@
+![Arrow Banner](https://github.com/Arrow-air/tf-github/raw/main/src/templates/doc-banner-services.png)
+
 # Concept of Operations - `svc-assets`
 
 Note on delegation: only allows for one level delegation. Only allows for asset
 group delegations. If user wants to delegate a single asset, a group
 must be created for this asset.
 
-<center>
+### Metadata
 
-<img src="https://github.com/Arrow-air/tf-github/raw/main/src/templates/doc-banner-services.png" style="height:250px" />
+| Attribute     | Description                                                       |
+| ------------- |-------------------------------------------------------------------|
+| Maintainer(s) | [Services Team](https://github.com/orgs/Arrow-air/teams/services) |
+| Stuckee       | [@GoodluckH](https://github.com/GoodluckH)                        |
+| Status        | Draft                                                             |
 
-</center>
-
-Attribute | Description
---- | ---
-Maintainer | [@Arrow-air/services](https://github.com/orgs/Arrow-air/teams)
-Status | Draft
-Stuckee | [@GoodluckH](https://github.com/GoodluckH)
-
-## Overview
+## :telescope: Overview
 
 The `svc-assets` micro-service provides a comprehensive asset management
 solution for operators. It enables clients to perform various actions
@@ -25,7 +23,7 @@ facilitates the delegation of grouped assets from one operator to
 another. This service is accessible to existing systems through a REST
 API interface.
 
-## Related Documents
+## :books: Related Documents
 
 Document | Description
 --- | ---
@@ -35,7 +33,7 @@ Document | Description
 [Interface Control Document (ICD) - `svc-assets`](./icd.md) | Defines the inputs and outputs of this microservice.
 [Software Design Document (SDD) - `svc-assets`](./sdd.md) | Specifies the internal activity of this microservice.
 
-## Motivation
+## :raised_hands: Motivation
 
 Managing assets for operators can be a complex and challenging task.
 Traditional methods of asset management are often cumbersome and
