@@ -20,12 +20,12 @@ serde_json    = "1.0"
 [dependencies.lib-common]
 features = ["grpc"]
 git      = "https://github.com/Arrow-air/lib-common.git"
-tag      = "v0.1.1-develop.2"
+tag      = "v0.2.0"
 
 # Get Geo types from storage client
 [dependencies.svc-storage-client-grpc]
 git = "https://github.com/Arrow-air/svc-storage"
-tag = "v0.10.1-develop.16"
+tag = "v0.11.0"
 
 [dev-dependencies]
 hyper = { version = "0.14", features = ["full"] }

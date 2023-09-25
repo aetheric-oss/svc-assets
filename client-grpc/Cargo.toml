@@ -1,6 +1,6 @@
 [package]
 description = "Arrow assets service gRPC client"
-keywords    = ["vtol", "client", "grpc", "assets"] # max 5
+keywords    = ["vtol", "client", "grpc", "rest", "assets"] # max 5
 name        = "svc-assets-client-grpc"
 version     = "0.4.1-develop.0"
 
@@ -38,7 +38,7 @@ tower       = { version = "0.4", optional = true }
 [dependencies.lib-common]
 features = ["grpc"]
 git      = "https://github.com/Arrow-air/lib-common.git"
-tag      = "v0.1.1-develop.2"
+tag      = "v0.2.0"
 
 [dependencies.tokio]
 features = ["macros", "rt-multi-thread"]

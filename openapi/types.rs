@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use utoipa::{IntoParams, ToSchema};
 
 pub use svc_storage_client_grpc::resources::{vehicle, vertipad, vertiport};
-pub use svc_storage_client_grpc::{GeoLineString, GeoPoint, GeoPolygon};
+pub use svc_storage_client_grpc::prelude::{GeoLineString, GeoPoint, GeoPolygon};
 
 /// Status of an Asset.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema)]
@@ -34,7 +34,7 @@ pub struct RegisterAircraftPayload {
     pub status: AssetStatus,
     /// The aircraft's manufacturer.
     ///
-    /// TODO R3/4: For now we can just say "Boeing", "Airbus", etc. Later, we
+    /// TODO(R4): For now we can just say "Boeing", "Airbus", etc. Later, we
     /// can a struct for this and store the manufacturer's name, logo,
     /// etc.
     pub manufacturer: String,
@@ -52,9 +52,9 @@ pub struct RegisterAircraftPayload {
     pub registration_number: String,
     /// optional additional description of the vehicle
     pub description: Option<String>,
-    /// TODO R4: Should be part of vehicle model data
+    /// TODO(R4): Should be part of vehicle model data
     pub max_payload_kg: f64,
-    /// TODO R4: Should be part of vehicle model data
+    /// TODO(R4): Should be part of vehicle model data
     pub max_range_km: f64,
     /// optional date of vehicle's last maintenance
     pub last_maintenance: Option<String>,
