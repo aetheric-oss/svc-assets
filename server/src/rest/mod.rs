@@ -11,6 +11,8 @@ use api::*;
 
 use utoipa::OpenApi;
 
+use svc_storage_client_grpc::prelude::*;
+
 #[derive(OpenApi)]
 #[openapi(
     paths(

@@ -1,6 +1,6 @@
 //! gRPC client helpers implementation
 
-use svc_storage_client_grpc::Clients;
+use svc_storage_client_grpc::prelude::Clients;
 
 /// Struct to hold all gRPC client connections
 #[derive(Clone, Debug)]
@@ -22,7 +22,7 @@ impl GrpcClients {
 
 #[cfg(test)]
 mod tests {
-    use svc_storage_client_grpc::Client;
+    use svc_storage_client_grpc::prelude::Client;
 
     use super::*;
 

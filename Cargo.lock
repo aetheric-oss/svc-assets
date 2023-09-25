@@ -169,8 +169,8 @@ checksum = "3d62b7694a562cdf5a74227903507c56ab2cc8bdd1f781ed5cb4cf9c9f810bfc"
 
 [[package]]
 name = "arrow-macros-core"
-version = "0.1.1-develop.2"
-source = "git+https://github.com/Arrow-air/lib-common.git?tag=v0.1.1-develop.2#c7e0fc4918d3346a13ab84e2d4fc16d430a60c59"
+version = "0.2.0"
+source = "git+https://github.com/Arrow-air/lib-common.git?tag=v0.2.0#ecae9794fb2220aa03fdc04329bda32ca8441056"
 dependencies = [
  "proc-macro-error",
  "proc-macro2",
@@ -180,8 +180,8 @@ dependencies = [
 
 [[package]]
 name = "arrow-macros-derive"
-version = "0.1.1-develop.2"
-source = "git+https://github.com/Arrow-air/lib-common.git?tag=v0.1.1-develop.2#c7e0fc4918d3346a13ab84e2d4fc16d430a60c59"
+version = "0.2.0"
+source = "git+https://github.com/Arrow-air/lib-common.git?tag=v0.2.0#ecae9794fb2220aa03fdc04329bda32ca8441056"
 dependencies = [
  "arrow-macros-core",
  "proc-macro-error",
@@ -583,9 +583,9 @@ dependencies = [
 
 [[package]]
 name = "clap"
-version = "4.3.8"
+version = "4.3.24"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d9394150f5b4273a1763355bd1c2ec54cc5a2593f790587bcd6b2c947cfa9211"
+checksum = "fb690e81c7840c0d7aade59f242ea3b41b9bc27bcd5997890e7702ae4b32e487"
 dependencies = [
  "clap_builder",
  "clap_derive",
@@ -594,22 +594,21 @@ dependencies = [
 
 [[package]]
 name = "clap_builder"
-version = "4.3.8"
+version = "4.3.24"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9a78fbdd3cc2914ddf37ba444114bc7765bbdcb55ec9cbe6fa054f0137400717"
+checksum = "5ed2e96bc16d8d740f6f48d663eddf4b8a0983e79210fd55479b7bcd0a69860e"
 dependencies = [
  "anstream",
  "anstyle",
- "bitflags 1.3.2",
  "clap_lex",
  "strsim",
 ]
 
 [[package]]
 name = "clap_derive"
-version = "4.3.2"
+version = "4.3.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b8cd2b2a819ad6eec39e8f1d6b53001af1e5469f8c177579cdaeb313115b825f"
+checksum = "54a9bb5758fc5dfe728d1019941681eccaf0cf8a4189b692a0ee2f2ecf90a050"
 dependencies = [
  "heck",
  "proc-macro2",
@@ -1508,8 +1507,8 @@ checksum = "e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646"
 
 [[package]]
 name = "lib-common"
-version = "0.1.1-develop.2"
-source = "git+https://github.com/Arrow-air/lib-common.git?tag=v0.1.1-develop.2#c7e0fc4918d3346a13ab84e2d4fc16d430a60c59"
+version = "0.2.0"
+source = "git+https://github.com/Arrow-air/lib-common.git?tag=v0.2.0#ecae9794fb2220aa03fdc04329bda32ca8441056"
 dependencies = [
  "arrow-macros-derive",
  "cargo-husky",
@@ -2892,6 +2891,7 @@ dependencies = [
  "cfg-if",
  "chrono",
  "clap",
+ "clap_lex",
  "config",
  "dotenv",
  "duplicate",
@@ -2961,8 +2961,8 @@ dependencies = [
 
 [[package]]
 name = "svc-storage"
-version = "0.10.1-develop.16"
-source = "git+https://github.com/Arrow-air/svc-storage?tag=v0.10.1-develop.16#fa0d08a648792fc4fcd76bb4bb55c65991b97d67"
+version = "0.11.0"
+source = "git+https://github.com/Arrow-air/svc-storage?tag=v0.11.0#e58dcdc9587a7e5cde605f68de94918e4d0fbd71"
 dependencies = [
  "anyhow",
  "byteorder",
@@ -2971,11 +2971,13 @@ dependencies = [
  "cfg-if",
  "chrono",
  "clap",
+ "clap_lex",
  "config",
  "deadpool",
  "deadpool-postgres",
  "dotenv",
  "futures",
+ "geo",
  "geo-types",
  "hyper",
  "lazy_static",
@@ -2987,7 +2989,6 @@ dependencies = [
  "num-traits",
  "once_cell",
  "openssl",
- "ordered-float 3.7.0",
  "paste",
  "postgis",
  "postgres-native-tls",
@@ -2995,6 +2996,7 @@ dependencies = [
  "prost",
  "prost-types",
  "prost-wkt-types",
+ "rand",
  "serde",
  "serde_json",
  "serde_yaml 0.9.22",
@@ -3010,8 +3012,8 @@ dependencies = [
 
 [[package]]
 name = "svc-storage-client-grpc"
-version = "0.10.1-develop.16"
-source = "git+https://github.com/Arrow-air/svc-storage?tag=v0.10.1-develop.16#fa0d08a648792fc4fcd76bb4bb55c65991b97d67"
+version = "0.11.0"
+source = "git+https://github.com/Arrow-air/svc-storage?tag=v0.11.0#e58dcdc9587a7e5cde605f68de94918e4d0fbd71"
 dependencies = [
  "anyhow",
  "cfg-if",
@@ -3025,11 +3027,13 @@ dependencies = [
  "num-derive",
  "num-traits",
  "ordered-float 3.7.0",
+ "paste",
  "prost",
  "prost-types",
  "prost-wkt-types",
  "rand",
  "serde",
+ "serde_json",
  "svc-storage",
  "tokio",
  "tonic",

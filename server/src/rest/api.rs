@@ -11,9 +11,8 @@ pub use rest_types::*;
 
 use axum::{extract::Path, Extension, Json};
 use hyper::StatusCode;
-use svc_storage_client_grpc::Timestamp;
-use svc_storage_client_grpc::{AdvancedSearchFilter, Id};
-use svc_storage_client_grpc::{ClientConnect, SimpleClient};
+use lib_common::grpc::ClientConnect;
+use svc_storage_client_grpc::prelude::*;
 
 use super::structs::{Aircraft, AssetGroup, Operator, Vertipad, Vertiport};
 use crate::grpc::client::GrpcClients;
@@ -95,12 +94,12 @@ pub async fn get_operator(
     Extension(mut _grpc_clients): Extension<GrpcClients>,
     Path(operator_id): Path<String>,
 ) -> Result<Json<Operator>, (StatusCode, String)> {
-    rest_info!("get_operator({})", operator_id);
+    rest_info!("(get_operator) {}", operator_id);
     if !is_uuid(&operator_id) {
         return Err((StatusCode::BAD_REQUEST, "Invalid operator id".to_string()));
     }
     // Get Client
-    // TODO R3: let _client_option = grpc_clients.storage.get_client().await;
+    // TODO(R4): let _client_option = grpc_clients.storage.get_client().await;
     // if client_option.is_none() {
     //     let error_msg = "svc-storage unavailable.".to_string();
     //     rest_error!("(get_operator) {}", &error_msg);
@@ -109,10 +108,6 @@ pub async fn get_operator(
     // let mut client = client_option.unwrap();
     Ok(Json(Operator::random()))
 }
-
-//-----------------------------------------------------------
-// R2 DEMO
-//-----------------------------------------------------------
 
 #[utoipa::path(
     get,
@@ -265,7 +260,7 @@ pub async fn get_all_assets_by_operator(
     Extension(mut _grpc_clients): Extension<GrpcClients>,
     Path(operator_id): Path<String>,
 ) -> Result<Json<Vec<Uuid>>, (StatusCode, String)> {
-    rest_info!("get_all_assets_by_operator({})", operator_id);
+    rest_info!("(get_all_assets_by_operator) {}", operator_id);
     if !is_uuid(&operator_id) {
         return Err((StatusCode::BAD_REQUEST, "Invalid operator id".to_string()));
     }
@@ -301,7 +296,7 @@ pub async fn get_all_assets_by_operator(
     //     })?
     //     .into_inner()
     //     .vertiports;
-    //TODO R3
+    // TODO(R4)
     Ok(Json(vec![]))
 }
 
@@ -328,7 +323,7 @@ pub async fn get_all_grouped_assets(
     Extension(mut _grpc_clients): Extension<GrpcClients>,
     Path(operator_id): Path<String>,
 ) -> Result<Json<Vec<Uuid>>, (StatusCode, String)> {
-    rest_info!("get_all_grouped_assets({})", operator_id);
+    rest_info!("(get_all_grouped_assets) {}", operator_id);
     if !is_uuid(&operator_id) {
         return Err((StatusCode::BAD_REQUEST, "Invalid operator id".to_string()));
     }
@@ -340,7 +335,7 @@ pub async fn get_all_grouped_assets(
     //     return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
     // }
     // let mut client = client_option.unwrap();
-    //TODO R3
+    // TODO(R4)
     Ok(Json(vec![]))
 }
 
@@ -363,7 +358,7 @@ pub async fn get_all_grouped_assets_delegated_to(
     Extension(mut _grpc_clients): Extension<GrpcClients>,
     Path(operator_id): Path<String>,
 ) -> Result<Json<Vec<Uuid>>, (StatusCode, String)> {
-    rest_info!("get_all_grouped_assets_delegated_to({})", operator_id);
+    rest_info!("(get_all_grouped_assets_delegated_to) {}", operator_id);
     if !is_uuid(&operator_id) {
         return Err((StatusCode::BAD_REQUEST, "Invalid operator id".to_string()));
     }
@@ -375,7 +370,7 @@ pub async fn get_all_grouped_assets_delegated_to(
     //     return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
     // }
     // let mut client = client_option.unwrap();
-    //TODO R3
+    // TODO(R4)
     Ok(Json(vec![]))
 }
 
@@ -398,7 +393,7 @@ pub async fn get_all_grouped_assets_delegated_from(
     Extension(mut _grpc_clients): Extension<GrpcClients>,
     Path(operator_id): Path<String>,
 ) -> Result<Json<Vec<Uuid>>, (StatusCode, String)> {
-    rest_info!("get_all_grouped_assets_delegated_from({})", operator_id);
+    rest_info!("(get_all_grouped_assets_delegated_from) {}", operator_id);
     if !is_uuid(&operator_id) {
         return Err((StatusCode::BAD_REQUEST, "Invalid operator id".to_string()));
     }
@@ -410,7 +405,7 @@ pub async fn get_all_grouped_assets_delegated_from(
     //     return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
     // }
     // let mut client = client_option.unwrap();
-    //TODO R3
+    // TODO(R4)
     Ok(Json(vec![]))
 }
 
@@ -599,7 +594,7 @@ pub async fn get_asset_group_by_id(
     Extension(mut _grpc_clients): Extension<GrpcClients>,
     Path(asset_group_id): Path<String>,
 ) -> Result<Json<AssetGroup>, (StatusCode, String)> {
-    rest_info!("get_asset_group_by_id({})", asset_group_id);
+    rest_info!("(get_asset_group_by_id) {}", asset_group_id);
     if !is_uuid(&asset_group_id) {
         return Err((
             StatusCode::BAD_REQUEST,
@@ -615,7 +610,7 @@ pub async fn get_asset_group_by_id(
     // }
     // let mut client = client_option.unwrap();
 
-    //TODO R3
+    // TODO(R4)
     Ok(Json(AssetGroup::random()))
 }
 
@@ -640,7 +635,7 @@ pub async fn register_aircraft(
     Json(payload): Json<vehicle::Data>,
 ) -> Result<String, (StatusCode, String)> {
     rest_info!("(register_aircraft) entry.");
-    rest_debug!("Payload: {:?}", &payload);
+    rest_debug!("(register_aircraft) Payload: {:?}", &payload);
 
     let client = grpc_clients.storage.vehicle;
 
@@ -661,7 +656,7 @@ pub async fn register_aircraft(
     match client.insert(data).await {
         Ok(res) => {
             rest_info!("(register_aircraft) registration success.");
-            rest_debug!("{:?}", res);
+            rest_debug!("(register_aircraft) {:?}", res);
             let vehicle_obj = res.into_inner().object;
             if let Some(vehicle_obj) = vehicle_obj {
                 rest_debug!(
@@ -697,14 +692,14 @@ pub async fn register_vertiport(
     Json(payload): Json<vertiport::Data>,
 ) -> Result<String, (StatusCode, String)> {
     rest_info!("(register_vertiport) entry.");
-    rest_debug!("Payload: {:?}", &payload);
+    rest_debug!("(register_vertiport) Payload: {:?}", &payload);
 
     let client = grpc_clients.storage.vertiport;
 
     match client.insert(payload).await {
         Ok(res) => {
             rest_info!("(register_vertiport) registration success.");
-            rest_debug!("{:?}", res);
+            rest_debug!("(register_vertiport) {:?}", res);
             let vertiport_obj = res.into_inner().object;
             if let Some(vertiport_obj) = vertiport_obj {
                 rest_debug!(
@@ -742,14 +737,14 @@ pub async fn register_vertipad(
     Json(payload): Json<vertipad::Data>,
 ) -> Result<String, (StatusCode, String)> {
     rest_info!("(register_vertipad) entry.");
-    rest_debug!("Payload: {:?}", &payload);
+    rest_debug!("(register_vertipad) Payload: {:?}", &payload);
 
     let client = grpc_clients.storage.vertipad;
 
     match client.insert(payload).await {
         Ok(res) => {
             rest_info!("(register_vertipad) registration success.");
-            rest_debug!("{:?}", res);
+            rest_debug!("(register_vertipad) {:?}", res);
             let vertipad_obj = res.into_inner().object;
             if let Some(vertipad_obj) = vertipad_obj {
                 rest_debug!(
@@ -788,7 +783,7 @@ pub async fn register_asset_group(
     Extension(mut _grpc_clients): Extension<GrpcClients>,
     Json(payload): Json<RegisterAssetGroupPayload>,
 ) -> Result<String, (StatusCode, String)> {
-    rest_info!("register_asset_group() with payload: {:?}", &payload);
+    rest_info!("(register_asset_group) with payload: {:?}", &payload);
 
     let _asset_group = AssetGroup {
         id: Uuid::new_v4().to_string(),
@@ -809,7 +804,7 @@ pub async fn register_asset_group(
     // }
     // let mut client = client_option.unwrap();
 
-    //TODO R3
+    // TODO(R4)
     Ok(_asset_group.id)
 }
 
@@ -836,7 +831,7 @@ pub async fn update_aircraft(
     Json(payload): Json<UpdateAircraftPayload>,
 ) -> Result<String, (StatusCode, String)> {
     rest_info!("(update_aircraft) entry [{}].", payload.id);
-    rest_debug!("Payload: {:?}", &payload);
+    rest_debug!("(update_aircraft) Payload: {:?}", &payload);
 
     let vehicle_id = payload.id.clone();
     let client = grpc_clients.storage.vehicle;
@@ -942,7 +937,7 @@ pub async fn update_vertiport(
     Json(payload): Json<UpdateVertiportPayload>,
 ) -> Result<String, (StatusCode, String)> {
     rest_info!("(update_vertiport) entry [{}].", payload.id);
-    rest_debug!("Payload: {:?}", &payload);
+    rest_debug!("(update_vertiport) Payload: {:?}", &payload);
 
     let client = grpc_clients.storage.vertiport;
 
@@ -1013,7 +1008,7 @@ pub async fn update_vertipad(
     Json(payload): Json<UpdateVertipadPayload>,
 ) -> Result<String, (StatusCode, String)> {
     rest_info!("(update_vertipad) entry [{}].", payload.id);
-    rest_debug!("Payload: {:?}", &payload);
+    rest_debug!("(update_vertipad) Payload: {:?}", &payload);
 
     let client = grpc_clients.storage.vertipad;
 
@@ -1086,7 +1081,7 @@ pub async fn update_asset_group(
     Json(payload): Json<AssetGroup>,
     Path(_id): Path<String>,
 ) -> Result<String, (StatusCode, String)> {
-    rest_info!("update_asset_group() with payload: {:?}", &payload);
+    rest_info!("(update_asset_group) with payload: {:?}", &payload);
 
     // Get Client
     // let _client_option = grpc_clients.storage.get_client().await;
@@ -1097,7 +1092,7 @@ pub async fn update_asset_group(
     // }
     // let mut client = client_option.unwrap();
 
-    //TODO R3
+    // TODO(R4)
     Ok(payload.id)
 }
 
@@ -1215,7 +1210,7 @@ pub async fn remove_asset_group(
     Extension(_grpc_clients): Extension<GrpcClients>,
     Path(_id): Path<String>,
 ) -> Result<String, (StatusCode, String)> {
-    rest_info!("remove_asset_group() with id: {:?}", &_id);
+    rest_info!("(remove_asset_group) with id: {:?}", &_id);
 
     // Get Client
     // let _client_option = grpc_clients.storage.get_client().await;
@@ -1226,6 +1221,6 @@ pub async fn remove_asset_group(
     // }
     // let mut client = client_option.unwrap();
 
-    //TODO R3
+    // TODO(R4)
     Ok(_id)
 }

@@ -11,11 +11,11 @@ use duplicate::duplicate_item;
 use lipsum::{lipsum, lipsum_title};
 use rand::Rng;
 use serde::{Deserialize, Serialize};
-use svc_storage_client_grpc::vertipad::Object as VertipadObject;
-use svc_storage_client_grpc::{
+use svc_storage_client_grpc::prelude::vertipad::Object as VertipadObject;
+use svc_storage_client_grpc::prelude::{
     vehicle::Object as VehicleObject, vertiport::Object as VertiportObject,
 };
-use svc_storage_client_grpc::{GeoPoint, GeoPolygon};
+use svc_storage_client_grpc::prelude::{GeoPoint, GeoPolygon};
 // use svc_storage_client_grpc::vehicle::VehicleType;
 use utoipa::{IntoParams, ToSchema};
 use uuid::Uuid;
@@ -222,7 +222,7 @@ pub struct Aircraft {
     pub basics: Basics,
     /// The aircraft's manufacturer.
     ///
-    /// TODO R3/4: For now we can just say "Boeing", "Airbus", etc. Later, we
+    /// TODO(R4): For now we can just say "Boeing", "Airbus", etc. Later, we
     /// can a struct for this and store the manufacturer's name, logo,
     /// etc.
     pub manufacturer: String,
@@ -261,7 +261,6 @@ impl Aircraft {
         }
     }
 
-    #[allow(dead_code)]
     /// Generate a random aircraft.
     pub fn random() -> Self {
         Self {
@@ -460,9 +459,7 @@ impl TryFrom<VertiportObject> for Vertiport {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use svc_storage_client_grpc::vehicle;
-    use svc_storage_client_grpc::vertipad;
-    use svc_storage_client_grpc::vertiport;
+    use svc_storage_client_grpc::prelude::*;
 
     #[test]
     fn test_asset_basics() {

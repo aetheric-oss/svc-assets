@@ -21,7 +21,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .build_client(false)
         .compile(&[proto_file], &[proto_dir])?;
 
-    println!("cargo:rerun-if-changed={}", proto_file);
+    println!("(build) cargo:rerun-if-changed={}", proto_file);
 
     Ok(())
 }

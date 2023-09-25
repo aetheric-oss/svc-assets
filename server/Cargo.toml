@@ -34,14 +34,14 @@ axum          = "0.5"
 cargo-husky   = "1"
 cfg-if        = "1.0"
 chrono        = { version = "0.4", features = ["serde"] }
-clap          = { version = "4.0", features = ["derive"] }
+clap          = { version = "=4.3.24", features = ["derive"] }
+clap_lex      = "=0.5.0"
 config        = "0.13"
 dotenv        = "0.15"
 duplicate     = "0.4"
 futures       = "0.3"
 hyper         = "0.14"
 lapin         = "2.1"
-lib-common    = { git = "https://github.com/Arrow-air/lib-common.git", tag = "v0.1.1-develop.2" }
 lipsum        = "0.8"
 log           = "0.4"
 mavlink       = "0.11"
@@ -65,7 +65,11 @@ uuid          = { version = "1.2", features = ["serde"] }
 [dependencies.svc-storage-client-grpc]
 features = ["vehicle", "vertiport", "vertipad"]
 git      = "https://github.com/Arrow-air/svc-storage"
-tag      = "v0.10.1-develop.16"
+tag      = "v0.11.0"
+
+[dependencies.lib-common]
+git = "https://github.com/Arrow-air/lib-common.git"
+tag = "v0.2.0"
 
 [dependencies.log4rs]
 features = [

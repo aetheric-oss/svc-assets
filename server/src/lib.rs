@@ -75,5 +75,5 @@ pub async fn shutdown_signal(
             .expect("(shutdown_signal) expect tokio signal ctrl-c"),
     }
 
-    warn!("(shutdown_signal) server shutdown for [{}]", server);
+    warn!("(shutdown_signal) server shutdown for [{}].", server);
 }
