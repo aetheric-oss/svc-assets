@@ -1,3 +1,22 @@
+## [Release 0.4.1](https://github.com/Arrow-air/svc-assets/releases/tag/v0.4.1)
+
+### 🐛 Fixes
+
+- remove (build) from build.rs print statement ([`660bece`](https://github.com/Arrow-air/svc-assets/commit/660bece8217d0ef1e6813c28c8c1496e123a197d))
+
+### 🔥 Refactorings
+
+- use lib-common and new svc-storage-grpc-client ([`4349013`](https://github.com/Arrow-air/svc-assets/commit/4349013be6f115cbd32bafb61820b7b6d9cc602a))
+
+### 🛠 Maintenance
+
+- terraform provisioned file changes ([`17fc0b7`](https://github.com/Arrow-air/svc-assets/commit/17fc0b7d1a263d2fb318563b00b15a85ea92eef4))
+- reviewer comments ([`b244482`](https://github.com/Arrow-air/svc-assets/commit/b244482f642f2f3f71d25b900fed37abb94ad302))
+
+### 📚 Documentation
+
+- fix icons/banners and add client READMEs ([`b42a893`](https://github.com/Arrow-air/svc-assets/commit/b42a8933613db27587a656d9a71cc6e91fa2c524))
+
 ## [Release 0.4.0](https://github.com/Arrow-air/svc-assets/releases/tag/v0.4.0)
 
 ### ✨ Features
