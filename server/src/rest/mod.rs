@@ -7,7 +7,11 @@ pub mod api;
 pub mod server;
 pub mod structs;
 
+use api::*;
+
 use utoipa::OpenApi;
+
+use svc_storage_client_grpc::prelude::*;
 
 #[derive(OpenApi)]
 #[openapi(
@@ -39,13 +43,16 @@ use utoipa::OpenApi;
     ),
     components(
         schemas(
-            api::rest_types::RegisterAircraftPayload,
-            api::rest_types::RegisterVertiportPayload,
-            api::rest_types::RegisterVertipadPayload,
-            api::rest_types::RegisterAssetGroupPayload,
-            api::rest_types::UpdateAircraftPayload,
-            api::rest_types::UpdateVertiportPayload,
-            api::rest_types::UpdateVertipadPayload,
+            vehicle::Data,
+            vertiport::Data,
+            vertipad::Data,
+            GeoPoint,
+            GeoPolygon,
+            GeoLineString,
+            RegisterAssetGroupPayload,
+            UpdateAircraftPayload,
+            UpdateVertiportPayload,
+            UpdateVertipadPayload,
             structs::Operator,
             structs::Aircraft,
             structs::Vertiport,
@@ -53,8 +60,6 @@ use utoipa::OpenApi;
             structs::AssetGroup,
             structs::AssetStatus,
             structs::Basics,
-            structs::Location,
-            structs::OrderedFloat64,
         )
     ),
     tags(
@@ -72,4 +77,14 @@ pub fn generate_openapi_spec(target: &str) -> Result<(), Box<dyn std::error::Err
     std::fs::write(target, output).expect("(ERROR) unable to write json string to file.");
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_openapi_spec_generation() {
+        assert!(generate_openapi_spec("/tmp/generate_openapi_spec.out").is_ok());
+    }
 }

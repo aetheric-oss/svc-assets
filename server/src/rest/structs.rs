@@ -6,52 +6,19 @@
 //! Types here are different from the openapi types.
 #![allow(missing_docs)]
 
-use chrono::{DateTime, TimeZone, Utc};
+use chrono::{DateTime, Utc};
 use duplicate::duplicate_item;
 use lipsum::{lipsum, lipsum_title};
-use ordered_float::OrderedFloat;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
-use svc_storage_client_grpc::vertipad::Object as VertipadObject;
-use svc_storage_client_grpc::{
+use svc_storage_client_grpc::prelude::vertipad::Object as VertipadObject;
+use svc_storage_client_grpc::prelude::{
     vehicle::Object as VehicleObject, vertiport::Object as VertiportObject,
 };
+use svc_storage_client_grpc::prelude::{GeoPoint, GeoPolygon};
 // use svc_storage_client_grpc::vehicle::VehicleType;
 use utoipa::{IntoParams, ToSchema};
 use uuid::Uuid;
-
-/// A wrapper for `OrderedFloat<f64>` for documentation generation purposes.
-#[derive(Debug, Serialize, Deserialize, Hash, Eq, PartialEq, Clone, Copy)]
-pub struct OrderedFloat64(pub OrderedFloat<f64>);
-
-impl From<f64> for OrderedFloat64 {
-    fn from(value: f64) -> Self {
-        OrderedFloat64(OrderedFloat(value))
-    }
-}
-
-impl OrderedFloat64 {
-    /// Convert the value to a f64.
-    pub fn to_f64(self) -> f64 {
-        self.0.into_inner()
-    }
-}
-
-impl ToSchema for OrderedFloat64 {
-    fn schema() -> utoipa::openapi::schema::Schema {
-        utoipa::openapi::ObjectBuilder::new()
-            .property(
-                "value",
-                utoipa::openapi::ObjectBuilder::new()
-                    .schema_type(utoipa::openapi::SchemaType::Number)
-                    .format(Some(utoipa::openapi::SchemaFormat::KnownFormat(
-                        utoipa::openapi::KnownFormat::Float,
-                    ))),
-            )
-            .required("value")
-            .into()
-    }
-}
 
 /// A struct representing the operator.
 ///
@@ -59,7 +26,7 @@ impl ToSchema for OrderedFloat64 {
 /// Arrow Cargo. The operator supplies the assets to the network,
 /// expects to receive and operate cargo shipments, and is expected to
 /// derive revenue from the operation.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema, IntoParams)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, ToSchema, IntoParams)]
 pub struct Operator {
     pub id: String,
     pub name: String,
@@ -73,7 +40,7 @@ pub struct Operator {
     pub description: String,
     pub logo: String,
     pub created_at: DateTime<Utc>,
-    pub updated_at: Option<DateTime<Utc>>,
+    pub updated_at: DateTime<Utc>,
 }
 
 impl Operator {
@@ -92,7 +59,7 @@ impl Operator {
             description: lipsum(10),
             logo: lipsum(1),
             created_at: Utc::now(),
-            updated_at: None,
+            updated_at: Utc::now(),
         }
     }
 }
@@ -104,16 +71,16 @@ impl Operator {
 /// A struct representing a group of assets.
 ///
 /// The asset group can be delegated to another operator.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema, IntoParams)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, ToSchema, IntoParams)]
 pub struct AssetGroup {
     /// UUID of the asset group.
     pub id: String,
     pub name: Option<String>,
-    /// The UUID of an [`crate::structs::Operator`] struct.
+    /// The UUID of an [`Operator`] struct.
     pub owner: String,
-    pub created_at: DateTime<Utc>,
+    pub created_at: Option<DateTime<Utc>>,
     pub updated_at: Option<DateTime<Utc>>,
-    /// The UUID of an [`crate::structs::Operator`] struct, if available.
+    /// The UUID of an [`Operator`] struct, if available.
     pub delegatee: Option<String>,
     /// The UUIDs of the assets in the group.
     pub assets: Vec<String>,
@@ -131,8 +98,8 @@ impl AssetGroup {
             id: Uuid::new_v4().to_string(),
             name: Some(lipsum_title()),
             owner: Uuid::new_v4().to_string(),
-            created_at: Utc::now(),
-            updated_at: None,
+            created_at: Some(Utc::now()),
+            updated_at: Some(Utc::now()),
             delegatee: None,
             assets,
         }
@@ -140,18 +107,18 @@ impl AssetGroup {
 }
 
 /// Attributes that are common to all assets.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema, IntoParams)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, ToSchema, IntoParams)]
 pub struct Basics {
     /// UUID of the asset.
     pub id: String,
     pub name: Option<String>,
-    /// The UUID of an [`crate::structs::AssetGroup`] struct, if available.
+    /// The UUID of an [`AssetGroup`] struct, if available.
     pub group_id: Option<String>,
-    /// The UUID of an [`crate::structs::Operator`] struct.
+    /// The UUID of an [`Operator`] struct.
     pub owner: String,
     pub created_at: DateTime<Utc>,
-    pub updated_at: Option<DateTime<Utc>>,
-    /// A list of UUIDs of [`crate::structs::Operator`] structs.
+    pub updated_at: DateTime<Utc>,
+    /// A list of UUIDs of [`Operator`] structs.
     ///
     /// If the vector is empty, the asset is available to everyone.
     ///
@@ -179,7 +146,7 @@ pub trait AssetsInfo {
     fn created_at(&self) -> DateTime<Utc>;
     /// Get the asset's last update time. If the asset has never been
     /// updated, this will return None.
-    fn updated_at(&self) -> Option<DateTime<Utc>>;
+    fn updated_at(&self) -> DateTime<Utc>;
     /// Check if the asset is grouped.
     fn is_grouped(&self) -> bool;
     /// Check if the asset is open to the public.
@@ -190,7 +157,7 @@ pub trait AssetsInfo {
     fn status(&self) -> AssetStatus;
 }
 
-#[duplicate_item(asset; [Aircraft]; [Vertiport])]
+#[duplicate_item(asset; [Aircraft]; [Vertiport]; [Vertipad])]
 impl AssetsInfo for asset {
     fn basics(&self) -> Basics {
         self.basics.clone()
@@ -213,7 +180,7 @@ impl AssetsInfo for asset {
     fn created_at(&self) -> DateTime<Utc> {
         self.basics().created_at
     }
-    fn updated_at(&self) -> Option<DateTime<Utc>> {
+    fn updated_at(&self) -> DateTime<Utc> {
         self.basics().updated_at
     }
     fn is_grouped(&self) -> bool {
@@ -235,7 +202,7 @@ impl AssetsInfo for asset {
 }
 
 /// Status of an asset.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 pub enum AssetStatus {
     /// The asset is available for use.
     Available,
@@ -245,24 +212,17 @@ pub enum AssetStatus {
     Emergency,
 }
 
-/// A struct representing a location.
-#[derive(Clone, Debug, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema, IntoParams)]
-pub struct Location {
-    pub latitude: OrderedFloat64,
-    pub longitude: OrderedFloat64,
-}
-
 // =====================================================================
 // Asset types
 // =====================================================================
 
 /// A struct representing an aircraft.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema, IntoParams)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToSchema, IntoParams)]
 pub struct Aircraft {
     pub basics: Basics,
     /// The aircraft's manufacturer.
     ///
-    /// TODO R3/4: For now we can just say "Boeing", "Airbus", etc. Later, we
+    /// TODO(R4): For now we can just say "Boeing", "Airbus", etc. Later, we
     /// can a struct for this and store the manufacturer's name, logo,
     /// etc.
     pub manufacturer: String,
@@ -277,8 +237,8 @@ pub struct Aircraft {
     /// aircraft from national aviation authorities like the FAA.
     pub registration_number: String,
     pub description: Option<String>,
-    pub max_payload_kg: OrderedFloat64,
-    pub max_range_km: OrderedFloat64,
+    pub max_payload_kg: f64,
+    pub max_range_km: f64,
     pub last_maintenance: Option<DateTime<Utc>>,
     pub next_maintenance: Option<DateTime<Utc>>,
     pub last_vertiport_id: Option<String>,
@@ -301,7 +261,6 @@ impl Aircraft {
         }
     }
 
-    #[allow(dead_code)]
     /// Generate a random aircraft.
     pub fn random() -> Self {
         Self {
@@ -311,7 +270,7 @@ impl Aircraft {
                 name: Some(lipsum_title()),
                 owner: Uuid::new_v4().to_string(),
                 created_at: Utc::now(),
-                updated_at: None,
+                updated_at: Utc::now(),
                 whitelist: Vec::new(),
                 status: AssetStatus::Available,
             },
@@ -320,32 +279,38 @@ impl Aircraft {
             serial_number: lipsum(12),
             registration_number: lipsum(12),
             description: None,
-            max_payload_kg: OrderedFloat64::from(1000.0),
-            max_range_km: OrderedFloat64::from(1000.0),
+            max_payload_kg: 1000.0,
+            max_range_km: 1000.0,
             last_maintenance: None,
             next_maintenance: None,
             last_vertiport_id: Some(Uuid::new_v4().to_string()),
         }
     }
+}
 
-    pub fn from(storage_vehicle: VehicleObject) -> Result<Aircraft, String> {
-        let data = storage_vehicle.data;
-        if data.is_none() {
-            return Err("Vehicle data is missing".to_string());
-        }
-        let data = match data {
+impl TryFrom<VehicleObject> for Aircraft {
+    type Error = String;
+
+    fn try_from(object: VehicleObject) -> Result<Self, Self::Error> {
+        let data = match object.data {
             Some(data) => data,
-            None => return Err("Vehicle data is missing".to_string()),
+            None => return Err("(try_from) vehicle data is missing".to_string()),
         };
 
         Ok(Aircraft {
             basics: Basics {
-                id: storage_vehicle.id,
+                id: object.id,
                 group_id: data.asset_group_id,
                 name: None,
                 owner: Uuid::new_v4().to_string(),
-                created_at: Utc::now(),
-                updated_at: None,
+                created_at: data
+                    .created_at
+                    .ok_or("(try_from) created_at field empty but expected.")?
+                    .into(),
+                updated_at: data
+                    .updated_at
+                    .ok_or("(try_from) updated_at field empty but expected.")?
+                    .into(),
                 whitelist: Vec::new(),
                 status: AssetStatus::Available,
             },
@@ -354,26 +319,10 @@ impl Aircraft {
             serial_number: data.serial_number,
             registration_number: data.registration_number,
             description: data.description,
-            max_payload_kg: 0.0.into(),
-            max_range_km: 0.0.into(),
-            last_maintenance: if data.last_maintenance.is_some() {
-                Some(
-                    Utc.timestamp_opt(data.last_maintenance.unwrap().seconds, 0)
-                        .single()
-                        .unwrap(),
-                )
-            } else {
-                None
-            },
-            next_maintenance: if data.next_maintenance.is_some() {
-                Some(
-                    Utc.timestamp_opt(data.next_maintenance.unwrap().seconds, 0)
-                        .single()
-                        .unwrap(),
-                )
-            } else {
-                None
-            },
+            max_payload_kg: 0.0,
+            max_range_km: 0.0,
+            last_maintenance: data.last_maintenance.map(|date| date.into()),
+            next_maintenance: data.next_maintenance.map(|date| date.into()),
             last_vertiport_id: data.last_vertiport_id,
         })
     }
@@ -383,47 +332,63 @@ impl Aircraft {
 ///
 /// A vertipad is a landing pad that is used for vertical takeoff and
 /// landing (VTOL) aircraft. Usually, vertipads belong to vertiports.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema, IntoParams)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToSchema, IntoParams)]
 pub struct Vertipad {
-    pub id: String,
+    pub basics: Basics,
     pub vertiport_id: String,
     pub enabled: bool,
     pub occupied: bool,
-    pub location: Location,
+    pub geo_location: GeoPoint,
+    pub schedule: Option<String>,
 }
 
 impl Vertipad {
-    #[allow(dead_code)]
-    /// Generate a random vertipad.
-    pub fn random() -> Self {
-        Self {
-            id: Uuid::new_v4().to_string(),
-            vertiport_id: Uuid::new_v4().to_string(),
-            enabled: true,
-            occupied: false,
-            location: Location {
-                latitude: OrderedFloat64::from(0.0),
-                longitude: OrderedFloat64::from(0.0),
-            },
+    /// Get the vertipad's name.
+    ///
+    /// It is recommended to make the `name` field required for
+    /// vertiports. This can be done through frontend validation.
+    pub fn full_name(&self) -> String {
+        match &self.basics.name {
+            Some(name) => name.clone(),
+            None => "Unnamed vertipad".to_string(),
         }
     }
+}
 
-    pub fn from(vertipad: VertipadObject) -> Result<Vertipad, String> {
-        let data = vertipad.data;
-        if let Some(data) = data {
-            Ok(Vertipad {
-                id: vertipad.id,
-                vertiport_id: data.vertiport_id,
-                enabled: data.enabled,
-                occupied: data.occupied,
-                location: Location {
-                    latitude: OrderedFloat64::from(data.latitude),
-                    longitude: OrderedFloat64::from(data.longitude),
-                },
-            })
-        } else {
-            Err("Vertipad data is missing".to_string())
-        }
+impl TryFrom<VertipadObject> for Vertipad {
+    type Error = String;
+
+    fn try_from(object: VertipadObject) -> Result<Self, Self::Error> {
+        let data = match object.data {
+            Some(data) => data,
+            None => return Err("(try_from) vertipad data is missing".to_string()),
+        };
+
+        Ok(Vertipad {
+            basics: Basics {
+                id: object.id,
+                group_id: None,
+                name: Some(data.name),
+                owner: Uuid::new_v4().to_string(),
+                created_at: data
+                    .created_at
+                    .ok_or("(try_from) created_at field empty but expected.")?
+                    .into(),
+                updated_at: data
+                    .updated_at
+                    .ok_or("(try_from) updated_at field empty but expected.")?
+                    .into(),
+                whitelist: Vec::new(),
+                status: AssetStatus::Available,
+            },
+            geo_location: data
+                .geo_location
+                .ok_or("(try_from) geo_location empty but expected.")?,
+            vertiport_id: data.vertiport_id,
+            enabled: data.enabled,
+            occupied: data.occupied,
+            schedule: data.schedule,
+        })
     }
 }
 
@@ -431,11 +396,12 @@ impl Vertipad {
 ///
 /// A vertiport is an airport that is used for vertical takeoff and
 /// landing (VTOL) aircraft. A vertiport may have one or more vertipads.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema, IntoParams)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToSchema, IntoParams)]
 pub struct Vertiport {
     pub basics: Basics,
-    pub description: Option<String>,
-    pub location: Location,
+    pub description: String,
+    pub geo_location: GeoPolygon,
+    pub schedule: Option<String>,
 }
 
 impl Vertiport {
@@ -449,52 +415,40 @@ impl Vertiport {
             None => "Unnamed vertiport".to_string(),
         }
     }
+}
 
-    #[allow(dead_code)]
-    /// Generate a random vertiport.
-    pub fn random() -> Self {
-        Self {
+impl TryFrom<VertiportObject> for Vertiport {
+    type Error = String;
+
+    fn try_from(object: VertiportObject) -> Result<Self, Self::Error> {
+        let data = match object.data {
+            Some(data) => data,
+            None => return Err("(try_from) vertiport data is missing".to_string()),
+        };
+
+        Ok(Vertiport {
             basics: Basics {
-                id: Uuid::new_v4().to_string(),
+                id: object.id,
                 group_id: None,
-                name: Some(lipsum_title()),
+                name: Some(data.name),
                 owner: Uuid::new_v4().to_string(),
-                created_at: Utc::now(),
-                updated_at: None,
+                created_at: data
+                    .created_at
+                    .ok_or("(try_from) created_at field empty but expected.")?
+                    .into(),
+                updated_at: data
+                    .updated_at
+                    .ok_or("(try_from) updated_at field empty but expected.")?
+                    .into(),
                 whitelist: Vec::new(),
                 status: AssetStatus::Available,
             },
-            description: None,
-            location: Location {
-                latitude: OrderedFloat64::from(0.0),
-                longitude: OrderedFloat64::from(0.0),
-            },
-        }
-    }
-
-    pub fn from(storage_vertiport: VertiportObject) -> Result<Vertiport, String> {
-        let data = storage_vertiport.data;
-        if let Some(data) = data {
-            Ok(Vertiport {
-                basics: Basics {
-                    id: storage_vertiport.id,
-                    group_id: None,
-                    name: Some("Vertiport".to_string()),
-                    owner: Uuid::new_v4().to_string(),
-                    created_at: Utc::now(),
-                    updated_at: None,
-                    whitelist: Vec::new(),
-                    status: AssetStatus::Available,
-                },
-                description: Some(data.description),
-                location: Location {
-                    latitude: OrderedFloat64::from(data.latitude),
-                    longitude: OrderedFloat64::from(data.longitude),
-                },
-            })
-        } else {
-            Err("Vertiport data is missing".to_string())
-        }
+            description: data.description,
+            geo_location: data
+                .geo_location
+                .ok_or("(try_from) geo_location empty but expected.")?,
+            schedule: data.schedule,
+        })
     }
 }
 
@@ -505,6 +459,7 @@ impl Vertiport {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use svc_storage_client_grpc::prelude::*;
 
     #[test]
     fn test_asset_basics() {
@@ -514,7 +469,7 @@ mod tests {
             group_id: Some(Uuid::new_v4().to_string()),
             owner: Uuid::new_v4().to_string(),
             created_at: Utc::now(),
-            updated_at: Some(Utc::now()),
+            updated_at: Utc::now(),
             whitelist: vec![Uuid::new_v4().to_string()],
             status: AssetStatus::Available,
         };
@@ -525,8 +480,8 @@ mod tests {
             serial_number: "12345".to_string(),
             registration_number: "N12345".to_string(),
             description: None,
-            max_payload_kg: OrderedFloat64::from(1000.0),
-            max_range_km: OrderedFloat64::from(1000.0),
+            max_payload_kg: 1000.0,
+            max_range_km: 1000.0,
             last_maintenance: None,
             next_maintenance: None,
             last_vertiport_id: None,
@@ -542,14 +497,21 @@ mod tests {
     }
 
     #[test]
-    fn test_assets_info_trait_methods_on_different_asset_types() {
+    fn test_aircraft_basics_trait_methods() {
+        let aircraft = vehicle::mock::get_data_obj();
         let basics = Basics {
             id: Uuid::new_v4().to_string(),
             name: Some("Test asset".to_string()),
             group_id: Some(Uuid::new_v4().to_string()),
             owner: Uuid::new_v4().to_string(),
-            created_at: Utc::now(),
-            updated_at: Some(Utc::now()),
+            created_at: aircraft
+                .created_at
+                .expect("mock didn't return a created_at date.")
+                .into(),
+            updated_at: aircraft
+                .updated_at
+                .expect("mock didn't return a updated_at date.")
+                .into(),
             whitelist: vec![Uuid::new_v4().to_string()],
             status: AssetStatus::Available,
         };
@@ -557,23 +519,14 @@ mod tests {
             basics: basics.clone(),
             manufacturer: "Boeing".to_string(),
             model: "737-800".to_string(),
-            serial_number: "12345".to_string(),
-            registration_number: "N12345".to_string(),
-            description: None,
-            max_payload_kg: OrderedFloat64::from(1000.0),
-            max_range_km: OrderedFloat64::from(1000.0),
+            serial_number: aircraft.serial_number,
+            registration_number: aircraft.registration_number,
+            description: aircraft.description,
+            max_payload_kg: 1000.0,
+            max_range_km: 1000.0,
             last_maintenance: None,
             next_maintenance: None,
             last_vertiport_id: None,
-        };
-
-        let vertiport = Vertiport {
-            basics: basics.clone(),
-            description: None,
-            location: Location {
-                latitude: 0.0.into(),
-                longitude: 0.0.into(),
-            },
         };
         assert_eq!(aircraft.id(), Uuid::parse_str(&basics.id));
         assert_eq!(aircraft.name(), basics.name.clone().unwrap());
@@ -583,7 +536,68 @@ mod tests {
         assert_eq!(aircraft.is_grouped(), true);
         assert_eq!(aircraft.is_public(), false);
         assert_eq!(aircraft.status(), basics.status);
+    }
 
+    #[test]
+    fn test_aircraft_from_vehicle_object() {
+        let expected_vehicle_id = Uuid::new_v4();
+        let vehicle_data: vehicle::Data = vehicle::mock::get_data_obj();
+        let vehicle_obj = VehicleObject {
+            id: expected_vehicle_id.clone().to_string(),
+            data: Some(vehicle_data.clone()),
+        };
+        let aircraft_result = vehicle_obj.try_into();
+        assert!(aircraft_result.is_ok());
+        let aircraft: Aircraft = aircraft_result.unwrap();
+
+        assert_eq!(aircraft.id(), Ok(expected_vehicle_id));
+        assert!(aircraft.name().len() > 0);
+        assert!(aircraft.owner().is_ok());
+        assert_eq!(
+            aircraft.created_at(),
+            vehicle_data
+                .created_at
+                .expect("mock didn't return a created_at date.")
+                .into()
+        );
+        assert_eq!(
+            aircraft.updated_at(),
+            vehicle_data
+                .updated_at
+                .expect("mock didn't return a updated_at date.")
+                .into()
+        );
+        assert_eq!(aircraft.is_grouped(), false);
+        assert_eq!(aircraft.is_public(), true);
+        assert_eq!(aircraft.status(), AssetStatus::Available);
+    }
+
+    #[test]
+    fn test_vertiport_basics_trait_methods() {
+        let vertiport = vertiport::mock::get_data_obj();
+        let basics = Basics {
+            id: Uuid::new_v4().to_string(),
+            name: Some("Test asset".to_string()),
+            group_id: Some(Uuid::new_v4().to_string()),
+            owner: Uuid::new_v4().to_string(),
+            created_at: vertiport
+                .created_at
+                .expect("mock didn't return a created_at date.")
+                .into(),
+            updated_at: vertiport
+                .updated_at
+                .expect("mock didn't return a updated_at date.")
+                .into(),
+            whitelist: vec![Uuid::new_v4().to_string()],
+            status: AssetStatus::Available,
+        };
+
+        let vertiport = Vertiport {
+            basics: basics.clone(),
+            description: vertiport.description,
+            geo_location: vertiport.geo_location.unwrap(),
+            schedule: vertiport.schedule,
+        };
         assert_eq!(vertiport.id(), Uuid::parse_str(&basics.id));
         assert_eq!(vertiport.name(), basics.name.clone().unwrap());
         assert_eq!(vertiport.owner(), Uuid::parse_str(&basics.owner));
@@ -592,6 +606,112 @@ mod tests {
         assert_eq!(vertiport.is_grouped(), true);
         assert_eq!(vertiport.is_public(), false);
         assert_eq!(vertiport.status(), basics.status);
+    }
+
+    #[test]
+    fn test_vertiport_from_vertiport_object() {
+        let expected_vertiport_id = Uuid::new_v4();
+        let vertiport_data: vertiport::Data = vertiport::mock::get_data_obj();
+        let vertiport_obj = VertiportObject {
+            id: expected_vertiport_id.clone().to_string(),
+            data: Some(vertiport_data.clone()),
+        };
+        let vertiport_result = vertiport_obj.try_into();
+        assert!(vertiport_result.is_ok());
+        let vertiport: Vertiport = vertiport_result.unwrap();
+
+        assert_eq!(vertiport.id(), Ok(expected_vertiport_id));
+        assert_eq!(vertiport.name(), vertiport_data.name);
+        assert!(vertiport.owner().is_ok());
+        assert_eq!(
+            vertiport.created_at(),
+            vertiport_data
+                .created_at
+                .expect("mock didn't return a created_at date.")
+                .into()
+        );
+        assert_eq!(
+            vertiport.updated_at(),
+            vertiport_data
+                .updated_at
+                .expect("mock didn't return a updated_at date.")
+                .into()
+        );
+        assert_eq!(vertiport.is_grouped(), false);
+        assert_eq!(vertiport.is_public(), true);
+        assert_eq!(vertiport.status(), AssetStatus::Available);
+    }
+
+    #[test]
+    fn test_vertipad_basics_trait_methods() {
+        let vertipad = vertipad::mock::get_data_obj();
+        let basics = Basics {
+            id: Uuid::new_v4().to_string(),
+            name: Some("Test asset".to_string()),
+            group_id: Some(Uuid::new_v4().to_string()),
+            owner: Uuid::new_v4().to_string(),
+            created_at: vertipad
+                .created_at
+                .expect("mock didn't return a created_at date.")
+                .into(),
+            updated_at: vertipad
+                .updated_at
+                .expect("mock didn't return a updated_at date.")
+                .into(),
+            whitelist: vec![Uuid::new_v4().to_string()],
+            status: AssetStatus::Available,
+        };
+
+        let vertipad = Vertipad {
+            basics: basics.clone(),
+            geo_location: vertipad.geo_location.unwrap(),
+            vertiport_id: vertipad.vertiport_id,
+            enabled: vertipad.enabled,
+            occupied: vertipad.occupied,
+            schedule: vertipad.schedule,
+        };
+        assert_eq!(vertipad.id(), Uuid::parse_str(&basics.id));
+        assert_eq!(vertipad.name(), basics.name.clone().unwrap());
+        assert_eq!(vertipad.owner(), Uuid::parse_str(&basics.owner));
+        assert_eq!(vertipad.created_at(), basics.created_at);
+        assert_eq!(vertipad.updated_at(), basics.updated_at);
+        assert_eq!(vertipad.is_grouped(), true);
+        assert_eq!(vertipad.is_public(), false);
+        assert_eq!(vertipad.status(), basics.status);
+    }
+
+    #[test]
+    fn test_vertipad_from_vertipad_object() {
+        let expected_vertipad_id = Uuid::new_v4();
+        let vertipad_data: vertipad::Data = vertipad::mock::get_data_obj();
+        let vertipad_obj = VertipadObject {
+            id: expected_vertipad_id.clone().to_string(),
+            data: Some(vertipad_data.clone()),
+        };
+        let vertipad_result = vertipad_obj.try_into();
+        assert!(vertipad_result.is_ok());
+        let vertipad: Vertipad = vertipad_result.unwrap();
+
+        assert_eq!(vertipad.id(), Ok(expected_vertipad_id));
+        assert_eq!(vertipad.name(), vertipad_data.name);
+        assert!(vertipad.owner().is_ok());
+        assert_eq!(
+            vertipad.created_at(),
+            vertipad_data
+                .created_at
+                .expect("mock didn't return a created_at date.")
+                .into()
+        );
+        assert_eq!(
+            vertipad.updated_at(),
+            vertipad_data
+                .updated_at
+                .expect("mock didn't return a updated_at date.")
+                .into()
+        );
+        assert_eq!(vertipad.is_grouped(), false);
+        assert_eq!(vertipad.is_public(), true);
+        assert_eq!(vertipad.status(), AssetStatus::Available);
     }
 
     #[test]
@@ -604,30 +724,31 @@ mod tests {
             group_id: Some(group_id.clone()),
             owner: Uuid::new_v4().to_string(),
             created_at: Utc::now(),
-            updated_at: Some(Utc::now()),
+            updated_at: Utc::now(),
             whitelist: vec![Uuid::new_v4().to_string()],
             status: AssetStatus::Available,
         };
+        let aircraft = vehicle::mock::get_data_obj();
         let aircraft = Aircraft {
             basics: basics.clone(),
             manufacturer: "Boeing".to_string(),
             model: "737-800".to_string(),
-            serial_number: "12345".to_string(),
-            registration_number: "N12345".to_string(),
-            description: None,
-            max_payload_kg: OrderedFloat64::from(1000.0),
-            max_range_km: OrderedFloat64::from(1000.0),
+            serial_number: aircraft.serial_number,
+            registration_number: aircraft.registration_number,
+            description: aircraft.description,
+            max_payload_kg: 1000.0,
+            max_range_km: 1000.0,
             last_maintenance: None,
             next_maintenance: None,
             last_vertiport_id: None,
         };
+
+        let vertiport = vertiport::mock::get_data_obj();
         let vertiport = Vertiport {
             basics: basics.clone(),
-            description: None,
-            location: Location {
-                latitude: 0.0.into(),
-                longitude: 0.0.into(),
-            },
+            description: vertiport.description,
+            geo_location: vertiport.geo_location.unwrap(),
+            schedule: vertiport.schedule,
         };
 
         let asset_group = AssetGroup {
@@ -641,7 +762,7 @@ mod tests {
             id: group_id.clone(),
             name: Some("Test group".to_string()),
             owner: Uuid::new_v4().to_string(),
-            created_at: Utc::now(),
+            created_at: Some(Utc::now()),
             updated_at: Some(Utc::now()),
             delegatee: None,
             assets: vec![

@@ -4,25 +4,18 @@
 pub mod rest_types {
     include!("../../../openapi/types.rs");
 }
+use prost_types::FieldMask;
 use std::str::FromStr;
 
-use prost_types::{FieldMask, Timestamp};
 pub use rest_types::*;
 
 use axum::{extract::Path, Extension, Json};
-use chrono::Utc;
 use hyper::StatusCode;
-use svc_storage_client_grpc::{AdvancedSearchFilter, Id};
-
-use svc_storage_client_grpc::resources::{
-    vehicle::{Data, UpdateObject},
-    vertipad::{Data as VertipadData, UpdateObject as VertipadUpdateObject},
-    vertiport::{Data as VertiportData, UpdateObject as VertiportUpdateObject},
-};
+use lib_common::grpc::ClientConnect;
+use svc_storage_client_grpc::prelude::*;
 
 use super::structs::{Aircraft, AssetGroup, Operator, Vertipad, Vertiport};
 use crate::grpc::client::GrpcClients;
-use crate::{rest_error, rest_info};
 use uuid::Uuid;
 
 //===========================================================
@@ -37,7 +30,7 @@ fn is_uuid(s: &str) -> bool {
 //===========================================================
 // REST API Implementations
 //===========================================================
-
+/// Health check for load balancing
 #[utoipa::path(
     get,
     path = "/health",
@@ -47,38 +40,32 @@ fn is_uuid(s: &str) -> bool {
         (status = 503, description = "Service is unhealthy, one or more dependencies unavailable.")
     )
 )]
-#[allow(missing_docs)]
 pub async fn health_check(
-    Extension(mut grpc_clients): Extension<GrpcClients>,
+    Extension(grpc_clients): Extension<GrpcClients>,
 ) -> Result<(), StatusCode> {
-    rest_info!("(health_check) entry.");
+    rest_debug!("(health_check) entry.");
 
     let mut ok = true;
 
-    let result = grpc_clients.storage_vertiport.get_client().await;
-    if result.is_none() {
-        let error_msg = "svc-storage: vertiport client unavailable.".to_string();
-        rest_error!("(health_check) {}", &error_msg);
+    if grpc_clients.storage.vertiport.get_client().await.is_err() {
+        let error_msg = "svc-storage vertiport unavailable.".to_string();
+        rest_error!("(health_check) {}.", &error_msg);
         ok = false;
-    };
-
-    let result = grpc_clients.storage_vertipad.get_client().await;
-    if result.is_none() {
-        let error_msg = "svc-storage: vertipad client unavailable.".to_string();
-        rest_error!("(health_check) {}", &error_msg);
+    }
+    if grpc_clients.storage.vertipad.get_client().await.is_err() {
+        let error_msg = "svc-storage vertipad unavailable.".to_string();
+        rest_error!("(health_check) {}.", &error_msg);
         ok = false;
-    };
-
-    let result = grpc_clients.storage_vehicle.get_client().await;
-    if result.is_none() {
-        let error_msg = "svc-storage: vehicle client unavailable.".to_string();
-        rest_error!("(health_check) {}", &error_msg);
+    }
+    if grpc_clients.storage.vehicle.get_client().await.is_err() {
+        let error_msg = "svc-storage vehicle unavailable.".to_string();
+        rest_error!("(health_check) {}.", &error_msg);
         ok = false;
-    };
+    }
 
     match ok {
         true => {
-            rest_info!("(health_check) healthy, all dependencies running.");
+            rest_debug!("(health_check) healthy, all dependencies running.");
             Ok(())
         }
         false => {
@@ -107,12 +94,12 @@ pub async fn get_operator(
     Extension(mut _grpc_clients): Extension<GrpcClients>,
     Path(operator_id): Path<String>,
 ) -> Result<Json<Operator>, (StatusCode, String)> {
-    rest_info!("get_operator({})", operator_id);
+    rest_info!("(get_operator) {}", operator_id);
     if !is_uuid(&operator_id) {
         return Err((StatusCode::BAD_REQUEST, "Invalid operator id".to_string()));
     }
     // Get Client
-    // TODO R3: let _client_option = grpc_clients.storage.get_client().await;
+    // TODO(R4): let _client_option = grpc_clients.storage.get_client().await;
     // if client_option.is_none() {
     //     let error_msg = "svc-storage unavailable.".to_string();
     //     rest_error!("(get_operator) {}", &error_msg);
@@ -121,10 +108,6 @@ pub async fn get_operator(
     // let mut client = client_option.unwrap();
     Ok(Json(Operator::random()))
 }
-
-//-----------------------------------------------------------
-// R2 DEMO
-//-----------------------------------------------------------
 
 #[utoipa::path(
     get,
@@ -137,38 +120,17 @@ pub async fn get_operator(
 )]
 /// Get all aircraft from the database.
 pub async fn get_all_aircraft(
-    Extension(mut grpc_clients): Extension<GrpcClients>,
+    Extension(grpc_clients): Extension<GrpcClients>,
 ) -> Result<Json<Vec<Aircraft>>, (StatusCode, String)> {
     rest_info!("(get_all_aircraft) entry.");
     let filter = AdvancedSearchFilter::search_is_not_null(String::from("deleted_at"));
-    let vehicle_client_option = grpc_clients.storage_vehicle.get_client().await;
-    if vehicle_client_option.is_none() {
-        let error_msg = "svc-storage unavailable.".to_string();
-        rest_error!("(get_all_aircraft) {}", &error_msg);
-        return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
-    }
 
-    let mut vehicle_client = match vehicle_client_option {
-        Some(client) => client,
-        None => {
-            let error_msg = "svc-storage's vehicle client is unavailable.".to_string();
-            rest_error!("(get_all_aircraft) {}", &error_msg);
-            return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
-        }
-    };
-
-    let vehicle_response = vehicle_client.search(filter.clone()).await;
-
-    if vehicle_response.is_err() {
-        let error_msg = "svc-storage unavailable.".to_string();
-        rest_error!("(get_all_aircraft) {}", &error_msg);
-        return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
-    }
-    let mut vehicles = match vehicle_response {
+    let vehicle_client = grpc_clients.storage.vehicle;
+    let mut vehicles = match vehicle_client.search(filter.clone()).await {
         Ok(response) => response.into_inner().list,
-        Err(_) => {
+        Err(e) => {
             let error_msg = "could not retrieve vehicles.".to_string();
-            rest_error!("(get_all_aircraft) {}", &error_msg);
+            rest_error!("(get_all_aircraft) {}: {}.", error_msg, e);
             return Err((StatusCode::INTERNAL_SERVER_ERROR, error_msg));
         }
     };
@@ -176,10 +138,10 @@ pub async fn get_all_aircraft(
     let mut assets = Vec::new();
 
     for vehicle in vehicles.drain(..) {
-        let aircraft = match Aircraft::from(vehicle) {
+        let aircraft: Aircraft = match vehicle.try_into() {
             Ok(object) => object,
             Err(_) => {
-                let error_msg = "could not convert vehicle to aircraft.".to_string();
+                let error_msg = "could not convert VehicleObject to Aircraft.".to_string();
                 rest_error!("(get_all_aircraft) {}", &error_msg);
                 return Err((StatusCode::INTERNAL_SERVER_ERROR, error_msg));
             }
@@ -201,37 +163,17 @@ pub async fn get_all_aircraft(
 )]
 /// Get all vertiports from the database.
 pub async fn get_all_vertiports(
-    Extension(mut grpc_clients): Extension<GrpcClients>,
+    Extension(grpc_clients): Extension<GrpcClients>,
 ) -> Result<Json<Vec<Vertiport>>, (StatusCode, String)> {
     rest_info!("(get_all_vertiports) entry.");
     let filter = AdvancedSearchFilter::search_is_not_null(String::from("deleted_at"));
-    let vertiport_client_option = grpc_clients.storage_vertiport.get_client().await;
-    if vertiport_client_option.is_none() {
-        let error_msg = "svc-storage unavailable.".to_string();
-        rest_error!("(get_all_vertiports) {}", &error_msg);
-        return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
-    }
 
-    let mut vertiport_client = match vertiport_client_option {
-        Some(client) => client,
-        None => {
-            let error_msg = "svc-storage's vertiport client is unavailable.".to_string();
-            rest_error!("(get_all_vertiports) {}", &error_msg);
-            return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
-        }
-    };
-    let vertiport_response = vertiport_client.search(filter.clone()).await;
-
-    if vertiport_response.is_err() {
-        let error_msg = "svc-storage unavailable.".to_string();
-        rest_error!("(get_all_vertiports) {}", &error_msg);
-        return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
-    }
-    let mut vertiports = match vertiport_response {
+    let vertiport_client = grpc_clients.storage.vertiport;
+    let mut vertiports = match vertiport_client.search(filter.clone()).await {
         Ok(response) => response.into_inner().list,
-        Err(_) => {
+        Err(e) => {
             let error_msg = "could not retrieve vertiports.".to_string();
-            rest_error!("(get_all_vertiports) {}", &error_msg);
+            rest_error!("(get_all_vertiports) {}: {}.", error_msg, e);
             return Err((StatusCode::INTERNAL_SERVER_ERROR, error_msg));
         }
     };
@@ -239,10 +181,10 @@ pub async fn get_all_vertiports(
     let mut assets = Vec::new();
 
     for vertiport in vertiports.drain(..) {
-        let vertiport = match Vertiport::from(vertiport) {
+        let vertiport: Vertiport = match vertiport.try_into() {
             Ok(object) => object,
             Err(_) => {
-                let error_msg = "could not convert vertiport to vertiport struct.".to_string();
+                let error_msg = "could not convert VertiportObject to Vertiport.".to_string();
                 rest_error!("(get_all_vertiports) {}", &error_msg);
                 return Err((StatusCode::INTERNAL_SERVER_ERROR, error_msg));
             }
@@ -264,48 +206,28 @@ pub async fn get_all_vertiports(
 )]
 /// Get all vertipads from the database.
 pub async fn get_all_vertipads(
-    Extension(mut grpc_clients): Extension<GrpcClients>,
+    Extension(grpc_clients): Extension<GrpcClients>,
 ) -> Result<Json<Vec<Vertipad>>, (StatusCode, String)> {
     rest_info!("(get_all_vertipads) entry.");
     let filter = AdvancedSearchFilter::search_is_not_null(String::from("deleted_at"));
-    let vertipad_client_option = grpc_clients.storage_vertipad.get_client().await;
-    if vertipad_client_option.is_none() {
-        let error_msg = "svc-storage unavailable.".to_string();
-        rest_error!("(get_all_vertipads) {}", &error_msg);
-        return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
-    }
 
-    let mut vertipad_client = match vertipad_client_option {
-        Some(client) => client,
-        None => {
-            let error_msg = "svc-storage's vertipad client is unavailable.".to_string();
-            rest_error!("(get_all_vertipads) {}", &error_msg);
-            return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
-        }
-    };
-
-    let vertipad_response = vertipad_client.search(filter.clone()).await;
-
-    if vertipad_response.is_err() {
-        let error_msg = "svc-storage unavailable.".to_string();
-        rest_error!("(get_all_vertipads) {}", &error_msg);
-        return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
-    }
-    let mut vertipads = match vertipad_response {
+    let vertipad_client = grpc_clients.storage.vertipad;
+    let mut vertipads = match vertipad_client.search(filter.clone()).await {
         Ok(response) => response.into_inner().list,
-        Err(_) => {
+        Err(e) => {
             let error_msg = "could not retrieve vertipads.".to_string();
-            rest_error!("(get_all_vertipads) {}", &error_msg);
+            rest_error!("(get_all_vertipads) {}: {}.", error_msg, e);
             return Err((StatusCode::INTERNAL_SERVER_ERROR, error_msg));
         }
     };
+
     let mut assets = Vec::new();
 
     for vertipad in vertipads.drain(..) {
-        let vertipad = match Vertipad::from(vertipad) {
+        let vertipad: Vertipad = match vertipad.try_into() {
             Ok(object) => object,
             Err(_) => {
-                let error_msg = "could not convert vertipad to vertipad struct.".to_string();
+                let error_msg = "could not convert VertipadObject to Vertipad.".to_string();
                 rest_error!("(get_all_vertipads) {}", &error_msg);
                 return Err((StatusCode::INTERNAL_SERVER_ERROR, error_msg));
             }
@@ -338,7 +260,7 @@ pub async fn get_all_assets_by_operator(
     Extension(mut _grpc_clients): Extension<GrpcClients>,
     Path(operator_id): Path<String>,
 ) -> Result<Json<Vec<Uuid>>, (StatusCode, String)> {
-    rest_info!("get_all_assets_by_operator({})", operator_id);
+    rest_info!("(get_all_assets_by_operator) {}", operator_id);
     if !is_uuid(&operator_id) {
         return Err((StatusCode::BAD_REQUEST, "Invalid operator id".to_string()));
     }
@@ -351,7 +273,7 @@ pub async fn get_all_assets_by_operator(
     //     return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
     // }
 
-    // let request = tonic::Request::new(SearchFilter {
+    // let request = SearchFilter {
     //     search_field: "".to_string(),
     //     search_value: "".to_string(),
     //     page_number: 1,
@@ -374,7 +296,7 @@ pub async fn get_all_assets_by_operator(
     //     })?
     //     .into_inner()
     //     .vertiports;
-    //TODO R3
+    // TODO(R4)
     Ok(Json(vec![]))
 }
 
@@ -401,7 +323,7 @@ pub async fn get_all_grouped_assets(
     Extension(mut _grpc_clients): Extension<GrpcClients>,
     Path(operator_id): Path<String>,
 ) -> Result<Json<Vec<Uuid>>, (StatusCode, String)> {
-    rest_info!("get_all_grouped_assets({})", operator_id);
+    rest_info!("(get_all_grouped_assets) {}", operator_id);
     if !is_uuid(&operator_id) {
         return Err((StatusCode::BAD_REQUEST, "Invalid operator id".to_string()));
     }
@@ -413,7 +335,7 @@ pub async fn get_all_grouped_assets(
     //     return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
     // }
     // let mut client = client_option.unwrap();
-    //TODO R3
+    // TODO(R4)
     Ok(Json(vec![]))
 }
 
@@ -436,7 +358,7 @@ pub async fn get_all_grouped_assets_delegated_to(
     Extension(mut _grpc_clients): Extension<GrpcClients>,
     Path(operator_id): Path<String>,
 ) -> Result<Json<Vec<Uuid>>, (StatusCode, String)> {
-    rest_info!("get_all_grouped_assets_delegated_to({})", operator_id);
+    rest_info!("(get_all_grouped_assets_delegated_to) {}", operator_id);
     if !is_uuid(&operator_id) {
         return Err((StatusCode::BAD_REQUEST, "Invalid operator id".to_string()));
     }
@@ -448,7 +370,7 @@ pub async fn get_all_grouped_assets_delegated_to(
     //     return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
     // }
     // let mut client = client_option.unwrap();
-    //TODO R3
+    // TODO(R4)
     Ok(Json(vec![]))
 }
 
@@ -471,7 +393,7 @@ pub async fn get_all_grouped_assets_delegated_from(
     Extension(mut _grpc_clients): Extension<GrpcClients>,
     Path(operator_id): Path<String>,
 ) -> Result<Json<Vec<Uuid>>, (StatusCode, String)> {
-    rest_info!("get_all_grouped_assets_delegated_from({})", operator_id);
+    rest_info!("(get_all_grouped_assets_delegated_from) {}", operator_id);
     if !is_uuid(&operator_id) {
         return Err((StatusCode::BAD_REQUEST, "Invalid operator id".to_string()));
     }
@@ -483,7 +405,7 @@ pub async fn get_all_grouped_assets_delegated_from(
     //     return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
     // }
     // let mut client = client_option.unwrap();
-    //TODO R3
+    // TODO(R4)
     Ok(Json(vec![]))
 }
 
@@ -507,39 +429,24 @@ pub async fn get_all_grouped_assets_delegated_from(
     )
 )]
 pub async fn get_aircraft_by_id(
-    Extension(mut grpc_clients): Extension<GrpcClients>,
+    Extension(grpc_clients): Extension<GrpcClients>,
     Path(aircraft_id): Path<String>,
 ) -> Result<Json<Aircraft>, (StatusCode, String)> {
-    rest_info!("get_aircraft_by_id({})", aircraft_id);
+    rest_info!("(get_aircraft_by_id) entry [{}].", aircraft_id);
     if !is_uuid(&aircraft_id) {
         return Err((StatusCode::BAD_REQUEST, "Invalid aircraft id".to_string()));
     }
 
-    // Get Client
-    let client_option = grpc_clients.storage_vehicle.get_client().await;
-    if client_option.is_none() {
-        let error_msg = "svc-storage unavailable.".to_string();
-        rest_error!("(get_aircraft_by_id) {}", &error_msg);
-        return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
-    }
-    let mut client = match client_option {
-        Some(client) => client,
-        None => {
-            let error_msg = "svc-storage unavailable.".to_string();
-            rest_error!("(get_aircraft_by_id) {}", &error_msg);
-            return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
-        }
-    };
-
+    let client = grpc_clients.storage.vehicle;
     match client
-        .get_by_id(tonic::Request::new(Id {
+        .get_by_id(Id {
             id: aircraft_id.clone(),
-        }))
+        })
         .await
     {
         Ok(response) => {
             let vehicle = response.into_inner();
-            let aircraft = match Aircraft::from(vehicle) {
+            let aircraft: Aircraft = match vehicle.try_into() {
                 Ok(aircraft) => {
                     rest_info!("(get_aircraft_by_id) Aircraft found: {}", aircraft_id);
                     aircraft
@@ -576,45 +483,30 @@ pub async fn get_aircraft_by_id(
     )
 )]
 pub async fn get_vertipad_by_id(
-    Extension(mut grpc_clients): Extension<GrpcClients>,
+    Extension(grpc_clients): Extension<GrpcClients>,
     Path(vertipad_id): Path<String>,
 ) -> Result<Json<Vertipad>, (StatusCode, String)> {
-    rest_info!("get_vertipad_by_id({})", vertipad_id);
+    rest_info!("(get_vertipad_by_id) entry [{}].", vertipad_id);
     if !is_uuid(&vertipad_id) {
         return Err((StatusCode::BAD_REQUEST, "Invalid vertipad id".to_string()));
     }
 
-    // Get Client
-    let client_option = grpc_clients.storage_vertipad.get_client().await;
-    if client_option.is_none() {
-        let error_msg = "svc-storage unavailable.".to_string();
-        rest_error!("(get_vertipad_by_id) {}", &error_msg);
-        return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
-    }
-    let mut client = match client_option {
-        Some(client) => client,
-        None => {
-            let error_msg = "svc-storage unavailable.".to_string();
-            rest_error!("(get_vertipad_by_id) {}", &error_msg);
-            return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
-        }
-    };
-
+    let client = grpc_clients.storage.vertipad;
     match client
-        .get_by_id(tonic::Request::new(Id {
+        .get_by_id(Id {
             id: vertipad_id.clone(),
-        }))
+        })
         .await
     {
         Ok(response) => {
             let vertipad = response.into_inner();
-            let vertipad = match Vertipad::from(vertipad) {
+            let vertipad: Vertipad = match vertipad.try_into() {
                 Ok(vertipad) => {
-                    rest_info!("(get_vertipad_by_id) Vertipad found: {:?}", &vertipad);
+                    rest_info!("(get_vertipad_by_id) Vertipad found: {}", vertipad_id);
                     vertipad
                 }
                 Err(e) => {
-                    let error_msg = format!("Error converting vertipad to vertipad: {}", e);
+                    let error_msg = format!("Error converting vehicle to vertipad: {}", e);
                     rest_error!("(get_vertipad_by_id) {}", &error_msg);
                     return Err((StatusCode::INTERNAL_SERVER_ERROR, error_msg));
                 }
@@ -645,49 +537,34 @@ pub async fn get_vertipad_by_id(
     )
 )]
 pub async fn get_vertiport_by_id(
-    Extension(mut grpc_clients): Extension<GrpcClients>,
+    Extension(grpc_clients): Extension<GrpcClients>,
     Path(vertiport_id): Path<String>,
 ) -> Result<Json<Vertiport>, (StatusCode, String)> {
-    rest_info!("get_vertiport_by_id({})", vertiport_id);
+    rest_info!("(get_vertiport_by_id) entry [{}].", vertiport_id);
     if !is_uuid(&vertiport_id) {
         return Err((StatusCode::BAD_REQUEST, "Invalid vertiport id".to_string()));
     }
-    // Get Client
-    let client_option = grpc_clients.storage_vertiport.get_client().await;
-    if client_option.is_none() {
-        let error_msg = "svc-storage unavailable.".to_string();
-        rest_error!("(get_vertiport_by_id) {}", &error_msg);
-        return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
-    }
-    let mut client = match client_option {
-        Some(client) => client,
-        None => {
-            let error_msg = "svc-storage unavailable.".to_string();
-            rest_error!("(get_vertiport_by_id) {}", &error_msg);
-            return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
-        }
-    };
 
+    let client = grpc_clients.storage.vertiport;
     match client
-        .get_by_id(tonic::Request::new(Id {
+        .get_by_id(Id {
             id: vertiport_id.clone(),
-        }))
+        })
         .await
     {
         Ok(response) => {
             let vertiport = response.into_inner();
-            let vertiport = match Vertiport::from(vertiport) {
+            let vertiport: Vertiport = match vertiport.try_into() {
                 Ok(vertiport) => {
-                    rest_info!("(get_vertiport_by_id) Vertiport found: {:?}", &vertiport);
+                    rest_info!("(get_vertiport_by_id) Vertiport found: {}", vertiport_id);
                     vertiport
                 }
                 Err(e) => {
-                    let error_msg = format!("Error converting vertiport to vertiport: {}", e);
+                    let error_msg = format!("Error converting vehicle to vertiport: {}", e);
                     rest_error!("(get_vertiport_by_id) {}", &error_msg);
                     return Err((StatusCode::INTERNAL_SERVER_ERROR, error_msg));
                 }
             };
-
             Ok(Json(vertiport))
         }
         Err(e) => {
@@ -698,7 +575,7 @@ pub async fn get_vertiport_by_id(
     }
 }
 
-/// Get an [`crate::structs::AssetGroup`] by its id.
+/// Get an [`AssetGroup`](crate::rest::structs::AssetGroup) by its id.
 #[utoipa::path(
     get,
     path = "/assets/groups/{id}",
@@ -717,7 +594,7 @@ pub async fn get_asset_group_by_id(
     Extension(mut _grpc_clients): Extension<GrpcClients>,
     Path(asset_group_id): Path<String>,
 ) -> Result<Json<AssetGroup>, (StatusCode, String)> {
-    rest_info!("get_asset_group_by_id({})", asset_group_id);
+    rest_info!("(get_asset_group_by_id) {}", asset_group_id);
     if !is_uuid(&asset_group_id) {
         return Err((
             StatusCode::BAD_REQUEST,
@@ -733,7 +610,7 @@ pub async fn get_asset_group_by_id(
     // }
     // let mut client = client_option.unwrap();
 
-    //TODO R3
+    // TODO(R4)
     Ok(Json(AssetGroup::random()))
 }
 
@@ -746,7 +623,7 @@ pub async fn get_asset_group_by_id(
     post,
     path = "/assets/aircraft",
     tag = "svc-assets",
-    request_body=RegisterAircraftPayload,
+    request_body=vehicle::Data,
     responses(
         (status = 200, description = "Aircraft registered in database; a UUID is returned", body = String),
         (status = 422, description = "Request body is invalid format"),
@@ -754,77 +631,43 @@ pub async fn get_asset_group_by_id(
     )
 )]
 pub async fn register_aircraft(
-    Extension(mut grpc_clients): Extension<GrpcClients>,
-    Json(payload): Json<RegisterAircraftPayload>,
+    Extension(grpc_clients): Extension<GrpcClients>,
+    Json(payload): Json<vehicle::Data>,
 ) -> Result<String, (StatusCode, String)> {
-    rest_info!("register_aircraft() with payload: {:?}", &payload);
+    rest_info!("(register_aircraft) entry.");
+    rest_debug!("(register_aircraft) Payload: {:?}", &payload);
 
-    // Get Client
-    let client_option = grpc_clients.storage_vehicle.get_client().await;
-    if client_option.is_none() {
-        let error_msg = "svc-storage unavailable.".to_string();
-        rest_error!("(register_aircraft) {}", &error_msg);
-        return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
-    }
-    let mut client = match client_option {
-        Some(client) => client,
-        None => {
-            let error_msg = "svc-storage unavailable.".to_string();
-            rest_error!("(register_aircraft) {}", &error_msg);
-            return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
-        }
-    };
+    let client = grpc_clients.storage.vehicle;
 
-    let last_maintenance = match payload.last_maintenance {
-        Some(str) => match Timestamp::from_str(&str) {
-            Ok(ts) => Some(ts),
-            Err(e) => {
-                let error_msg = format!("Error converting last_maintenance to Timestamp: {}", e);
-                rest_error!("(register_aircraft) {}", &error_msg);
-                return Err((StatusCode::INTERNAL_SERVER_ERROR, error_msg));
-            }
-        },
-        _ => None,
-    };
-
-    let next_maintenance = match payload.next_maintenance {
-        Some(str) => match Timestamp::from_str(&str) {
-            Ok(ts) => Some(ts),
-            Err(e) => {
-                let error_msg = format!("Error converting next_maintenance to Timestamp: {}", e);
-                rest_error!("(register_aircraft) {}", &error_msg);
-                return Err((StatusCode::INTERNAL_SERVER_ERROR, error_msg));
-            }
-        },
-        _ => None,
-    };
-
-    let data = Data {
+    let data = vehicle::Data {
         last_vertiport_id: payload.last_vertiport_id,
         vehicle_model_id: Uuid::new_v4().to_string(),
         serial_number: payload.serial_number,
         registration_number: payload.registration_number,
-        description: payload.name, // TODO R3/4 add nickname column to storage
+        description: payload.description,
         asset_group_id: None,
         schedule: None,
-        last_maintenance,
-        next_maintenance,
+        last_maintenance: payload.last_maintenance,
+        next_maintenance: payload.next_maintenance,
+        created_at: None,
+        updated_at: None,
     };
 
-    let result = client.insert(tonic::Request::new(data)).await;
-    match result {
+    match client.insert(data).await {
         Ok(res) => {
-            rest_info!(
-                "(register_aircraft) successfully registered aircraft {:?}.",
-                res
-            );
+            rest_info!("(register_aircraft) registration success.");
+            rest_debug!("(register_aircraft) {:?}", res);
             let vehicle_obj = res.into_inner().object;
             if let Some(vehicle_obj) = vehicle_obj {
+                rest_debug!(
+                    "(register_aircraft) got new aircraft id: {}",
+                    vehicle_obj.id
+                );
                 Ok(vehicle_obj.id)
             } else {
                 Err((
                     StatusCode::INTERNAL_SERVER_ERROR,
-                    "Could not insert vehicle".to_string(),
+                    "(register_aircraft) could not insert vehicle.".to_string(),
                 ))
             }
         }
@@ -837,7 +680,7 @@ pub async fn register_aircraft(
     post,
     path = "/assets/vertiports",
     tag = "svc-assets",
-    request_body=RegisterVertiportPayload,
+    request_body=vertiport::Data,
     responses(
         (status = 200, description = "Vertiport registered in database; a UUID is returned", body = String),
         (status = 422, description = "Request body is invalid format"),
@@ -845,49 +688,29 @@ pub async fn register_aircraft(
     )
 )]
 pub async fn register_vertiport(
-    Extension(mut grpc_clients): Extension<GrpcClients>,
-    Json(payload): Json<RegisterVertiportPayload>,
+    Extension(grpc_clients): Extension<GrpcClients>,
+    Json(payload): Json<vertiport::Data>,
 ) -> Result<String, (StatusCode, String)> {
-    rest_info!("register_vertiport() with payload: {:?}", &payload);
+    rest_info!("(register_vertiport) entry.");
+    rest_debug!("(register_vertiport) Payload: {:?}", &payload);
 
-    // Get Client
-    let client_option = grpc_clients.storage_vertiport.get_client().await;
-    if client_option.is_none() {
-        let error_msg = "svc-storage unavailable.".to_string();
-        rest_error!("(register_vertiport) {}", &error_msg);
-        return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
-    }
-    let mut client = match client_option {
-        Some(client) => client,
-        None => {
-            let error_msg = "svc-storage unavailable.".to_string();
-            rest_error!("(register_vertiport) {}", &error_msg);
-            return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
-        }
-    };
+    let client = grpc_clients.storage.vertiport;
 
-    match client
-        .insert(tonic::Request::new(VertiportData {
-            name: payload.name.unwrap_or_else(|| "unnamed".to_string()),
-            description: payload.description.unwrap_or_else(|| "N/A".to_string()),
-            latitude: payload.location.latitude.to_f64(),
-            longitude: payload.location.longitude.to_f64(),
-            schedule: Some("".to_string()),
-        }))
-        .await
-    {
+    match client.insert(payload).await {
         Ok(res) => {
-            rest_info!(
-                "(register_vertiport) successfully registered vertiport {:?}",
-                res
-            );
+            rest_info!("(register_vertiport) registration success.");
+            rest_debug!("(register_vertiport) {:?}", res);
             let vertiport_obj = res.into_inner().object;
             if let Some(vertiport_obj) = vertiport_obj {
+                rest_debug!(
+                    "(register_vertiport) got new vertiport id: {}",
+                    vertiport_obj.id
+                );
                 Ok(vertiport_obj.id)
             } else {
                 Err((
                     StatusCode::INTERNAL_SERVER_ERROR,
-                    "Could not insert vertiport".to_string(),
+                    "(register_vertiport) could not insert vertiport.".to_string(),
                 ))
             }
         }
@@ -902,7 +725,7 @@ pub async fn register_vertiport(
     post,
     path = "/assets/vertipads",
     tag = "svc-assets",
-    request_body=RegisterVertipadPayload,
+    request_body=vertipad::Data,
     responses(
         (status = 200, description = "Vertipad registered in database; a UUID is returned", body = String),
         (status = 422, description = "Request body is invalid format"),
@@ -910,51 +733,29 @@ pub async fn register_vertiport(
     )
 )]
 pub async fn register_vertipad(
-    Extension(mut grpc_clients): Extension<GrpcClients>,
-    Json(payload): Json<RegisterVertipadPayload>,
+    Extension(grpc_clients): Extension<GrpcClients>,
+    Json(payload): Json<vertipad::Data>,
 ) -> Result<String, (StatusCode, String)> {
-    rest_info!("register_vertipad() with payload: {:?}", &payload);
+    rest_info!("(register_vertipad) entry.");
+    rest_debug!("(register_vertipad) Payload: {:?}", &payload);
 
-    // Get Client
-    let client_option = grpc_clients.storage_vertipad.get_client().await;
-    if client_option.is_none() {
-        let error_msg = "svc-storage unavailable.".to_string();
-        rest_error!("(register_vertipad) {}", &error_msg);
-        return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
-    }
-    let mut client = match client_option {
-        Some(client) => client,
-        None => {
-            let error_msg = "svc-storage unavailable.".to_string();
-            rest_error!("(register_vertipad) {}", &error_msg);
-            return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
-        }
-    };
+    let client = grpc_clients.storage.vertipad;
 
-    match client
-        .insert(tonic::Request::new(VertipadData {
-            name: payload.name.unwrap_or_else(|| "unnamed".to_string()),
-            vertiport_id: payload.vertiport_id.clone(),
-            latitude: payload.location.latitude.to_f64(),
-            longitude: payload.location.longitude.to_f64(),
-            schedule: Some("".to_string()),
-            enabled: payload.enabled,
-            occupied: payload.occupied,
-        }))
-        .await
-    {
+    match client.insert(payload).await {
         Ok(res) => {
-            rest_info!(
-                "(register_vertipad) successfully registered vertipad {:?}",
-                res
-            );
+            rest_info!("(register_vertipad) registration success.");
+            rest_debug!("(register_vertipad) {:?}", res);
             let vertipad_obj = res.into_inner().object;
             if let Some(vertipad_obj) = vertipad_obj {
+                rest_debug!(
+                    "(register_vertipad) got new vertipad id: {}",
+                    vertipad_obj.id
+                );
                 Ok(vertipad_obj.id)
             } else {
                 Err((
                     StatusCode::INTERNAL_SERVER_ERROR,
-                    "Could not insert vertipad".to_string(),
+                    "(register_vertipad) could not insert vertipad.".to_string(),
                 ))
             }
         }
@@ -966,7 +767,7 @@ pub async fn register_vertipad(
 // Group management
 //-----------------------------------------------------------
 
-/// Register an [`crate::structs::AssetGroup`] in the database.
+/// Register an [`AssetGroup`](crate::rest::structs::AssetGroup) in the database.
 #[utoipa::path(
     post,
     path = "/assets/groups",
@@ -982,13 +783,13 @@ pub async fn register_asset_group(
     Extension(mut _grpc_clients): Extension<GrpcClients>,
     Json(payload): Json<RegisterAssetGroupPayload>,
 ) -> Result<String, (StatusCode, String)> {
-    rest_info!("register_asset_group() with payload: {:?}", &payload);
+    rest_info!("(register_asset_group) with payload: {:?}", &payload);
 
     let _asset_group = AssetGroup {
         id: Uuid::new_v4().to_string(),
         name: payload.name,
         owner: payload.owner,
-        created_at: Utc::now(),
+        created_at: None,
         updated_at: None,
         delegatee: None,
         assets: payload.assets,
@@ -1003,7 +804,7 @@ pub async fn register_asset_group(
     // }
     // let mut client = client_option.unwrap();
 
-    //TODO R3
+    // TODO(R4)
     Ok(_asset_group.id)
 }
 
@@ -1026,36 +827,23 @@ pub async fn register_asset_group(
     )
 )]
 pub async fn update_aircraft(
-    Extension(mut grpc_clients): Extension<GrpcClients>,
+    Extension(grpc_clients): Extension<GrpcClients>,
     Json(payload): Json<UpdateAircraftPayload>,
 ) -> Result<String, (StatusCode, String)> {
-    rest_info!("update_aircraft() with payload: {:?}", &payload);
+    rest_info!("(update_aircraft) entry [{}].", payload.id);
+    rest_debug!("(update_aircraft) Payload: {:?}", &payload);
 
     let vehicle_id = payload.id.clone();
-    // Get Client
-    let client_option = grpc_clients.storage_vehicle.get_client().await;
-    if client_option.is_none() {
-        let error_msg = "svc-storage unavailable.".to_string();
-        rest_error!("(update_aircraft) {}", &error_msg);
-        return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
-    }
-    let mut client = match client_option {
-        Some(client) => client,
-        None => {
-            let error_msg = "svc-storage unavailable.".to_string();
-            rest_error!("(update_aircraft) {}", &error_msg);
-            return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
-        }
-    };
+    let client = grpc_clients.storage.vehicle;
 
     let response = match client
-        .get_by_id(tonic::Request::new(Id {
+        .get_by_id(Id {
             id: vehicle_id.clone(),
-        }))
+        })
         .await
     {
         Ok(res) => {
-            rest_info!("(update_aircraft) successfully got vehicle {:?}", res);
+            rest_debug!("(update_aircraft) successfully got vehicle {:?}", res);
             res
         }
         Err(e) => {
@@ -1071,9 +859,9 @@ pub async fn update_aircraft(
     };
 
     match client
-        .update(tonic::Request::new(UpdateObject {
+        .update(vehicle::UpdateObject {
             id: vehicle_id.clone(),
-            data: Some(Data {
+            data: Some(vehicle::Data {
                 last_vertiport_id: payload.last_vertiport_id,
                 vehicle_model_id: payload.vehicle_model_id.unwrap_or(vehicle.vehicle_model_id),
                 serial_number: payload.serial_number.unwrap_or(vehicle.serial_number),
@@ -1084,41 +872,41 @@ pub async fn update_aircraft(
                 asset_group_id: payload.asset_group_id.unwrap_or(vehicle.asset_group_id),
                 schedule: payload.schedule.unwrap_or(vehicle.schedule),
                 last_maintenance: if let Some(last_maintenance) = payload.last_maintenance {
-                    if let Some(last_maintenance) = last_maintenance {
-                        match Timestamp::from_str(&last_maintenance) {
+                    match last_maintenance {
+                        Some(last_maintenance) => match Timestamp::from_str(&last_maintenance) {
                             Ok(time_stamp) => Some(time_stamp),
                             Err(e) => {
                                 rest_error!("(update_aircraft) {}", &e.to_string());
                                 return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
                             }
-                        }
-                    } else {
-                        None
+                        },
+                        None => None,
                     }
                 } else {
                     vehicle.last_maintenance
                 },
 
                 next_maintenance: if let Some(next_maintenance) = payload.next_maintenance {
-                    if let Some(next_maintenance) = next_maintenance {
-                        match Timestamp::from_str(&next_maintenance) {
+                    match next_maintenance {
+                        Some(next_maintenance) => match Timestamp::from_str(&next_maintenance) {
                             Ok(time_stamp) => Some(time_stamp),
                             Err(e) => {
                                 rest_error!("(update_aircraft) {}", &e.to_string());
                                 return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
                             }
-                        }
-                    } else {
-                        None
+                        },
+                        None => None,
                     }
                 } else {
                     vehicle.next_maintenance
                 },
+                created_at: None,
+                updated_at: None,
             }),
             mask: Some(FieldMask {
                 paths: payload.mask,
             }),
-        }))
+        })
         .await
     {
         Ok(res) => {
@@ -1145,31 +933,18 @@ pub async fn update_aircraft(
     )
 )]
 pub async fn update_vertiport(
-    Extension(mut grpc_clients): Extension<GrpcClients>,
+    Extension(grpc_clients): Extension<GrpcClients>,
     Json(payload): Json<UpdateVertiportPayload>,
 ) -> Result<String, (StatusCode, String)> {
-    rest_info!("update_vertiport() with payload: {:?}", &payload);
+    rest_info!("(update_vertiport) entry [{}].", payload.id);
+    rest_debug!("(update_vertiport) Payload: {:?}", &payload);
 
-    // Get Client
-    let client_option = grpc_clients.storage_vertiport.get_client().await;
-    if client_option.is_none() {
-        let error_msg = "svc-storage unavailable.".to_string();
-        rest_error!("(update_vertiport) {}", &error_msg);
-        return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
-    }
-    let mut client = match client_option {
-        Some(client) => client,
-        None => {
-            let error_msg = "svc-storage unavailable.".to_string();
-            rest_error!("(update_vertiport) {}", &error_msg);
-            return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
-        }
-    };
+    let client = grpc_clients.storage.vertiport;
 
     let response = match client
-        .get_by_id(tonic::Request::new(Id {
+        .get_by_id(Id {
             id: payload.id.clone(),
-        }))
+        })
         .await
     {
         Ok(res) => {
@@ -1189,19 +964,20 @@ pub async fn update_vertiport(
     };
 
     match client
-        .update(tonic::Request::new(VertiportUpdateObject {
+        .update(vertiport::UpdateObject {
             id: payload.id.clone(),
-            data: Some(VertiportData {
+            data: Some(vertiport::Data {
                 name: payload.name.unwrap_or(vertiport.name),
                 description: payload.description.unwrap_or(vertiport.description),
-                latitude: payload.latitude.unwrap_or(vertiport.latitude),
-                longitude: payload.longitude.unwrap_or(vertiport.longitude),
+                geo_location: payload.geo_location.or(vertiport.geo_location),
                 schedule: payload.schedule.unwrap_or(vertiport.schedule),
+                created_at: None,
+                updated_at: None,
             }),
             mask: Some(FieldMask {
                 paths: payload.mask,
             }),
-        }))
+        })
         .await
     {
         Ok(res) => {
@@ -1228,30 +1004,18 @@ pub async fn update_vertiport(
     )
 )]
 pub async fn update_vertipad(
-    Extension(mut grpc_clients): Extension<GrpcClients>,
+    Extension(grpc_clients): Extension<GrpcClients>,
     Json(payload): Json<UpdateVertipadPayload>,
 ) -> Result<String, (StatusCode, String)> {
-    rest_info!("update_vertipad() with payload: {:?}", &payload);
-    // Get Client
-    let client_option = grpc_clients.storage_vertipad.get_client().await;
-    if client_option.is_none() {
-        let error_msg = "svc-storage unavailable.".to_string();
-        rest_error!("(update_vertipad) {}", &error_msg);
-        return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
-    }
-    let mut client = match client_option {
-        Some(client) => client,
-        None => {
-            let error_msg = "svc-storage unavailable.".to_string();
-            rest_error!("(update_vertipad) {}", &error_msg);
-            return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
-        }
-    };
+    rest_info!("(update_vertipad) entry [{}].", payload.id);
+    rest_debug!("(update_vertipad) Payload: {:?}", &payload);
+
+    let client = grpc_clients.storage.vertipad;
 
     let response = match client
-        .get_by_id(tonic::Request::new(Id {
+        .get_by_id(Id {
             id: payload.id.clone(),
-        }))
+        })
         .await
     {
         Ok(res) => {
@@ -1271,21 +1035,22 @@ pub async fn update_vertipad(
     };
 
     match client
-        .update(tonic::Request::new(VertipadUpdateObject {
+        .update(vertipad::UpdateObject {
             id: payload.id.clone(),
-            data: Some(VertipadData {
+            data: Some(vertipad::Data {
                 name: payload.name.unwrap_or(vertipad.name),
-                latitude: payload.latitude.unwrap_or(vertipad.latitude),
-                longitude: payload.longitude.unwrap_or(vertipad.longitude),
+                geo_location: payload.geo_location.or(vertipad.geo_location),
                 enabled: payload.enabled.unwrap_or(vertipad.enabled),
                 occupied: payload.occupied.unwrap_or(vertipad.occupied),
                 schedule: payload.schedule.unwrap_or(vertipad.schedule),
                 vertiport_id: payload.vertiport_id.unwrap_or(vertipad.vertiport_id),
+                created_at: None,
+                updated_at: None,
             }),
             mask: Some(FieldMask {
                 paths: payload.mask,
             }),
-        }))
+        })
         .await
     {
         Ok(res) => {
@@ -1296,7 +1061,7 @@ pub async fn update_vertipad(
     }
 }
 
-/// Update/modify an [`crate::structs::AssetGroup`] in the database.
+/// Update/modify an [`AssetGroup`](crate::rest::structs::AssetGroup) in the database.
 #[utoipa::path(
     put,
     path = "/assets/groups/{id}",
@@ -1316,7 +1081,7 @@ pub async fn update_asset_group(
     Json(payload): Json<AssetGroup>,
     Path(_id): Path<String>,
 ) -> Result<String, (StatusCode, String)> {
-    rest_info!("update_asset_group() with payload: {:?}", &payload);
+    rest_info!("(update_asset_group) with payload: {:?}", &payload);
 
     // Get Client
     // let _client_option = grpc_clients.storage.get_client().await;
@@ -1327,7 +1092,7 @@ pub async fn update_asset_group(
     // }
     // let mut client = client_option.unwrap();
 
-    //TODO R3
+    // TODO(R4)
     Ok(payload.id)
 }
 
@@ -1349,31 +1114,14 @@ pub async fn update_asset_group(
     )
 )]
 pub async fn remove_aircraft(
-    Extension(mut grpc_clients): Extension<GrpcClients>,
+    Extension(grpc_clients): Extension<GrpcClients>,
     Path(id): Path<String>,
 ) -> Result<String, (StatusCode, String)> {
-    rest_info!("remove_aircraft() with id: {:?}", &id);
+    rest_info!("(remove_aircraft) entry [{}].", &id);
 
-    // Get Client
-    let client_option = grpc_clients.storage_vehicle.get_client().await;
-    if client_option.is_none() {
-        let error_msg = "svc-storage unavailable.".to_string();
-        rest_error!("(remove_aircraft) {}", &error_msg);
-        return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
-    }
-    let mut client = match client_option {
-        Some(client) => client,
-        None => {
-            let error_msg = "svc-storage unavailable.".to_string();
-            rest_error!("(remove_aircraft) {}", &error_msg);
-            return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
-        }
-    };
+    let client = grpc_clients.storage.vehicle;
 
-    match client
-        .delete(tonic::Request::new(Id { id: id.clone() }))
-        .await
-    {
+    match client.delete(Id { id: id.clone() }).await {
         Ok(res) => {
             rest_info!("(remove_aircraft) successfully removed aircraft {:?}", res);
             Ok(id)
@@ -1396,31 +1144,14 @@ pub async fn remove_aircraft(
     )
 )]
 pub async fn remove_vertipad(
-    Extension(mut grpc_clients): Extension<GrpcClients>,
+    Extension(grpc_clients): Extension<GrpcClients>,
     Path(id): Path<String>,
 ) -> Result<String, (StatusCode, String)> {
-    rest_info!("remove_vertipad() with id: {:?}", &id);
+    rest_info!("(remove_vertipad) entry [{}].", &id);
 
-    // Get Client
-    let client_option = grpc_clients.storage_vertipad.get_client().await;
-    if client_option.is_none() {
-        let error_msg = "svc-storage unavailable.".to_string();
-        rest_error!("(remove_vertipad) {}", &error_msg);
-        return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
-    }
-    let mut client = match client_option {
-        Some(client) => client,
-        None => {
-            let error_msg = "svc-storage unavailable.".to_string();
-            rest_error!("(remove_vertipad) {}", &error_msg);
-            return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
-        }
-    };
+    let client = grpc_clients.storage.vertipad;
 
-    match client
-        .delete(tonic::Request::new(Id { id: id.clone() }))
-        .await
-    {
+    match client.delete(Id { id: id.clone() }).await {
         Ok(res) => {
             rest_info!("(remove_vertipad) successfully removed vertipad {:?}", res);
             Ok(id)
@@ -1443,30 +1174,14 @@ pub async fn remove_vertipad(
     )
 )]
 pub async fn remove_vertiport(
-    Extension(mut grpc_clients): Extension<GrpcClients>,
+    Extension(grpc_clients): Extension<GrpcClients>,
     Path(id): Path<String>,
 ) -> Result<String, (StatusCode, String)> {
-    rest_info!("remove_vertiport() with id: {:?}", &id);
+    rest_info!("(remove_vertiport) entry [{}].", &id);
 
-    // Get Client
-    let client_option = grpc_clients.storage_vertiport.get_client().await;
-    if client_option.is_none() {
-        let error_msg = "svc-storage unavailable.".to_string();
-        rest_error!("(remove_vertiport) {}", &error_msg);
-        return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
-    }
-    let mut client = match client_option {
-        Some(client) => client,
-        None => {
-            let error_msg = "svc-storage unavailable.".to_string();
-            rest_error!("(remove_vertiport) {}", &error_msg);
-            return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
-        }
-    };
-    match client
-        .delete(tonic::Request::new(Id { id: id.clone() }))
-        .await
-    {
+    let client = grpc_clients.storage.vertiport;
+
+    match client.delete(Id { id: id.clone() }).await {
         Ok(res) => {
             rest_info!(
                 "(remove_vertiport) successfully removed vertiport {:?}",
@@ -1478,7 +1193,7 @@ pub async fn remove_vertiport(
     }
 }
 
-/// Remove an [`crate::structs::AssetGroup`] from the database.
+/// Remove an [`AssetGroup`](crate::rest::structs::AssetGroup) from the database.
 #[utoipa::path(
     delete,
     path = "/assets/groups/{id}",
@@ -1492,10 +1207,10 @@ pub async fn remove_vertiport(
     )
 )]
 pub async fn remove_asset_group(
-    Extension(mut _grpc_clients): Extension<GrpcClients>,
+    Extension(_grpc_clients): Extension<GrpcClients>,
     Path(_id): Path<String>,
 ) -> Result<String, (StatusCode, String)> {
-    rest_info!("remove_asset_group() with id: {:?}", &_id);
+    rest_info!("(remove_asset_group) with id: {:?}", &_id);
 
     // Get Client
     // let _client_option = grpc_clients.storage.get_client().await;
@@ -1506,6 +1221,6 @@ pub async fn remove_asset_group(
     // }
     // let mut client = client_option.unwrap();
 
-    //TODO R3
+    // TODO(R4)
     Ok(_id)
 }
