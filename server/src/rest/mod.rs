@@ -5,41 +5,59 @@
 pub mod macros;
 pub mod api;
 pub mod server;
-pub mod structs;
-
-use api::*;
 
 use utoipa::OpenApi;
 
+use api::rest_types::*;
+use api::structs;
 use svc_storage_client_grpc::prelude::*;
 
 #[derive(OpenApi)]
 #[openapi(
     paths(
-        api::get_operator,
-        api::get_all_aircraft,
-        api::get_all_vertiports,
-        api::get_all_vertipads,
-        api::get_all_assets_by_operator,
-        api::get_all_grouped_assets,
-        api::get_all_grouped_assets_delegated_to,
-        api::get_all_grouped_assets_delegated_from,
-        api::get_aircraft_by_id,
-        api::get_vertipad_by_id,
-        api::get_vertiport_by_id,
-        api::get_asset_group_by_id,
-        api::register_aircraft,
-        api::register_vertiport,
-        api::register_vertipad,
-        api::register_asset_group,
-        api::update_aircraft,
-        api::update_vertiport,
-        api::update_vertipad,
-        api::update_asset_group,
-        api::remove_aircraft,
-        api::remove_vertiport,
-        api::remove_vertipad,
-        api::remove_asset_group,
+        //
+        // asset endpoints
+        //
+
+        // get
+        api::asset::get_all_aircraft,
+        api::asset::get_all_vertiports,
+        api::asset::get_all_vertipads,
+        api::asset::get_aircraft_by_id,
+        api::asset::get_vertipad_by_id,
+        api::asset::get_vertiport_by_id,
+
+        // new
+        api::asset::register_aircraft,
+        api::asset::register_vertiport,
+        api::asset::register_vertipad,
+
+        // update
+        api::asset::update_aircraft,
+        api::asset::update_vertiport,
+        api::asset::update_vertipad,
+
+        // remove
+        api::asset::remove_aircraft,
+        api::asset::remove_vertiport,
+        api::asset::remove_vertipad,
+
+        //
+        // operator endpoints
+        //
+        api::operator::get_all_assets_by_operator,
+        api::operator::get_operator,
+
+        //
+        // group endpoints
+        //
+        api::group::get_all_grouped_assets,
+        api::group::get_all_grouped_assets_delegated_to,
+        api::group::get_all_grouped_assets_delegated_from,
+        api::group::get_asset_group_by_id,
+        api::group::register_asset_group,
+        api::group::update_asset_group,
+        api::group::remove_asset_group,
     ),
     components(
         schemas(

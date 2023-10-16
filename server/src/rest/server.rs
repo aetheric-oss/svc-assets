@@ -86,75 +86,110 @@ pub async fn rest_server(
 
     let app = Router::new()
         // .merge(SwaggerUi::new("/swagger-ui/*tail").url("/api-doc/openapi.json", ApiDoc::openapi()))
-        // GET endpoints
-        .route("/assets/operators/:id", routing::get(api::get_operator))
-        .route("/assets/demo/aircraft", routing::get(api::get_all_aircraft))
+        //
+        // Operator Endpoints
+        //
         .route(
-            "/assets/demo/vertiports",
-            routing::get(api::get_all_vertiports),
-        )
-        .route(
-            "/assets/demo/vertipads",
-            routing::get(api::get_all_vertipads),
+            "/assets/operators/:id",
+            routing::get(api::operator::get_operator),
         )
         .route(
             "/assets/operators/:id/assets",
-            routing::get(api::get_all_assets_by_operator),
+            routing::get(api::operator::get_all_assets_by_operator),
+        )
+        //
+        // Asset Endpoints
+        //
+        .route(
+            "/assets/demo/aircraft",
+            routing::get(api::asset::get_all_aircraft),
+        )
+        .route(
+            "/assets/demo/vertiports",
+            routing::get(api::asset::get_all_vertiports),
+        )
+        .route(
+            "/assets/demo/vertipads",
+            routing::get(api::asset::get_all_vertipads),
+        )
+        .route(
+            "/assets/aircraft/:id",
+            routing::get(api::asset::get_aircraft_by_id),
+        )
+        .route(
+            "/assets/vertipads/:id",
+            routing::get(api::asset::get_vertipad_by_id),
+        )
+        .route(
+            "/assets/vertiports/:id",
+            routing::get(api::asset::get_vertiport_by_id),
+        )
+        .route(
+            "/assets/aircraft",
+            routing::post(api::asset::register_aircraft),
+        )
+        .route(
+            "/assets/vertiports",
+            routing::post(api::asset::register_vertiport),
+        )
+        .route(
+            "/assets/vertipads",
+            routing::post(api::asset::register_vertipad),
+        )
+        .route(
+            "/assets/aircraft",
+            routing::put(api::asset::update_aircraft),
+        )
+        .route(
+            "/assets/vertiports",
+            routing::put(api::asset::update_vertiport),
+        )
+        .route(
+            "/assets/vertipads",
+            routing::put(api::asset::update_vertipad),
+        )
+        .route(
+            "/assets/aircraft/:id",
+            routing::delete(api::asset::remove_aircraft),
+        )
+        .route(
+            "/assets/vertiports/:id",
+            routing::delete(api::asset::remove_vertiport),
+        )
+        .route(
+            "/assets/vertipads/:id",
+            routing::delete(api::asset::remove_vertipad),
+        )
+        //
+        // Groups
+        //
+        .route(
+            "/assets/groups",
+            routing::post(api::group::register_asset_group),
+        )
+        .route(
+            "/assets/groups/:id",
+            routing::put(api::group::update_asset_group),
+        )
+        .route(
+            "/assets/groups/:id",
+            routing::delete(api::group::remove_asset_group),
+        )
+        .route(
+            "/assets/groups/:id",
+            routing::get(api::group::get_asset_group_by_id),
         )
         .route(
             "/assets/operators/:id/grouped",
-            routing::get(api::get_all_grouped_assets),
+            routing::get(api::group::get_all_grouped_assets),
         )
         .route(
             "/assets/operators/:id/grouped/delegated-to",
-            routing::get(api::get_all_grouped_assets_delegated_to),
+            routing::get(api::group::get_all_grouped_assets_delegated_to),
         )
         .route(
             "/assets/operators/:id/grouped/delegated-from",
-            routing::get(api::get_all_grouped_assets_delegated_from),
-        )
-        .route(
-            "/assets/aircraft/:id",
-            routing::get(api::get_aircraft_by_id),
-        )
-        .route(
-            "/assets/vertipads/:id",
-            routing::get(api::get_vertipad_by_id),
-        )
-        .route(
-            "/assets/vertiports/:id",
-            routing::get(api::get_vertiport_by_id),
-        )
-        .route(
-            "/assets/groups/:id",
-            routing::get(api::get_asset_group_by_id),
-        )
-        // POST endpoints
-        .route("/assets/aircraft", routing::post(api::register_aircraft))
-        .route("/assets/vertiports", routing::post(api::register_vertiport))
-        .route("/assets/vertipads", routing::post(api::register_vertipad))
-        .route("/assets/groups", routing::post(api::register_asset_group))
-        // PUT endpoints
-        .route("/assets/aircraft", routing::put(api::update_aircraft))
-        .route("/assets/vertiports", routing::put(api::update_vertiport))
-        .route("/assets/vertipads", routing::put(api::update_vertipad))
-        .route("/assets/groups/:id", routing::put(api::update_asset_group))
-        // DELETE endpoints
-        .route(
-            "/assets/aircraft/:id",
-            routing::delete(api::remove_aircraft),
-        )
-        .route(
-            "/assets/vertiports/:id",
-            routing::delete(api::remove_vertiport),
-        )
-        .route(
-            "/assets/vertipads/:id",
-            routing::delete(api::remove_vertipad),
-        )
-        .route(
-            "/assets/groups/:id",
-            routing::delete(api::remove_asset_group),
+            routing::get(api::group::get_all_grouped_assets_delegated_from),
         )
         .layer(
             CorsLayer::new()

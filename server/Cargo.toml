@@ -29,6 +29,7 @@ stub_server = ["test_util"]
 stub_client = ["stub_backends"]
 
 [dependencies]
+anstyle       = "=1.0.0"
 anyhow        = "1.0"
 axum          = "0.5"
 cargo-husky   = "1"
