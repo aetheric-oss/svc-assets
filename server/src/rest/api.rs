@@ -11,7 +11,6 @@ pub use rest_types::*;
 
 use axum::{extract::Path, Extension, Json};
 use hyper::StatusCode;
-use lib_common::grpc::ClientConnect;
 use svc_storage_client_grpc::prelude::*;
 
 use super::structs::{Aircraft, AssetGroup, Operator, Vertipad, Vertiport};
@@ -47,17 +46,35 @@ pub async fn health_check(
 
     let mut ok = true;
 
-    if grpc_clients.storage.vertiport.get_client().await.is_err() {
+    if grpc_clients
+        .storage
+        .vertiport
+        .is_ready(ReadyRequest {})
+        .await
+        .is_err()
+    {
         let error_msg = "svc-storage vertiport unavailable.".to_string();
         rest_error!("(health_check) {}.", &error_msg);
         ok = false;
     }
-    if grpc_clients.storage.vertipad.get_client().await.is_err() {
+    if grpc_clients
+        .storage
+        .vertipad
+        .is_ready(ReadyRequest {})
+        .await
+        .is_err()
+    {
         let error_msg = "svc-storage vertipad unavailable.".to_string();
         rest_error!("(health_check) {}.", &error_msg);
         ok = false;
     }
-    if grpc_clients.storage.vehicle.get_client().await.is_err() {
+    if grpc_clients
+        .storage
+        .vehicle
+        .is_ready(ReadyRequest {})
+        .await
+        .is_err()
+    {
         let error_msg = "svc-storage vehicle unavailable.".to_string();
         rest_error!("(health_check) {}.", &error_msg);
         ok = false;
