@@ -17,7 +17,10 @@ fn check_body(bytes: &hyper::body::Bytes) -> String {
 
 async fn evaluate(response: Result<Response<Body>, Error>, expected_code: StatusCode) -> String {
     let Ok(response) = response else {
-        println!("Response was an Err() type: {:?}", response.as_ref().unwrap_err());
+        println!(
+            "Response was an Err() type: {:?}",
+            response.as_ref().unwrap_err()
+        );
         println!("{:?}", response);
         return String::from("");
     };

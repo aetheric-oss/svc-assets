@@ -13,27 +13,27 @@ repository.workspace   = true
 
 [dependencies]
 chrono        = { version = "0.4", features = ["serde"] }
-ordered-float = { version = "3.4", features = ["serde"] }
+ordered-float = { version = "4.1", features = ["serde"] }
 serde         = "1.0"
 serde_json    = "1.0"
 
 [dependencies.lib-common]
 features = ["grpc"]
 git      = "https://github.com/Arrow-air/lib-common.git"
-tag      = "v0.2.0"
+tag      = "latest-develop"
 
 # Get Geo types from storage client
 [dependencies.svc-storage-client-grpc]
 git = "https://github.com/Arrow-air/svc-storage"
-tag = "v0.11.0"
+tag = "latest-develop"
 
 [dev-dependencies]
 hyper = { version = "0.14", features = ["full"] }
-tokio = { version = "1.20", features = ["full"] }
+tokio = { version = "1.33", features = ["full"] }
 
 [dependencies.utoipa]
 features = ["axum_extras", "chrono"]
-version  = "3.3"
+version  = "4.0"
 
 [[example]]
 name = "rest"
