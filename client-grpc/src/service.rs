@@ -1,4 +1,5 @@
 //! Client Library: Client Functions, Structs, Traits
+
 /// gRPC object traits to provide wrappers for grpc functions
 #[tonic::async_trait]
 pub trait Client<T>
@@ -16,22 +17,18 @@ where
     ///
     /// # Errors
     ///
-    /// Returns [`tonic::Status`] with [`Code::Unknown`](tonic::Code::Unknown) if
-    /// the server is not ready.
+    /// Returns [`tonic::Status`] with [`tonic::Code::Unknown`] if the server is not ready.
     ///
     /// # Examples
     /// ```
     /// use lib_common::grpc::get_endpoint_from_env;
-    /// use svc_assets_client_grpc::client::{ReadyRequest, RpcServiceClient};
-    /// use svc_assets_client_grpc::{Client, GrpcClient};
-    /// use svc_assets_client_grpc::service::Client as ServiceClient;
-    /// use tonic::transport::Channel;
+    /// use svc_assets_client_grpc::prelude::*;
     ///
     /// async fn example () -> Result<(), Box<dyn std::error::Error>> {
     ///     let (host, port) = get_endpoint_from_env("SERVER_HOSTNAME", "SERVER_PORT_GRPC");
-    ///     let connection = GrpcClient::<RpcServiceClient<Channel>>::new_client(&host, port, "assets");
-    ///     let response = connection
-    ///         .is_ready(ReadyRequest {})
+    ///     let client = AssetsClient::new_client(&host, port, "assets");
+    ///     let response = client
+    ///         .is_ready(assets::ReadyRequest {})
     ///         .await?;
     ///     println!("RESPONSE={:?}", response.into_inner());
     ///     Ok(())
