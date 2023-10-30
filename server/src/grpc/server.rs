@@ -103,10 +103,15 @@ mod tests {
 
     #[tokio::test]
     async fn test_grpc_server_is_ready() {
+        crate::get_log_handle().await;
+        ut_info!("(test_grpc_server_is_ready) Start.");
+
         let imp = ServerImpl::default();
         let result = imp.is_ready(Request::new(ReadyRequest {})).await;
         assert!(result.is_ok());
         let result: ReadyResponse = result.unwrap().into_inner();
         assert_eq!(result.ready, true);
+
+        ut_info!("(test_grpc_server_is_ready) Success.");
     }
 }
