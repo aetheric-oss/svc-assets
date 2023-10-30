@@ -1,4 +1,7 @@
 //! Integration Tests
+use lib_common::log_macros;
+
+log_macros!("it", "test");
 
 fn get_log_string(function: &str, name: &str) -> String {
     #[cfg(feature = "stub_server")]
