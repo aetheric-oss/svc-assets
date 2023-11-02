@@ -656,21 +656,7 @@ pub async fn register_aircraft(
 
     let client = grpc_clients.storage.vehicle;
 
-    let data = vehicle::Data {
-        last_vertiport_id: payload.last_vertiport_id,
-        vehicle_model_id: Uuid::new_v4().to_string(),
-        serial_number: payload.serial_number,
-        registration_number: payload.registration_number,
-        description: payload.description,
-        asset_group_id: None,
-        schedule: None,
-        last_maintenance: payload.last_maintenance,
-        next_maintenance: payload.next_maintenance,
-        created_at: None,
-        updated_at: None,
-    };
-
-    match client.insert(data).await {
+    match client.insert(payload).await {
         Ok(res) => {
             rest_info!("(register_aircraft) registration success.");
             rest_debug!("(register_aircraft) {:?}", res);
@@ -879,7 +865,8 @@ pub async fn update_aircraft(
         .update(vehicle::UpdateObject {
             id: vehicle_id.clone(),
             data: Some(vehicle::Data {
-                last_vertiport_id: payload.last_vertiport_id,
+                hangar_id: payload.hangar_id,
+                hangar_bay_id: payload.hangar_bay_id,
                 vehicle_model_id: payload.vehicle_model_id.unwrap_or(vehicle.vehicle_model_id),
                 serial_number: payload.serial_number.unwrap_or(vehicle.serial_number),
                 registration_number: payload
