@@ -241,7 +241,7 @@ pub struct Aircraft {
     pub max_range_km: f64,
     pub last_maintenance: Option<DateTime<Utc>>,
     pub next_maintenance: Option<DateTime<Utc>>,
-    pub last_vertiport_id: Option<String>,
+    pub hangar_id: Option<String>,
 }
 
 impl Aircraft {
@@ -283,7 +283,7 @@ impl Aircraft {
             max_range_km: 1000.0,
             last_maintenance: None,
             next_maintenance: None,
-            last_vertiport_id: Some(Uuid::new_v4().to_string()),
+            hangar_id: Some(Uuid::new_v4().to_string()),
         }
     }
 }
@@ -323,7 +323,7 @@ impl TryFrom<VehicleObject> for Aircraft {
             max_range_km: 0.0,
             last_maintenance: data.last_maintenance.map(|date| date.into()),
             next_maintenance: data.next_maintenance.map(|date| date.into()),
-            last_vertiport_id: data.last_vertiport_id,
+            hangar_id: data.hangar_id,
         })
     }
 }
@@ -484,7 +484,7 @@ mod tests {
             max_range_km: 1000.0,
             last_maintenance: None,
             next_maintenance: None,
-            last_vertiport_id: None,
+            hangar_id: None,
         };
         assert_eq!(asset.id(), Uuid::parse_str(&basics.id));
         assert_eq!(asset.name(), basics.name.unwrap());
@@ -526,7 +526,7 @@ mod tests {
             max_range_km: 1000.0,
             last_maintenance: None,
             next_maintenance: None,
-            last_vertiport_id: None,
+            hangar_id: None,
         };
         assert_eq!(aircraft.id(), Uuid::parse_str(&basics.id));
         assert_eq!(aircraft.name(), basics.name.clone().unwrap());
@@ -740,7 +740,7 @@ mod tests {
             max_range_km: 1000.0,
             last_maintenance: None,
             next_maintenance: None,
-            last_vertiport_id: None,
+            hangar_id: None,
         };
 
         let vertiport = vertiport::mock::get_data_obj();
