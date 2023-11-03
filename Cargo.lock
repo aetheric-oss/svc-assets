@@ -2982,7 +2982,7 @@ checksum = "81cdd64d312baedb58e21336b31bc043b77e01cc99033ce76ef539f78e965ebc"
 
 [[package]]
 name = "svc-assets"
-version = "0.4.2-develop.0"
+version = "0.4.2-develop.1"
 dependencies = [
  "anyhow",
  "axum 0.5.17",
@@ -3026,7 +3026,7 @@ dependencies = [
 
 [[package]]
 name = "svc-assets-client-grpc"
-version = "0.4.2-develop.0"
+version = "0.4.2-develop.1"
 dependencies = [
  "cfg-if",
  "lib-common 0.2.1-develop.0 (git+https://github.com/Arrow-air/lib-common.git?tag=latest-develop)",
@@ -3044,7 +3044,7 @@ dependencies = [
 
 [[package]]
 name = "svc-assets-client-rest"
-version = "0.4.2-develop.0"
+version = "0.4.2-develop.1"
 dependencies = [
  "chrono",
  "hyper",
