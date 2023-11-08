@@ -48,7 +48,7 @@ mod tests {
         crate::get_log_handle().await;
         ut_info!("(test_grpc_clients_default) Start.");
 
-        let config = crate::config::Config::default();
+        let config = crate::Config::default();
         let clients = GrpcClients::default(config);
 
         let vehicle = &clients.storage.vehicle;
