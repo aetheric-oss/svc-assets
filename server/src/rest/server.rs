@@ -85,8 +85,7 @@ pub async fn rest_server(
     let grpc_clients = GrpcClients::default(config.clone());
 
     let app = Router::new()
-        // .merge(SwaggerUi::new("/swagger-ui/*tail").url("/api-doc/openapi.json", ApiDoc::openapi()))
-        // GET endpoints
+        .route("/health", routing::get(api::health_check))
         .route("/assets/operators/:id", routing::get(api::get_operator))
         .route("/assets/demo/aircraft", routing::get(api::get_all_aircraft))
         .route(

@@ -4,7 +4,6 @@
 pub mod rest_types {
     include!("../../../openapi/types.rs");
 }
-use prost_types::FieldMask;
 use std::str::FromStr;
 
 pub use rest_types::*;
