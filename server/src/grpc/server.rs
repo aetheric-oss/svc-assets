@@ -27,7 +27,8 @@ impl RpcService for ServerImpl {
         &self,
         request: Request<ReadyRequest>,
     ) -> Result<Response<ReadyResponse>, Status> {
-        grpc_info!("(is_ready) assets server.");
+        // only show is_ready calls if log level is debug. This will be called 5times per second by the health checks.
+        grpc_debug!("(is_ready) assets server.");
         grpc_debug!("(is_ready) request: {:?}", request);
         let response = ReadyResponse { ready: true };
         Ok(Response::new(response))
