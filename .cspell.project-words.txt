@@ -47,3 +47,5 @@ Refactorings
 RRULE
 struct
 anstyle
+Lcov
+seccomp
