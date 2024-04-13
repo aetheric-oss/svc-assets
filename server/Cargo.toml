@@ -2,7 +2,7 @@
 description = "Arrow Assets Service gRPC and REST servers"
 keywords    = ["vtol", "server", "grpc", "rest", "template"] # max 5
 name        = "svc-assets"
-version     = "0.4.2-develop.2"
+version     = "0.4.2-develop.3"
 
 authors.workspace      = true
 categories.workspace   = true
