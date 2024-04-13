@@ -1,0 +1,34 @@
+version: '3.8'
+
+configs:
+  log4rs:
+    file: log4rs.yaml
+  dot-env:
+    file: .env
+
+services:
+  web-server:
+    extends:
+      file: docker-compose-base.yml
+      service: web-server
+    environment:
+      - STORAGE_HOST_GRPC=svc-storage
+      - STORAGE_PORT_GRPC
+      - REST_REQUEST_LIMIT_PER_SECOND
+      - REST_CORS_ALLOWED_ORIGIN
+      - REST_CONCURRENCY_LIMIT_PER_SERVICE
+
+  example:
+    extends:
+      file: docker-compose-base.yml
+      service: example
+
+  ut-coverage:
+    extends:
+      file: docker-compose-base.yml
+      service: ut-coverage
+
+  it-coverage:
+    extends:
+      file: docker-compose-base.yml
+      service: it-coverage
