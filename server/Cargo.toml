@@ -40,7 +40,6 @@ hyper         = "0.14"
 lapin         = "2.3"
 lipsum        = "0.9"
 log           = "0.4"
-mavlink       = "0.12"
 openssl       = "0.10"
 packed_struct = "0.10"
 prost         = "0.12"
@@ -59,12 +58,12 @@ tower-http    = { version = "0.4", features = ["cors", "trace"] }
 uuid          = { version = "1.5", features = ["serde"] }
 
 [dependencies.svc-storage-client-grpc]
-features = ["vehicle", "vertiport", "vertipad"]
-git      = "https://github.com/Arrow-air/svc-storage"
+features = ["vehicle", "vertiport", "vertipad", "group"]
+git      = "https://github.com/aetheric-oss/svc-storage"
 tag      = "latest-develop"
 
 [dependencies.lib-common]
-git = "https://github.com/Arrow-air/lib-common.git"
+git = "https://github.com/aetheric-oss/lib-common.git"
 tag = "latest-develop"
 
 [dependencies.log4rs]
