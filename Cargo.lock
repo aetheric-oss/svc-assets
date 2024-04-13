@@ -2943,7 +2943,7 @@ checksum = "81cdd64d312baedb58e21336b31bc043b77e01cc99033ce76ef539f78e965ebc"
 
 [[package]]
 name = "svc-assets"
-version = "0.4.2-develop.3"
+version = "0.4.2-develop.4"
 dependencies = [
  "anyhow",
  "axum 0.5.17",
@@ -2986,7 +2986,7 @@ dependencies = [
 
 [[package]]
 name = "svc-assets-client-grpc"
-version = "0.4.2-develop.3"
+version = "0.4.2-develop.4"
 dependencies = [
  "cfg-if",
  "lib-common",
@@ -3004,7 +3004,7 @@ dependencies = [
 
 [[package]]
 name = "svc-assets-client-rest"
-version = "0.4.2-develop.3"
+version = "0.4.2-develop.4"
 dependencies = [
  "chrono",
  "hyper",
