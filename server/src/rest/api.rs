@@ -56,6 +56,7 @@ pub async fn health_check(
         rest_error!("(health_check) {}.", &error_msg);
         ok = false;
     }
+
     if grpc_clients
         .storage
         .vertipad
@@ -67,6 +68,7 @@ pub async fn health_check(
         rest_error!("(health_check) {}.", &error_msg);
         ok = false;
     }
+
     if grpc_clients
         .storage
         .vehicle
@@ -139,31 +141,28 @@ pub async fn get_all_aircraft(
     Extension(grpc_clients): Extension<GrpcClients>,
 ) -> Result<Json<Vec<Aircraft>>, (StatusCode, String)> {
     rest_info!("(get_all_aircraft) entry.");
-    let filter = AdvancedSearchFilter::search_is_not_null(String::from("deleted_at"));
 
-    let vehicle_client = grpc_clients.storage.vehicle;
-    let mut vehicles = match vehicle_client.search(filter.clone()).await {
-        Ok(response) => response.into_inner().list,
-        Err(e) => {
+    let filter = AdvancedSearchFilter::search_is_null("deleted_at".to_string());
+    let assets = grpc_clients
+        .storage
+        .vehicle
+        .search(filter)
+        .await
+        .map_err(|e| {
             let error_msg = "could not retrieve vehicles.".to_string();
             rest_error!("(get_all_aircraft) {}: {}.", error_msg, e);
-            return Err((StatusCode::INTERNAL_SERVER_ERROR, error_msg));
-        }
-    };
-
-    let mut assets = Vec::new();
-
-    for vehicle in vehicles.drain(..) {
-        let aircraft: Aircraft = match vehicle.try_into() {
-            Ok(object) => object,
-            Err(_) => {
-                let error_msg = "could not convert VehicleObject to Aircraft.".to_string();
-                rest_error!("(get_all_aircraft) {}", &error_msg);
-                return Err((StatusCode::INTERNAL_SERVER_ERROR, error_msg));
-            }
-        };
-        assets.push(aircraft);
-    }
+            (StatusCode::INTERNAL_SERVER_ERROR, error_msg)
+        })?
+        .into_inner()
+        .list
+        .into_iter()
+        .map(|object| object.try_into())
+        .collect::<Result<Vec<Aircraft>, _>>()
+        .map_err(|e| {
+            let error_msg = "could not convert VehicleObject to Aircraft.".to_string();
+            rest_error!("(get_all_aircraft) {}: {e}", &error_msg);
+            (StatusCode::INTERNAL_SERVER_ERROR, error_msg)
+        })?;
 
     Ok(Json(assets))
 }
@@ -182,31 +181,27 @@ pub async fn get_all_vertiports(
     Extension(grpc_clients): Extension<GrpcClients>,
 ) -> Result<Json<Vec<Vertiport>>, (StatusCode, String)> {
     rest_info!("(get_all_vertiports) entry.");
-    let filter = AdvancedSearchFilter::search_is_not_null(String::from("deleted_at"));
-
-    let vertiport_client = grpc_clients.storage.vertiport;
-    let mut vertiports = match vertiport_client.search(filter.clone()).await {
-        Ok(response) => response.into_inner().list,
-        Err(e) => {
+    let filter = AdvancedSearchFilter::search_is_null("deleted_at".to_string());
+    let assets = grpc_clients
+        .storage
+        .vertiport
+        .search(filter)
+        .await
+        .map_err(|e| {
             let error_msg = "could not retrieve vertiports.".to_string();
             rest_error!("(get_all_vertiports) {}: {}.", error_msg, e);
-            return Err((StatusCode::INTERNAL_SERVER_ERROR, error_msg));
-        }
-    };
-
-    let mut assets = Vec::new();
-
-    for vertiport in vertiports.drain(..) {
-        let vertiport: Vertiport = match vertiport.try_into() {
-            Ok(object) => object,
-            Err(_) => {
-                let error_msg = "could not convert VertiportObject to Vertiport.".to_string();
-                rest_error!("(get_all_vertiports) {}", &error_msg);
-                return Err((StatusCode::INTERNAL_SERVER_ERROR, error_msg));
-            }
-        };
-        assets.push(vertiport);
-    }
+            (StatusCode::INTERNAL_SERVER_ERROR, error_msg)
+        })?
+        .into_inner()
+        .list
+        .into_iter()
+        .map(|object| object.try_into())
+        .collect::<Result<Vec<Vertiport>, _>>()
+        .map_err(|e| {
+            let error_msg = "could not convert VertiportObject to Vertiport.".to_string();
+            rest_error!("(get_all_vertiports) {}: {e}", &error_msg);
+            (StatusCode::INTERNAL_SERVER_ERROR, error_msg)
+        })?;
 
     Ok(Json(assets))
 }
@@ -225,31 +220,27 @@ pub async fn get_all_vertipads(
     Extension(grpc_clients): Extension<GrpcClients>,
 ) -> Result<Json<Vec<Vertipad>>, (StatusCode, String)> {
     rest_info!("(get_all_vertipads) entry.");
-    let filter = AdvancedSearchFilter::search_is_not_null(String::from("deleted_at"));
-
-    let vertipad_client = grpc_clients.storage.vertipad;
-    let mut vertipads = match vertipad_client.search(filter.clone()).await {
-        Ok(response) => response.into_inner().list,
-        Err(e) => {
+    let filter = AdvancedSearchFilter::search_is_null("deleted_at".to_string());
+    let assets = grpc_clients
+        .storage
+        .vertipad
+        .search(filter)
+        .await
+        .map_err(|e| {
             let error_msg = "could not retrieve vertipads.".to_string();
             rest_error!("(get_all_vertipads) {}: {}.", error_msg, e);
-            return Err((StatusCode::INTERNAL_SERVER_ERROR, error_msg));
-        }
-    };
-
-    let mut assets = Vec::new();
-
-    for vertipad in vertipads.drain(..) {
-        let vertipad: Vertipad = match vertipad.try_into() {
-            Ok(object) => object,
-            Err(_) => {
-                let error_msg = "could not convert VertipadObject to Vertipad.".to_string();
-                rest_error!("(get_all_vertipads) {}", &error_msg);
-                return Err((StatusCode::INTERNAL_SERVER_ERROR, error_msg));
-            }
-        };
-        assets.push(vertipad);
-    }
+            (StatusCode::INTERNAL_SERVER_ERROR, error_msg)
+        })?
+        .into_inner()
+        .list
+        .into_iter()
+        .map(|object| object.try_into())
+        .collect::<Result<Vec<Vertipad>, _>>()
+        .map_err(|e| {
+            let error_msg = "could not convert VertipadObject to Vertipad.".to_string();
+            rest_error!("(get_all_vertipads) {}: {e}", &error_msg);
+            (StatusCode::INTERNAL_SERVER_ERROR, error_msg)
+        })?;
 
     Ok(Json(assets))
 }
