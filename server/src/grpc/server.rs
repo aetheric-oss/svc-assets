@@ -47,6 +47,7 @@ impl RpcService for ServerImpl {
 ///     Ok(())
 /// }
 /// ```
+#[cfg(not(tarpaulin_include))]
 pub async fn grpc_server(config: Config, shutdown_rx: Option<tokio::sync::oneshot::Receiver<()>>) {
     grpc_debug!("(grpc_server) entry.");
 
@@ -104,7 +105,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_grpc_server_is_ready() {
-        crate::get_log_handle().await;
+        lib_common::logger::get_log_handle().await;
         ut_info!("(test_grpc_server_is_ready) Start.");
 
         let imp = ServerImpl::default();

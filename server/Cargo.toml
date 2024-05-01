@@ -30,7 +30,6 @@ anyhow        = "1.0"
 axum          = "0.5"
 cargo-husky   = "1"
 cfg-if        = "1.0"
-chrono        = { version = "0.4", features = ["serde"] }
 clap          = { version = "4.4", features = ["derive"] }
 config        = "0.13"
 dotenv        = "0.15"
@@ -38,7 +37,6 @@ duplicate     = "1.0"
 futures       = "0.3"
 hyper         = "0.14"
 lapin         = "2.3"
-lipsum        = "0.9"
 log           = "0.4"
 openssl       = "0.10"
 packed_struct = "0.10"
@@ -55,7 +53,6 @@ tonic         = "0.10"
 tonic-health  = "0.10"
 tower         = { version = "0.4", features = ["limit"] }
 tower-http    = { version = "0.4", features = ["cors", "trace"] }
-uuid          = { version = "1.5", features = ["serde"] }
 
 [dependencies.svc-storage-client-grpc]
 features = ["vehicle", "vertiport", "vertipad", "group"]
