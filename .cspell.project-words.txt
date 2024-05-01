@@ -33,9 +33,8 @@ stuckee
 Stuckee
 structs
 Structs
-GoodluckH
+ServiceDog
 Goodluck
-lipsum
 utoipa
 autonumber
 dotenv

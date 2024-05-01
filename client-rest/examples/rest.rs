@@ -3,6 +3,7 @@
 use hyper::{Body, Client, Method, Request, Response};
 use hyper::{Error, StatusCode};
 use lib_common::grpc::get_endpoint_from_env;
+use lib_common::time::Utc;
 use svc_assets_client_rest::types::*;
 
 fn check_body(bytes: &hyper::body::Bytes) -> String {
@@ -67,7 +68,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             registration_number: "N2133423".to_string(),
             serial_number: "1234".to_string(),
             description: None,
-            last_maintenance: Some(chrono::Utc::now().into()),
+            last_maintenance: Some(Utc::now().into()),
             next_maintenance: None,
             hangar_id: None,
             hangar_bay_id: None,

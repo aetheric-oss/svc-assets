@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use utoipa::{IntoParams, ToSchema};
+use lib_common::time::{DateTime, Utc};
 
 pub use svc_storage_client_grpc::prelude::{GeoLineString, GeoPoint, GeoPolygon};
 pub use svc_storage_client_grpc::resources::{vehicle, vertipad, vertiport};
@@ -48,15 +49,15 @@ pub struct UpdateAircraftPayload {
     /// aircraft from national aviation authorities like the FAA.
     pub registration_number: Option<String>,
     /// Optional additional description of the Aircraft.
-    pub description: Option<Option<String>>,
+    pub description: Option<String>,
     /// The UUID of an AssetGroup, if available.
-    pub asset_group_id: Option<Option<String>>,
+    pub asset_group_id: Option<String>,
     /// Optional RRULE data string to indicate the Aircraft's available days and hours.
-    pub schedule: Option<Option<String>>,
+    pub schedule: Option<String>,
     /// Optional date of Aircraft's last maintenance.
-    pub last_maintenance: Option<Option<String>>,
+    pub last_maintenance: Option<DateTime<Utc>>,
     /// Optional date of Aircraft's next planned maintenance.
-    pub next_maintenance: Option<Option<String>>,
+    pub next_maintenance: Option<DateTime<Utc>>,
     /// List of fields that should be updated.
     ///
     /// If any other fields are provided, they will be ignored.
@@ -75,7 +76,7 @@ pub struct UpdateVertiportPayload {
     /// Geographical area location of the Vertiport.
     pub geo_location: Option<GeoPolygon>,
     /// Optional RRULE data string to indicate the Vertiport's available days and hours.
-    pub schedule: Option<Option<String>>,
+    pub schedule: Option<String>,
     /// List of fields that should be updated.
     ///
     /// If any other fields are provided, they will be ignored.
@@ -98,7 +99,7 @@ pub struct UpdateVertipadPayload {
     /// Indicates if the Vertipad is currently occupied.
     pub occupied: Option<bool>,
     /// Optional RRULE data string to indicate the Vertipad's available days and hours.
-    pub schedule: Option<Option<String>>,
+    pub schedule: Option<String>,
     /// List of fields that should be updated.
     ///
     /// If any other fields are provided, they will be ignored.

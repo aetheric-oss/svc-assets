@@ -7,39 +7,51 @@ pub mod api;
 pub mod server;
 pub mod structs;
 
-use api::*;
+use api::rest_types::*;
+use svc_storage_client_grpc::resources::{vehicle, vertipad, vertiport};
 
+use std::fmt::{self, Display, Formatter};
 use utoipa::OpenApi;
 
 use svc_storage_client_grpc::prelude::*;
 
-#[derive(OpenApi)]
+/// OpenAPI 3.0 specification for this service
+#[derive(OpenApi, Copy, Clone, Debug)]
 #[openapi(
     paths(
-        api::get_operator,
-        api::get_all_aircraft,
-        api::get_all_vertiports,
-        api::get_all_vertipads,
-        api::get_all_assets_by_operator,
-        api::get_all_grouped_assets,
-        api::get_all_grouped_assets_delegated_to,
-        api::get_all_grouped_assets_delegated_from,
-        api::get_aircraft_by_id,
-        api::get_vertipad_by_id,
-        api::get_vertiport_by_id,
-        api::get_asset_group_by_id,
-        api::register_aircraft,
-        api::register_vertiport,
-        api::register_vertipad,
-        api::register_asset_group,
-        api::update_aircraft,
-        api::update_vertiport,
-        api::update_vertipad,
-        api::update_asset_group,
-        api::remove_aircraft,
-        api::remove_vertiport,
-        api::remove_vertipad,
-        api::remove_asset_group,
+        api::health::health_check,
+
+        // GET
+        api::operator::get_operator,
+        api::operator::get_all_assets_by_operator,
+        api::operator::get_all_grouped_assets,
+        api::operator::get_all_grouped_assets_delegated_to,
+        api::operator::get_all_grouped_assets_delegated_from,
+        api::aircraft::get_all_aircraft,
+        api::vertiport::get_all_vertiports,
+        api::vertipad::get_all_vertipads,
+        api::aircraft::get_aircraft_by_id,
+        api::vertipad::get_vertipad_by_id,
+        api::vertiport::get_vertiport_by_id,
+        api::group::get_asset_group_by_id,
+
+        // CREATE
+        api::aircraft::register_aircraft,
+        api::vertiport::register_vertiport,
+        api::vertipad::register_vertipad,
+        api::group::register_asset_group,
+
+        // UPDATE
+        api::aircraft::update_aircraft,
+        api::vertiport::update_vertiport,
+        api::vertipad::update_vertipad,
+        api::group::update_asset_group,
+
+        // REMOVE
+        api::aircraft::remove_aircraft,
+        api::vertiport::remove_vertiport,
+        api::vertipad::remove_vertipad,
+        api::group::remove_asset_group,
     ),
     components(
         schemas(
@@ -53,10 +65,10 @@ use svc_storage_client_grpc::prelude::*;
             UpdateAircraftPayload,
             UpdateVertiportPayload,
             UpdateVertipadPayload,
-            structs::Operator,
-            structs::Aircraft,
-            structs::Vertiport,
-            structs::Vertipad,
+            api::operator::Operator,
+            api::aircraft::Aircraft,
+            api::vertiport::Vertiport,
+            api::vertipad::Vertipad,
             structs::AssetGroup,
             structs::AssetStatus,
             structs::Basics,
@@ -66,17 +78,44 @@ use svc_storage_client_grpc::prelude::*;
         (name = "svc-assets", description = "svc-assets API")
     )
 )]
-struct ApiDoc;
+#[cfg(not(tarpaulin_include))]
+pub struct ApiDoc;
 
-/// Create OpenAPI3 Specification File
-pub fn generate_openapi_spec(target: &str) -> Result<(), Box<dyn std::error::Error>> {
-    let output = ApiDoc::openapi()
-        .to_pretty_json()
-        .expect("(ERROR) unable to write openapi specification to json.");
+/// Errors with OpenAPI generation
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum OpenApiError {
+    /// Failed to export as JSON string
+    Json,
 
-    std::fs::write(target, output).expect("(ERROR) unable to write json string to file.");
+    /// Failed to write to file
+    FileWrite,
+}
 
-    Ok(())
+impl std::error::Error for OpenApiError {}
+
+impl Display for OpenApiError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            OpenApiError::Json => write!(f, "Failed to export as JSON string"),
+            OpenApiError::FileWrite => write!(f, "Failed to write to file"),
+        }
+    }
+}
+
+/// Create OpenAPI 3.0 Specification File
+pub fn generate_openapi_spec<T>(target: &str) -> Result<(), OpenApiError>
+where
+    T: OpenApi,
+{
+    let output = T::openapi().to_pretty_json().map_err(|e| {
+        rest_error!("(generate_openapi_spec) failed to export as JSON string: {e}");
+        OpenApiError::Json
+    })?;
+
+    std::fs::write(target, output).map_err(|e| {
+        rest_error!("(generate_openapi_spec) failed to write to file: {e}");
+        OpenApiError::FileWrite
+    })
 }
 
 #[cfg(test)]
@@ -84,7 +123,18 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_openapi_spec_generation() {
-        assert!(generate_openapi_spec("/tmp/generate_openapi_spec.out").is_ok());
+    fn test_generate_openapi_spec() {
+        let target = "/nonsense/";
+        let error = generate_openapi_spec::<ApiDoc>(target).unwrap_err();
+        assert_eq!(error, OpenApiError::FileWrite);
+
+        // TODO(R5): Is it possible to make the JSON export fail?
+        // #[derive(OpenApi)]
+        // #[openapi(
+        //     paths(invalid)
+        // )]
+        // struct InvalidApi;
+        // let error = generate_openapi_spec::<InvalidApi>("test.json").unwrap_err();
+        // assert_eq!(error, OpenApiError::Json);
     }
 }
