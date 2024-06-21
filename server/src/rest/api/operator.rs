@@ -79,9 +79,9 @@ pub async fn get_operator(
     Extension(mut _grpc_clients): Extension<GrpcClients>,
     Path(operator_id): Path<String>,
 ) -> Result<Json<Operator>, StatusCode> {
-    rest_info!("(get_operator) {}", operator_id);
+    rest_info!("{}", operator_id);
     let _id = to_uuid(&operator_id).ok_or_else(|| {
-        rest_error!("(get_operator) Invalid operator id.");
+        rest_error!("Invalid operator id.");
         StatusCode::BAD_REQUEST
     })?;
 
@@ -110,9 +110,9 @@ pub async fn get_all_assets_by_operator(
     Extension(mut _grpc_clients): Extension<GrpcClients>,
     Path(operator_id): Path<String>,
 ) -> Result<Json<Vec<Uuid>>, StatusCode> {
-    rest_info!("(get_all_assets_by_operator) {}", operator_id);
+    rest_info!("{}", operator_id);
     let _id = to_uuid(&operator_id).ok_or_else(|| {
-        rest_error!("(get_all_assets_by_operator) Invalid operator id.");
+        rest_error!("Invalid operator id.");
         StatusCode::BAD_REQUEST
     })?;
 
@@ -123,7 +123,7 @@ pub async fn get_all_assets_by_operator(
     // let vertipad_client_option = grpc_clients.storage_vertipad.get_client().await;
     // if vertiport_client_option.is_none() || vertipad_client_option.is_none() {
     //     let error_msg = "svc-storage unavailable.".to_string();
-    //     rest_error!("(get_all_assets) {}", &error_msg);
+    //     rest_error!("{}", &error_msg);
     //     return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
     // }
 
@@ -142,7 +142,7 @@ pub async fn get_all_assets_by_operator(
     //     .get_all_with_filter(request)
     //     .await
     //     .map_err(|e| {
-    //         rest_error!("(get_all_assets) Error getting vertiports: {}", e);
+    //         rest_error!("Error getting vertiports: {}", e);
     //         (
     //             StatusCode::SERVICE_UNAVAILABLE,
     //             "Error getting vertiports".to_string(),
@@ -150,7 +150,7 @@ pub async fn get_all_assets_by_operator(
     //     })?
     //     .into_inner()
     //     .vertiports;
-    // TODO(R4)
+    // TODO(R5)
     // Ok(Json(vec![]))
 }
 
@@ -177,10 +177,10 @@ pub async fn get_all_grouped_assets(
     Extension(mut _grpc_clients): Extension<GrpcClients>,
     Path(operator_id): Path<String>,
 ) -> Result<Json<Vec<Uuid>>, StatusCode> {
-    rest_info!("(get_all_grouped_assets) {}", operator_id);
+    rest_info!("{}", operator_id);
 
     let _id = to_uuid(&operator_id).ok_or_else(|| {
-        rest_error!("(get_all_grouped_assets) Invalid operator id.");
+        rest_error!("Invalid operator id.");
         StatusCode::BAD_REQUEST
     })?;
 
@@ -190,11 +190,11 @@ pub async fn get_all_grouped_assets(
     // let _client_option = grpc_clients.storage.get_client().await;
     // if client_option.is_none() {
     //     let error_msg = "svc-storage unavailable.".to_string();
-    //     rest_error!("(get_all_grouped_assets) {}", &error_msg);
+    //     rest_error!("{}", &error_msg);
     //     return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
     // }
     // let mut client = client_option.unwrap();
-    // TODO(R4)
+    // TODO(R5)
     // Ok(Json(vec![]))
 }
 
@@ -217,9 +217,9 @@ pub async fn get_all_grouped_assets_delegated_to(
     Extension(mut _grpc_clients): Extension<GrpcClients>,
     Path(operator_id): Path<String>,
 ) -> Result<Json<Vec<Uuid>>, StatusCode> {
-    rest_info!("(get_all_grouped_assets_delegated_to) {}", operator_id);
+    rest_info!("{}", operator_id);
     let _id = to_uuid(&operator_id).ok_or_else(|| {
-        rest_error!("(get_all_grouped_assets_delegated_to) Invalid operator id.");
+        rest_error!("Invalid operator id.");
         StatusCode::BAD_REQUEST
     })?;
 
@@ -229,11 +229,11 @@ pub async fn get_all_grouped_assets_delegated_to(
     // let _client_option = grpc_clients.storage.get_client().await;
     // if client_option.is_none() {
     //     let error_msg = "svc-storage unavailable.".to_string();
-    //     rest_error!("(get_all_grouped_assets_delegated_to) {}", &error_msg);
+    //     rest_error!("{}", &error_msg);
     //     return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
     // }
     // let mut client = client_option.unwrap();
-    // TODO(R4)
+    // TODO(R5)
     // Ok(Json(vec![]))
 }
 
@@ -256,10 +256,10 @@ pub async fn get_all_grouped_assets_delegated_from(
     Extension(mut _grpc_clients): Extension<GrpcClients>,
     Path(operator_id): Path<String>,
 ) -> Result<Json<Vec<Uuid>>, StatusCode> {
-    rest_info!("(get_all_grouped_assets_delegated_from) {}", operator_id);
+    rest_info!("{}", operator_id);
 
     let _id = to_uuid(&operator_id).ok_or_else(|| {
-        rest_error!("(get_all_grouped_assets_delegated_from) Invalid operator id.");
+        rest_error!("Invalid operator id.");
         StatusCode::BAD_REQUEST
     })?;
 
@@ -269,11 +269,11 @@ pub async fn get_all_grouped_assets_delegated_from(
     // let _client_option = grpc_clients.storage.get_client().await;
     // if client_option.is_none() {
     //     let error_msg = "svc-storage unavailable.".to_string();
-    //     rest_error!("(get_all_grouped_assets_delegated_from) {}", &error_msg);
+    //     rest_error!("{}", &error_msg);
     //     return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
     // }
     // let mut client = client_option.unwrap();
-    // TODO(R4)
+    // TODO(R5)
     // Ok(Json(vec![]))
 }
 

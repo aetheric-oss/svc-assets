@@ -24,7 +24,7 @@ pub async fn register_asset_group(
     Extension(mut _grpc_clients): Extension<GrpcClients>,
     Json(payload): Json<RegisterAssetGroupPayload>,
 ) -> Result<String, (StatusCode, String)> {
-    rest_info!("(register_asset_group) with payload: {:?}", &payload);
+    rest_info!("with payload: {:?}", &payload);
     Err((StatusCode::NOT_IMPLEMENTED, "Not implemented".to_string()))
 
     // let _asset_group = AssetGroup {
@@ -41,12 +41,12 @@ pub async fn register_asset_group(
     // let _client_option = grpc_clients.storage.get_client().await;
     // if client_option.is_none() {
     //     let error_msg = "svc-storage unavailable.".to_string();
-    //     rest_error!("(get_asset_group_by_id) {}", &error_msg);
+    //     rest_error!("{}", &error_msg);
     //     return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
     // }
     // let mut client = client_option.unwrap();
 
-    // TODO(R4)
+    // TODO(R5)
     // Ok(_asset_group.id)
 }
 
@@ -70,19 +70,19 @@ pub async fn update_asset_group(
     Json(payload): Json<AssetGroup>,
     Path(_id): Path<String>,
 ) -> Result<String, (StatusCode, String)> {
-    rest_info!("(update_asset_group) with payload: {:?}", &payload);
+    rest_info!("with payload: {:?}", &payload);
     Err((StatusCode::NOT_IMPLEMENTED, "Not implemented".to_string()))
 
     // Get Client
     // let _client_option = grpc_clients.storage.get_client().await;
     // if client_option.is_none() {
     //     let error_msg = "svc-storage unavailable.".to_string();
-    //     rest_error!("(get_asset_group_by_id) {}", &error_msg);
+    //     rest_error!("{}", &error_msg);
     //     return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
     // }
     // let mut client = client_option.unwrap();
 
-    // TODO(R4)
+    // TODO(R5)
     // Ok(payload.id)
 }
 
@@ -103,19 +103,19 @@ pub async fn remove_asset_group(
     Extension(_grpc_clients): Extension<GrpcClients>,
     Path(_id): Path<String>,
 ) -> Result<String, (StatusCode, String)> {
-    rest_info!("(remove_asset_group) with id: {:?}", &_id);
+    rest_info!("with id: {:?}", &_id);
     Err((StatusCode::NOT_IMPLEMENTED, "Not implemented".to_string()))
 
     // Get Client
     // let _client_option = grpc_clients.storage.get_client().await;
     // if client_option.is_none() {
     //     let error_msg = "svc-storage unavailable.".to_string();
-    //     rest_error!("(remove_asset_group) {}", &error_msg);
+    //     rest_error!("{}", &error_msg);
     //     return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
     // }
     // let mut client = client_option.unwrap();
 
-    // TODO(R4)
+    // TODO(R5)
     // Ok(_id)
 }
 
@@ -138,10 +138,10 @@ pub async fn get_asset_group_by_id(
     Extension(mut _grpc_clients): Extension<GrpcClients>,
     Path(asset_group_id): Path<String>,
 ) -> Result<Json<AssetGroup>, (StatusCode, String)> {
-    rest_info!("(get_asset_group_by_id) {}", asset_group_id);
+    rest_info!("{}", asset_group_id);
 
     // let _asset_group_id = to_uuid(&asset_group_id).ok_or_else(|| {
-    //     rest_error!("(get_asset_group_by_id) Invalid asset group id.");
+    //     rest_error!("Invalid asset group id.");
     //     (
     //         StatusCode::BAD_REQUEST,
     //         "Invalid asset group id".to_string(),
@@ -160,7 +160,7 @@ mod tests {
     #[tokio::test]
     async fn test_register_asset_group() {
         get_log_handle().await;
-        ut_info!("(test_register_asset_group) Start.");
+        ut_info!("Start.");
 
         let payload = RegisterAssetGroupPayload {
             name: Some("Test Group".to_string()),
@@ -178,7 +178,7 @@ mod tests {
     #[tokio::test]
     async fn test_update_asset_group() {
         get_log_handle().await;
-        ut_info!("(test_update_asset_group) Start.");
+        ut_info!("Start.");
 
         let payload = AssetGroup {
             id: Uuid::new_v4().to_string(),
@@ -206,7 +206,7 @@ mod tests {
     #[tokio::test]
     async fn test_remove_asset_group() {
         get_log_handle().await;
-        ut_info!("(test_remove_asset_group) Start.");
+        ut_info!("Start.");
 
         let config = crate::config::Config::default();
         let grpc_clients = GrpcClients::default(config);
@@ -220,7 +220,7 @@ mod tests {
     #[tokio::test]
     async fn test_get_asset_group_by_id() {
         get_log_handle().await;
-        ut_info!("(test_get_asset_group_by_id) Start.");
+        ut_info!("Start.");
 
         let config = crate::config::Config::default();
         let grpc_clients = GrpcClients::default(config);

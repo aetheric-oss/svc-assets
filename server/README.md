@@ -1,4 +1,4 @@
-![Aetheric Banner](https://github.com/aetheric-oss/.github/blob/main/assets/readme-banner.png)
+![Aetheric Banner](https://github.com/aetheric-oss/.github/raw/main/assets/readme-banner.png)
 
 # svc-assets Service
 

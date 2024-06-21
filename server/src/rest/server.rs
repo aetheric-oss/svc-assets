@@ -31,28 +31,22 @@ use tower_http::trace::TraceLayer;
 ///     Ok(())
 /// }
 /// ```
-#[cfg(not(tarpaulin_include))]
-// no_coverage: Needs running backends to work.
-// Will be tested in integration tests.
 pub async fn rest_server(
     config: Config,
     shutdown_rx: Option<tokio::sync::oneshot::Receiver<()>>,
 ) -> Result<(), ()> {
-    rest_info!("(rest_server) entry.");
+    rest_info!("entry.");
     let rest_port = config.docker_port_rest;
 
     let full_rest_addr: SocketAddr = format!("[::]:{}", rest_port).parse().map_err(|e| {
-        rest_error!("(rest_server) invalid address: {:?}, exiting.", e);
+        rest_error!("invalid address: {:?}, exiting.", e);
     })?;
 
     let cors_allowed_origin = config
         .rest_cors_allowed_origin
         .parse::<HeaderValue>()
         .map_err(|e| {
-            rest_error!(
-                "(rest_server) invalid cors_allowed_origin address: {:?}, exiting.",
-                e
-            );
+            rest_error!("invalid cors_allowed_origin address: {:?}, exiting.", e);
         })?;
 
     // Rate limiting
@@ -61,7 +55,7 @@ pub async fn rest_server(
     let limit_middleware = ServiceBuilder::new()
         .layer(TraceLayer::new_for_http())
         .layer(HandleErrorLayer::new(|e: BoxError| async move {
-            rest_warn!("(server) too many requests: {}", e);
+            rest_warn!("too many requests: {}", e);
             (
                 StatusCode::TOO_MANY_REQUESTS,
                 "(server) too many requests.".to_string(),
@@ -193,18 +187,41 @@ pub async fn rest_server(
     //
     // Bind to address
     //
-    match axum::Server::bind(&full_rest_addr)
+    axum::Server::bind(&full_rest_addr)
         .serve(app.into_make_service())
         .with_graceful_shutdown(shutdown_signal("rest", shutdown_rx))
         .await
-    {
-        Ok(_) => {
-            rest_info!("(rest_server) hosted at: {}.", full_rest_addr);
-            Ok(())
-        }
-        Err(e) => {
-            rest_error!("(rest_server) could not start server: {}", e);
-            Err(())
-        }
+        .map_err(|e| {
+            rest_error!("could not start server: {}", e);
+        })?;
+
+    rest_info!("server running at: {}.", full_rest_addr);
+    Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn test_server_start_and_shutdown() {
+        use tokio::time::{sleep, Duration};
+        lib_common::logger::get_log_handle().await;
+        ut_info!("start");
+
+        let config = Config::default();
+
+        let (shutdown_tx, shutdown_rx) = tokio::sync::oneshot::channel::<()>();
+
+        // Start the rest server
+        tokio::spawn(rest_server(config, Some(shutdown_rx)));
+
+        // Give the server time to get through the startup sequence (and thus code)
+        sleep(Duration::from_secs(1)).await;
+
+        // Shut down server
+        assert!(shutdown_tx.send(()).is_ok());
+
+        ut_info!("success");
     }
 }

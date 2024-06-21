@@ -109,7 +109,7 @@ impl AssetsInfo for asset {
 
     fn id(&self) -> Result<Uuid, AssetsError> {
         to_uuid(&self.basics().id).ok_or_else(|| {
-            rest_error!("(id) Invalid asset UUID: {}", self.basics().id);
+            rest_error!("Invalid asset UUID: {}", self.basics().id);
             AssetsError::InvalidUuid
         })
     }
@@ -120,7 +120,7 @@ impl AssetsInfo for asset {
         };
 
         let id = to_uuid(id).ok_or_else(|| {
-            rest_error!("(group_id) Invalid group UUID: {}", id);
+            rest_error!("Invalid group UUID: {}", id);
             AssetsError::InvalidUuid
         })?;
 

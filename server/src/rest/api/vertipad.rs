@@ -33,7 +33,7 @@ pub struct Vertipad {
     pub occupied: bool,
 
     /// The geographical location of the vertipad.
-    pub geo_location: GeoPoint,
+    pub geo_location: GeoPointZ,
 
     /// The schedule of the vertipad.
     pub schedule: Option<String>,
@@ -106,8 +106,8 @@ pub async fn register_vertipad(
     Extension(grpc_clients): Extension<GrpcClients>,
     Json(payload): Json<vertipad::Data>,
 ) -> Result<String, StatusCode> {
-    rest_info!("(register_vertipad) entry.");
-    rest_debug!("(register_vertipad) Payload: {:?}", &payload);
+    rest_info!("entry.");
+    rest_debug!("Payload: {:?}", &payload);
 
     // TODO(R5): maybe not safe to just take the storage type directly from the client and shove
     //  it into svc-storage without parsing/checking
@@ -117,18 +117,18 @@ pub async fn register_vertipad(
         .insert(payload)
         .await
         .map_err(|e| {
-            rest_error!("(register_vertipad) could not insert vertipad: {e}");
+            rest_error!("could not insert vertipad: {e}");
             StatusCode::INTERNAL_SERVER_ERROR
         })?
         .into_inner()
         .object
         .ok_or_else(|| {
-            rest_error!("(register_vertipad) could not insert vertipad.");
+            rest_error!("could not insert vertipad.");
             StatusCode::INTERNAL_SERVER_ERROR
         })?
         .id;
 
-    rest_info!("(register_vertipad) registration success.");
+    rest_info!("registration success.");
 
     Ok(id)
 }
@@ -149,13 +149,13 @@ pub async fn update_vertipad(
     Extension(grpc_clients): Extension<GrpcClients>,
     Json(payload): Json<UpdateVertipadPayload>,
 ) -> Result<(), StatusCode> {
-    rest_info!("(update_vertipad) entry [{}].", payload.id);
-    rest_debug!("(update_vertipad) Payload: {:?}", &payload);
+    rest_info!("entry [{}].", payload.id);
+    rest_debug!("Payload: {:?}", &payload);
 
     let id = to_uuid(&payload.id)
         .ok_or_else(|| {
             let error_msg = "Invalid vertipad id".to_string();
-            rest_error!("(update_vertipad) {}", &error_msg);
+            rest_error!("{}", &error_msg);
             StatusCode::BAD_REQUEST
         })?
         .to_string();
@@ -167,14 +167,14 @@ pub async fn update_vertipad(
         .await
         .map_err(|e| {
             let error_msg = format!("could not retrieve vertipad: {}", e);
-            rest_error!("(update_vertipad) {}", &error_msg);
+            rest_error!("{}", &error_msg);
             StatusCode::NOT_FOUND
         })?
         .into_inner()
         .data
         .ok_or_else(|| {
             let error_msg = "vertipad not found".to_string();
-            rest_error!("(update_vertipad) {}", &error_msg);
+            rest_error!("{}", &error_msg);
             StatusCode::NOT_FOUND
         })?;
 
@@ -211,11 +211,11 @@ pub async fn update_vertipad(
         .await
         .map_err(|e| {
             let error_msg = format!("could not update vertipad: {}", e);
-            rest_error!("(update_vertipad) {}", &error_msg);
+            rest_error!("{}", &error_msg);
             StatusCode::INTERNAL_SERVER_ERROR
         })?;
 
-    rest_info!("(update_vertipad) successfully updated vertipad.");
+    rest_info!("successfully updated vertipad.");
     Ok(())
 }
 
@@ -236,11 +236,11 @@ pub async fn remove_vertipad(
     Extension(grpc_clients): Extension<GrpcClients>,
     Path(id): Path<String>,
 ) -> Result<(), StatusCode> {
-    rest_info!("(remove_vertipad) entry [{}].", &id);
+    rest_info!("entry [{}].", &id);
 
     let id = to_uuid(&id)
         .ok_or_else(|| {
-            rest_error!("(remove_vertipad) Invalid vertipad id: {}", &id);
+            rest_error!("Invalid vertipad id: {}", &id);
             StatusCode::BAD_REQUEST
         })?
         .to_string();
@@ -251,7 +251,7 @@ pub async fn remove_vertipad(
         .delete(Id { id })
         .await
         .map_err(|e| {
-            rest_error!("(remove_vertipad) could not remove vertipad: {e}");
+            rest_error!("could not remove vertipad: {e}");
             StatusCode::NOT_FOUND
         })?;
 
@@ -271,7 +271,7 @@ pub async fn remove_vertipad(
 pub async fn get_all_vertipads(
     Extension(grpc_clients): Extension<GrpcClients>,
 ) -> Result<Json<Vec<Vertipad>>, StatusCode> {
-    rest_info!("(get_all_vertipads) entry.");
+    rest_info!("entry.");
     let filter = AdvancedSearchFilter::search_is_null("deleted_at".to_string());
     let assets: Vec<Vertipad> = grpc_clients
         .storage
@@ -279,7 +279,7 @@ pub async fn get_all_vertipads(
         .search(filter)
         .await
         .map_err(|e| {
-            rest_error!("(get_all_vertipads) could not retrieve vertipads: {e}.");
+            rest_error!("could not retrieve vertipads: {e}.");
             StatusCode::NOT_FOUND
         })?
         .into_inner()
@@ -310,11 +310,11 @@ pub async fn get_vertipad_by_id(
     Extension(grpc_clients): Extension<GrpcClients>,
     Path(vertipad_id): Path<String>,
 ) -> Result<Json<Vertipad>, StatusCode> {
-    rest_info!("(get_vertipad_by_id) entry [{}].", vertipad_id);
+    rest_info!("entry [{}].", vertipad_id);
 
     let id = to_uuid(&vertipad_id)
         .ok_or_else(|| {
-            rest_error!("(get_vertipad_by_id) Invalid vertipad id: {}", vertipad_id);
+            rest_error!("Invalid vertipad id: {}", vertipad_id);
             StatusCode::BAD_REQUEST
         })? // Check if the vertipad_id is a valid UUID
         .to_string();
@@ -325,17 +325,17 @@ pub async fn get_vertipad_by_id(
         .get_by_id(Id { id })
         .await
         .map_err(|e| {
-            rest_error!("(get_vertipad_by_id) could not get vertipad: {e}");
+            rest_error!("could not get vertipad: {e}");
             StatusCode::NOT_FOUND
         })?
         .into_inner()
         .try_into()
         .map_err(|e| {
-            rest_error!("(get_vertipad_by_id) could not convert vertipad: {e}");
+            rest_error!("could not convert vertipad: {e}");
             StatusCode::INTERNAL_SERVER_ERROR
         })?;
 
-    rest_debug!("(get_vertipad_by_id) vertipad found: {:#?}", vertipad);
+    rest_debug!("vertipad found: {:#?}", vertipad);
     Ok(Json(vertipad))
 }
 
@@ -466,10 +466,10 @@ mod tests {
         let vertipad_data = vertipad::Data {
             name: "Test Vertipad".to_string(),
             vertiport_id: "test-vertiport".to_string(),
-            geo_location: Some(GeoPoint {
-                latitude: 0.0,
-                longitude: 0.0,
-                altitude: 0.0,
+            geo_location: Some(GeoPointZ {
+                y: 0.0,
+                x: 0.0,
+                z: 0.0,
             }),
             enabled: true,
             occupied: false,
@@ -494,10 +494,10 @@ mod tests {
         let data = vertipad::Data {
             name: "Test Vertipad".to_string(),
             vertiport_id: "test-vertiport".to_string(),
-            geo_location: Some(GeoPoint {
-                latitude: 0.0,
-                longitude: 0.0,
-                altitude: 0.0,
+            geo_location: Some(GeoPointZ {
+                y: 0.0,
+                x: 0.0,
+                z: 0.0,
             }),
             enabled: true,
             occupied: false,
@@ -522,10 +522,10 @@ mod tests {
         let vertipad_data = vertipad::Data {
             name: "Test Vertipad".to_string(),
             vertiport_id: "test-vertiport".to_string(),
-            geo_location: Some(GeoPoint {
-                latitude: 0.0,
-                longitude: 0.0,
-                altitude: 0.0,
+            geo_location: Some(GeoPointZ {
+                y: 0.0,
+                x: 0.0,
+                z: 0.0,
             }),
             enabled: true,
             occupied: false,
@@ -582,10 +582,10 @@ mod tests {
         let data = vertipad::Data {
             name: "Test Vertipad".to_string(),
             vertiport_id: "test-vertiport".to_string(),
-            geo_location: Some(GeoPoint {
-                latitude: 0.0,
-                longitude: 0.0,
-                altitude: 0.0,
+            geo_location: Some(GeoPointZ {
+                y: 0.0,
+                x: 0.0,
+                z: 0.0,
             }),
             enabled: true,
             occupied: false,
@@ -645,10 +645,10 @@ mod tests {
         let vertipad_data = vertipad::Data {
             name: "Test Vertipad".to_string(),
             vertiport_id: "test-vertiport".to_string(),
-            geo_location: Some(GeoPoint {
-                latitude: 0.0,
-                longitude: 0.0,
-                altitude: 0.0,
+            geo_location: Some(GeoPointZ {
+                y: 0.0,
+                x: 0.0,
+                z: 0.0,
             }),
             enabled: true,
             occupied: false,

@@ -33,8 +33,8 @@ impl crate::service::Client<RpcServiceClient<Channel>> for AssetsClient {
         request: Self::ReadyRequest,
     ) -> Result<tonic::Response<Self::ReadyResponse>, tonic::Status> {
         // only show is_ready calls if log level is debug. This will be called 5times per second by the health checks.
-        grpc_debug!("(is_ready) {} client.", self.get_name());
-        grpc_debug!("(is_ready) request: {:?}", request);
+        grpc_debug!("{} client.", self.get_name());
+        grpc_debug!("request: {:?}", request);
         self.get_client().await?.is_ready(request).await
     }
 }
@@ -49,8 +49,8 @@ impl crate::service::Client<RpcServiceClient<Channel>> for AssetsClient {
         &self,
         request: Self::ReadyRequest,
     ) -> Result<tonic::Response<Self::ReadyResponse>, tonic::Status> {
-        grpc_warn!("(is_ready MOCK) {} client.", self.get_name());
-        grpc_debug!("(is_ready MOCK) request: {:?}", request);
+        grpc_warn!("(MOCK) {} client.", self.get_name());
+        grpc_debug!("(MOCK) request: {:?}", request);
         Ok(tonic::Response::new(ReadyResponse { ready: true }))
     }
 }

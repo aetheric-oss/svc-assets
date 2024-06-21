@@ -8,6 +8,7 @@ use svc_assets::*;
 
 #[tokio::main]
 #[cfg(not(tarpaulin_include))]
+// no_coverage: (Rnever) not unit testable, only integration tests
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Will use default config settings if no environment vars are found.
     let config = Config::try_from_env()

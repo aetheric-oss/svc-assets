@@ -33,7 +33,7 @@ stuckee
 Stuckee
 structs
 Structs
-ServiceDog
+amsmith-pro
 Goodluck
 utoipa
 autonumber
@@ -48,3 +48,4 @@ struct
 anstyle
 Lcov
 seccomp
+Rnever

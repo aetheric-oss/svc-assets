@@ -27,7 +27,7 @@ pub struct Vertiport {
     pub description: String,
 
     /// The geographic location of the vertiport.
-    pub geo_location: GeoPolygon,
+    pub geo_location: GeoPolygonZ,
 
     /// The schedule of the vertiport.
     pub schedule: Option<String>,
@@ -96,8 +96,8 @@ pub async fn register_vertiport(
     Extension(grpc_clients): Extension<GrpcClients>,
     Json(payload): Json<vertiport::Data>,
 ) -> Result<String, StatusCode> {
-    rest_info!("(register_vertiport) entry.");
-    rest_debug!("(register_vertiport) Payload: {:?}", &payload);
+    rest_info!("entry.");
+    rest_debug!("Payload: {:?}", &payload);
 
     let id = grpc_clients
         .storage
@@ -105,13 +105,13 @@ pub async fn register_vertiport(
         .insert(payload)
         .await
         .map_err(|e| {
-            rest_error!("(register_vertiport) could not insert vertiport: {e}");
+            rest_error!("could not insert vertiport: {e}");
             StatusCode::INTERNAL_SERVER_ERROR
         })?
         .into_inner()
         .object
         .ok_or_else(|| {
-            rest_error!("(register_vertiport) vertiport not found.");
+            rest_error!("vertiport not found.");
             StatusCode::INTERNAL_SERVER_ERROR
         })?
         .id;
@@ -138,12 +138,12 @@ pub async fn update_vertiport(
     Extension(grpc_clients): Extension<GrpcClients>,
     Json(payload): Json<UpdateVertiportPayload>,
 ) -> Result<(), StatusCode> {
-    rest_info!("(update_vertiport) entry [{}].", payload.id);
-    rest_debug!("(update_vertiport) Payload: {:?}", &payload);
+    rest_info!("entry [{}].", payload.id);
+    rest_debug!("Payload: {:?}", &payload);
 
     let id = to_uuid(&payload.id)
         .ok_or_else(|| {
-            rest_error!("(update_vertiport) Invalid vertiport id: {}", &payload.id);
+            rest_error!("Invalid vertiport id: {}", &payload.id);
             StatusCode::BAD_REQUEST
         })?
         .to_string();
@@ -154,13 +154,13 @@ pub async fn update_vertiport(
         .get_by_id(Id { id: id.clone() })
         .await
         .map_err(|e| {
-            rest_error!("(update_vertiport) error getting vertiport from storage: {e}");
+            rest_error!("error getting vertiport from storage: {e}");
             StatusCode::NOT_FOUND
         })?
         .into_inner()
         .data
         .ok_or_else(|| {
-            rest_error!("(update_vertiport) vertiport data malformed.");
+            rest_error!("vertiport data malformed.");
             StatusCode::INTERNAL_SERVER_ERROR
         })?;
 
@@ -188,11 +188,11 @@ pub async fn update_vertiport(
         .update(object)
         .await
         .map_err(|e| {
-            rest_error!("(update_vertiport) could not update vertiport: {e}");
+            rest_error!("could not update vertiport: {e}");
             StatusCode::INTERNAL_SERVER_ERROR
         })?;
 
-    rest_info!("(update_vertiport) successfully updated vertiport.",);
+    rest_info!("successfully updated vertiport.",);
 
     Ok(())
 }
@@ -214,11 +214,11 @@ pub async fn remove_vertiport(
     Extension(grpc_clients): Extension<GrpcClients>,
     Path(id): Path<String>,
 ) -> Result<(), StatusCode> {
-    rest_info!("(remove_vertiport) entry [{}].", &id);
+    rest_info!("entry [{}].", &id);
 
     let id = to_uuid(&id)
         .ok_or_else(|| {
-            rest_error!("(remove_vertiport) Invalid vertiport id: {}", &id);
+            rest_error!("Invalid vertiport id: {}", &id);
             StatusCode::BAD_REQUEST
         })?
         .to_string();
@@ -229,7 +229,7 @@ pub async fn remove_vertiport(
         .delete(Id { id })
         .await
         .map_err(|e| {
-            rest_error!("(remove_vertiport) could not remove vertiport: {e}");
+            rest_error!("could not remove vertiport: {e}");
             StatusCode::INTERNAL_SERVER_ERROR
         })?;
 
@@ -249,7 +249,7 @@ pub async fn remove_vertiport(
 pub async fn get_all_vertiports(
     Extension(grpc_clients): Extension<GrpcClients>,
 ) -> Result<Json<Vec<Vertiport>>, StatusCode> {
-    rest_info!("(get_all_vertiports) entry.");
+    rest_info!("entry.");
     let filter = AdvancedSearchFilter::search_is_null("deleted_at".to_string());
     let assets: Vec<Vertiport> = grpc_clients
         .storage
@@ -257,7 +257,7 @@ pub async fn get_all_vertiports(
         .search(filter)
         .await
         .map_err(|e| {
-            rest_error!("(get_all_vertiports) could not retrieve vertiports: {e}.");
+            rest_error!("could not retrieve vertiports: {e}.");
             StatusCode::INTERNAL_SERVER_ERROR
         })?
         .into_inner()
@@ -288,14 +288,11 @@ pub async fn get_vertiport_by_id(
     Extension(grpc_clients): Extension<GrpcClients>,
     Path(vertiport_id): Path<String>,
 ) -> Result<Json<Vertiport>, StatusCode> {
-    rest_info!("(get_vertiport_by_id) entry [{}].", vertiport_id);
+    rest_info!("entry [{}].", vertiport_id);
 
     let id = to_uuid(&vertiport_id)
         .ok_or_else(|| {
-            rest_error!(
-                "(get_vertiport_by_id) Invalid vertiport id: {}",
-                vertiport_id
-            );
+            rest_error!("Invalid vertiport id: {}", vertiport_id);
             StatusCode::BAD_REQUEST
         })?
         .to_string();
@@ -306,17 +303,17 @@ pub async fn get_vertiport_by_id(
         .get_by_id(Id { id })
         .await
         .map_err(|e| {
-            rest_error!("(get_vertiport_by_id) error getting vertiport from storage: {e}");
+            rest_error!("error getting vertiport from storage: {e}");
             StatusCode::NOT_FOUND
         })?
         .into_inner()
         .try_into()
         .map_err(|e| {
-            rest_error!("(get_vertiport_by_id) error converting vehicle to vertiport: {e}");
+            rest_error!("error converting vehicle to vertiport: {e}");
             StatusCode::INTERNAL_SERVER_ERROR
         })?;
 
-    rest_info!("(get_vertiport_by_id) Vertiport found: {}", vertiport_id);
+    rest_info!("Vertiport found: {}", vertiport_id);
 
     Ok(Json(vertiport))
 }
@@ -463,10 +460,7 @@ mod tests {
     async fn test_update_vertiport() {
         let data = vertiport::mock::get_data_obj();
         let data = vertiport::Data {
-            geo_location: Some(GeoPolygon {
-                interiors: vec![],
-                exterior: None,
-            }),
+            geo_location: Some(GeoPolygonZ { rings: vec![] }),
             created_at: Some(Utc::now().into()),
             updated_at: Some(Utc::now().into()),
             ..data
@@ -551,10 +545,7 @@ mod tests {
         let data = vertiport::Data {
             name: "Test".to_string(),
             description: "Description".to_string(),
-            geo_location: Some(GeoPolygon {
-                interiors: vec![],
-                exterior: None,
-            }),
+            geo_location: Some(GeoPolygonZ { rings: vec![] }),
             schedule: None,
             created_at: Some(Utc::now().into()),
             updated_at: Some(Utc::now().into()),
@@ -576,10 +567,7 @@ mod tests {
         let data = vertiport::Data {
             name: "Test".to_string(),
             description: "Description".to_string(),
-            geo_location: Some(GeoPolygon {
-                interiors: vec![],
-                exterior: None,
-            }),
+            geo_location: Some(GeoPolygonZ { rings: vec![] }),
             schedule: None,
             created_at: Some(Utc::now().into()),
             updated_at: Some(Utc::now().into()),

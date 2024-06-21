@@ -1,5 +1,5 @@
 [package]
-description = "Arrow assets service gRPC client"
+description = "Aetheric assets service gRPC client"
 keywords    = ["vtol", "client", "grpc", "rest", "assets"] # max 5
 name        = "svc-assets-client-grpc"
 version     = "0.4.2-develop.6"
@@ -33,7 +33,7 @@ tower       = { version = "0.4", optional = true }
 [dependencies.lib-common]
 features = ["grpc"]
 git      = "https://github.com/aetheric-oss/lib-common.git"
-tag      = "latest-develop"
+tag      = "v2.0.0"
 
 [dependencies.tokio]
 features = ["macros", "rt-multi-thread"]

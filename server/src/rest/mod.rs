@@ -7,13 +7,10 @@ pub mod api;
 pub mod server;
 pub mod structs;
 
-use api::rest_types::*;
-use svc_storage_client_grpc::resources::{vehicle, vertipad, vertiport};
+pub use api::rest_types::*;
 
 use std::fmt::{self, Display, Formatter};
 use utoipa::OpenApi;
-
-use svc_storage_client_grpc::prelude::*;
 
 /// OpenAPI 3.0 specification for this service
 #[derive(OpenApi, Copy, Clone, Debug)]
@@ -58,9 +55,9 @@ use svc_storage_client_grpc::prelude::*;
             vehicle::Data,
             vertiport::Data,
             vertipad::Data,
-            GeoPoint,
-            GeoPolygon,
-            GeoLineString,
+            GeoPointZ,
+            GeoPolygonZ,
+            GeoLineStringZ,
             RegisterAssetGroupPayload,
             UpdateAircraftPayload,
             UpdateVertiportPayload,
@@ -79,6 +76,7 @@ use svc_storage_client_grpc::prelude::*;
     )
 )]
 #[cfg(not(tarpaulin_include))]
+// no_coverage: (Rnever) not unit testable
 pub struct ApiDoc;
 
 /// Errors with OpenAPI generation
@@ -108,12 +106,12 @@ where
     T: OpenApi,
 {
     let output = T::openapi().to_pretty_json().map_err(|e| {
-        rest_error!("(generate_openapi_spec) failed to export as JSON string: {e}");
+        rest_error!("failed to export as JSON string: {e}");
         OpenApiError::Json
     })?;
 
     std::fs::write(target, output).map_err(|e| {
-        rest_error!("(generate_openapi_spec) failed to write to file: {e}");
+        rest_error!("failed to write to file: {e}");
         OpenApiError::FileWrite
     })
 }

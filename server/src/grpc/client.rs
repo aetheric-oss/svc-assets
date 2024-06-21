@@ -29,23 +29,23 @@ mod tests {
     #[tokio::test]
     async fn test_grpc_clients_default() {
         lib_common::logger::get_log_handle().await;
-        ut_info!("(test_grpc_clients_default) Start.");
+        ut_info!("Start.");
 
         let config = crate::Config::default();
         let clients = GrpcClients::default(config);
 
         let vehicle = &clients.storage.vehicle;
-        ut_debug!("(test_grpc_clients_default) vehicle: {:?}", vehicle);
+        ut_debug!("vehicle: {:?}", vehicle);
         assert_eq!(vehicle.get_name(), "vehicle");
 
         let vertipad = &clients.storage.vertipad;
-        ut_debug!("(test_grpc_clients_default) vertipad: {:?}", vertipad);
+        ut_debug!("vertipad: {:?}", vertipad);
         assert_eq!(vertipad.get_name(), "vertipad");
 
         let vertiport = &clients.storage.vertiport;
-        ut_debug!("(test_grpc_clients_default) vertiport: {:?}", vertiport);
+        ut_debug!("vertiport: {:?}", vertiport);
         assert_eq!(vertiport.get_name(), "vertiport");
 
-        ut_info!("(test_grpc_clients_default) Success.");
+        ut_info!("Success.");
     }
 }

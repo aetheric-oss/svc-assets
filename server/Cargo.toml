@@ -1,6 +1,6 @@
 [package]
-description = "Arrow Assets Service gRPC and REST servers"
-keywords    = ["vtol", "server", "grpc", "rest", "template"] # max 5
+description = "Aetheric Assets Service gRPC and REST servers"
+keywords    = ["vtol", "server", "grpc", "rest", "template"]  # max 5
 name        = "svc-assets"
 version     = "0.4.2-develop.6"
 
@@ -57,11 +57,11 @@ tower-http    = { version = "0.4", features = ["cors", "trace"] }
 [dependencies.svc-storage-client-grpc]
 features = ["vehicle", "vertiport", "vertipad", "group"]
 git      = "https://github.com/aetheric-oss/svc-storage"
-tag      = "latest-develop"
+tag      = "v0.12.1"
 
 [dependencies.lib-common]
 git = "https://github.com/aetheric-oss/lib-common.git"
-tag = "latest-develop"
+tag = "v2.0.0"
 
 [dependencies.log4rs]
 features = [

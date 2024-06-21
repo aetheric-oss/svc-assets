@@ -1,9 +1,9 @@
+use lib_common::time::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use utoipa::{IntoParams, ToSchema};
-use lib_common::time::{DateTime, Utc};
 
-pub use svc_storage_client_grpc::prelude::{GeoLineString, GeoPoint, GeoPolygon};
-pub use svc_storage_client_grpc::resources::{vehicle, vertipad, vertiport};
+pub use svc_storage_client_grpc::prelude::{group, vehicle, vertipad, vertiport};
+pub use svc_storage_client_grpc::prelude::{GeoLineStringZ, GeoPointZ, GeoPolygonZ};
 
 /// Status of an Asset.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema)]
@@ -74,7 +74,7 @@ pub struct UpdateVertiportPayload {
     /// Additional description of the Vertiport.
     pub description: Option<String>,
     /// Geographical area location of the Vertiport.
-    pub geo_location: Option<GeoPolygon>,
+    pub geo_location: Option<GeoPolygonZ>,
     /// Optional RRULE data string to indicate the Vertiport's available days and hours.
     pub schedule: Option<String>,
     /// List of fields that should be updated.
@@ -93,7 +93,7 @@ pub struct UpdateVertipadPayload {
     /// Identification name of the Vertipad.
     pub name: Option<String>,
     /// Geographical location of the Vertipad.
-    pub geo_location: Option<GeoPoint>,
+    pub geo_location: Option<GeoPointZ>,
     /// Indicates if the Vertipad is in business.
     pub enabled: Option<bool>,
     /// Indicates if the Vertipad is currently occupied.

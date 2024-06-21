@@ -1,6 +1,6 @@
 [package]
-description = "Arrow assets service REST client"
-keywords    = ["vtol", "client", "rest", "assets"] # max 5
+description = "Aetheric assets service REST client"
+keywords    = ["vtol", "client", "rest", "assets"]  # max 5
 name        = "svc-assets-client-rest"
 version     = "0.4.2-develop.6"
 
@@ -19,12 +19,13 @@ serde_json    = "1.0"
 [dependencies.lib-common]
 features = ["grpc"]
 git      = "https://github.com/aetheric-oss/lib-common.git"
-tag      = "latest-develop"
+tag      = "v2.0.0"
 
-# Get Geo types from storage client
+# Get types from storage client
 [dependencies.svc-storage-client-grpc]
-git = "https://github.com/aetheric-oss/svc-storage"
-tag = "latest-develop"
+features = ["vehicle", "vertiport", "vertipad", "group"]
+git      = "https://github.com/aetheric-oss/svc-storage"
+tag      = "v0.12.1"
 
 [dev-dependencies]
 hyper = { version = "0.14", features = ["full"] }
