@@ -1,8 +1,11 @@
 //! Integration Tests
+use lib_common::log_macros;
+
+log_macros!("it", "test");
 
 fn get_log_string(function: &str, name: &str) -> String {
     #[cfg(feature = "stub_server")]
-    return format!("({} MOCK) {} server.", function, name);
+    return format!("({}) (MOCK) {} server.", function, name);
 
     #[cfg(not(feature = "stub_server"))]
     return format!("({}) {} server.", function, name);

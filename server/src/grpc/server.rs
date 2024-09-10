@@ -27,8 +27,9 @@ impl RpcService for ServerImpl {
         &self,
         request: Request<ReadyRequest>,
     ) -> Result<Response<ReadyResponse>, Status> {
-        grpc_info!("(is_ready) assets server.");
-        grpc_debug!("(is_ready) request: {:?}", request);
+        // only show is_ready calls if log level is debug. This will be called 5times per second by the health checks.
+        grpc_debug!("assets server.");
+        grpc_debug!("request: {:?}", request);
         let response = ReadyResponse { ready: true };
         Ok(Response::new(response))
     }
@@ -47,14 +48,14 @@ impl RpcService for ServerImpl {
 /// }
 /// ```
 pub async fn grpc_server(config: Config, shutdown_rx: Option<tokio::sync::oneshot::Receiver<()>>) {
-    grpc_debug!("(grpc_server) entry.");
+    grpc_debug!("entry.");
 
     // Grpc Server
     let grpc_port = config.docker_port_grpc;
     let full_grpc_addr: SocketAddr = match format!("[::]:{}", grpc_port).parse() {
         Ok(addr) => addr,
         Err(e) => {
-            grpc_error!("(grpc_server) Failed to parse gRPC address: {}", e);
+            grpc_error!("Failed to parse gRPC address: {}", e);
             return;
         }
     };
@@ -66,19 +67,16 @@ pub async fn grpc_server(config: Config, shutdown_rx: Option<tokio::sync::onesho
         .await;
 
     //start server
-    grpc_info!(
-        "(grpc_server) Starting gRPC services on: {}.",
-        full_grpc_addr
-    );
+    grpc_info!("Starting gRPC services on: {}.", full_grpc_addr);
     match Server::builder()
         .add_service(health_service)
         .add_service(RpcServiceServer::new(imp))
         .serve_with_shutdown(full_grpc_addr, shutdown_signal("grpc", shutdown_rx))
         .await
     {
-        Ok(_) => grpc_info!("(grpc_server) gRPC server running at: {}.", full_grpc_addr),
+        Ok(_) => grpc_info!("gRPC server running at: {}.", full_grpc_addr),
         Err(e) => {
-            grpc_error!("(grpc_server) could not start gRPC server: {}", e);
+            grpc_error!("could not start gRPC server: {}", e);
         }
     };
 }
@@ -90,8 +88,8 @@ impl RpcService for ServerImpl {
         &self,
         request: Request<ReadyRequest>,
     ) -> Result<Response<ReadyResponse>, Status> {
-        grpc_warn!("(is_ready MOCK) assets server.");
-        grpc_debug!("(is_ready MOCK) request: {:?}", request);
+        grpc_warn!("(MOCK) assets server.");
+        grpc_debug!("(MOCK) request: {:?}", request);
         let response = ReadyResponse { ready: true };
         Ok(Response::new(response))
     }
@@ -103,10 +101,37 @@ mod tests {
 
     #[tokio::test]
     async fn test_grpc_server_is_ready() {
+        lib_common::logger::get_log_handle().await;
+        ut_info!("Start.");
+
         let imp = ServerImpl::default();
         let result = imp.is_ready(Request::new(ReadyRequest {})).await;
         assert!(result.is_ok());
         let result: ReadyResponse = result.unwrap().into_inner();
         assert_eq!(result.ready, true);
+
+        ut_info!("Success.");
+    }
+
+    #[tokio::test]
+    async fn test_grpc_server_start_and_shutdown() {
+        use tokio::time::{sleep, Duration};
+        lib_common::logger::get_log_handle().await;
+        ut_info!("start");
+
+        let config = Config::default();
+
+        let (shutdown_tx, shutdown_rx) = tokio::sync::oneshot::channel::<()>();
+
+        // Start the grpc server
+        tokio::spawn(grpc_server(config, Some(shutdown_rx)));
+
+        // Give the server time to get through the startup sequence (and thus code)
+        sleep(Duration::from_secs(1)).await;
+
+        // Shut down server
+        assert!(shutdown_tx.send(()).is_ok());
+
+        ut_info!("success");
     }
 }

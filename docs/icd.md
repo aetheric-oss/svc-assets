@@ -1,4 +1,4 @@
-![Arrow Banner](https://github.com/Arrow-air/tf-github/raw/main/src/templates/doc-banner-services.png)
+![Aetheric Banner](https://github.com/aetheric-oss/.github/raw/main/assets/doc-banner.png)
 
 # Interface Control Document (ICD) - `svc-assets`
 
@@ -11,17 +11,17 @@ microservice.
 
 | Attribute     | Description                                                       |
 | ------------- |-------------------------------------------------------------------|
-| Maintainer(s) | [Services Team](https://github.com/orgs/Arrow-air/teams/services) |
-| Stuckee       | [@GoodluckH](https://github.com/GoodluckH)                        |
+| Maintainer(s) | [Aetheric Realm Team](https://github.com/orgs/aetheric-oss/teams/dev-realm) |
+| Stuckee       | [@amsmith-pro](https://github.com/amsmith-pro)                        |
 | Status        | Draft                                                             |
 
 ## :books: Related Documents
 
 Document | Description
 --- | ---
-[High-Level Concept of Operations (CONOPS)](https://github.com/Arrow-air/se-services/blob/develop/docs/conops.md) | Overview of Arrow microservices.
-[High-Level Interface Control Document (ICD)](https://github.com/Arrow-air/se-services/blob/develop/docs/icd.md) | Interfaces and frameworks common to all Arrow microservices.
-[Requirements - `svc-assets`](https://nocodb.arrowair.com/dashboard/#/nc/view/08f51c89-565d-40b4-984e-9ed75eea1f26) | Requirements and user stories for this microservice.
+[High-Level Concept of Operations (CONOPS)](https://github.com/aetheric-oss/se-services/blob/develop/docs/conops.md) | Overview of Aetheric microservices.
+[High-Level Interface Control Document (ICD)](https://github.com/aetheric-oss/se-services/blob/develop/docs/icd.md) | Interfaces and frameworks common to all Aetheric microservices.
+[Requirements - `svc-assets`](https://nocodb.aetheric.nl/dashboard/#/nc/view/08f51c89-565d-40b4-984e-9ed75eea1f26) | Requirements and user stories for this microservice.
 [Concept of Operations - `svc-assets`](./conops.md) | Defines the motivation and duties of this microservice.
 [Software Design Document (SDD) - `svc-assets`](./sdd.md) | Specifies the internal activity of this microservice.
 
@@ -38,11 +38,11 @@ See the High-Level ICD for common interfaces.
 
 | File Location | Description |
 --- | ---
-[`server/src/rest/api.rs`](../server/src/rest/api.rs) | Implements the REST endpoints.
+[`server/src/rest/api/mod.rs`](../server/src/rest/api/mod.rs) | REST endpoint handlers.
 
 ### Authentication
 
-See [High-Level Services ICD](https://github.com/Arrow-air/se-services/blob/develop/docs/icd.md).
+See [High-Level Services ICD](https://github.com/aetheric-oss/se-services/blob/develop/docs/icd.md).
 
 ### Endpoints
 
@@ -57,7 +57,7 @@ See [here](https://arrowair.com/docs/documentation/services/api/rest/develop#tag
 
 ### Integrated Authentication & Encryption
 
-See [High-Level Services ICD](https://github.com/Arrow-air/se-services/blob/develop/docs/icd.md).
+See [High-Level Services ICD](https://github.com/aetheric-oss/se-services/blob/develop/docs/icd.md).
 
 ### gRPC Server Methods ("Services")
 

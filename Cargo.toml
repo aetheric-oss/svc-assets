@@ -1,12 +1,13 @@
 [workspace]
-members = ["server", "client-grpc", "client-rest"]
+members  = ["server", "client-grpc", "client-rest"]
+resolver = "2"
 
 [workspace.package]
-authors      = ["arrow-services <group-services@arrowair.com>"]
+authors      = ["A.M. Smith <alex@aetheric.nl>"]
 edition      = "2021"
-homepage     = "https://www.arrowair.com/docs/documentation/services/intro"
+homepage     = "https://www.aetheric.nl"
 license-file = "LICENSE"
-repository   = "https://github.com/Arrow-air/svc-assets"
+repository   = "https://github.com/aetheric-oss/svc-assets"
 
 categories = [
   "aerospace::drones",

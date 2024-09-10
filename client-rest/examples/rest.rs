@@ -3,6 +3,7 @@
 use hyper::{Body, Client, Method, Request, Response};
 use hyper::{Error, StatusCode};
 use lib_common::grpc::get_endpoint_from_env;
+use lib_common::time::Utc;
 use svc_assets_client_rest::types::*;
 
 fn check_body(bytes: &hyper::body::Bytes) -> String {
@@ -17,7 +18,10 @@ fn check_body(bytes: &hyper::body::Bytes) -> String {
 
 async fn evaluate(response: Result<Response<Body>, Error>, expected_code: StatusCode) -> String {
     let Ok(response) = response else {
-        println!("Response was an Err() type: {:?}", response.as_ref().unwrap_err());
+        println!(
+            "Response was an Err() type: {:?}",
+            response.as_ref().unwrap_err()
+        );
         println!("{:?}", response);
         return String::from("");
     };
@@ -64,9 +68,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             registration_number: "N2133423".to_string(),
             serial_number: "1234".to_string(),
             description: None,
-            last_maintenance: Some(chrono::Utc::now().into()),
+            last_maintenance: Some(Utc::now().into()),
             next_maintenance: None,
-            last_vertiport_id: None,
+            hangar_id: None,
+            hangar_bay_id: None,
             created_at: None,
             updated_at: None,
             asset_group_id: None,

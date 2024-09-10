@@ -1,8 +1,8 @@
 [package]
-description = "Arrow assets service gRPC client"
+description = "Aetheric assets service gRPC client"
 keywords    = ["vtol", "client", "grpc", "rest", "assets"] # max 5
 name        = "svc-assets-client-grpc"
-version     = "0.4.1"
+version     = "0.4.2-develop.6"
 
 authors.workspace      = true
 categories.workspace   = true
@@ -13,40 +13,35 @@ repository.workspace   = true
 
 [features]
 dev       = ["mock", "tokio"]
-test_util = ["mock", "stub_backends"]
+test_util = ["mock", "stub_backends", "tokio"]
 # Will add a 'mock' module for the enabled resources, providing access to mock data generation functions
 mock = []
 # Will use a stubbed server connection, only use for tests!
-stub_backends = [
-  "svc-assets/stub_server",
-  "lib-common/grpc_mock",
-  "tower",
-  "tokio",
-]
+stub_backends = ["svc-assets/stub_server", "lib-common/grpc_mock", "tower"]
 # Will implement stub functions for the client, only use for tests!
 stub_client = ["svc-assets"]
 
 [dependencies]
 cfg-if      = "1.0"
 log         = { version = "0.4" }
-prost       = "0.11"
-prost-types = "0.11"
+prost       = "0.12"
+prost-types = "0.12"
 svc-assets  = { path = "../server", optional = true }
-tonic       = "0.8"
+tonic       = "0.10"
 tower       = { version = "0.4", optional = true }
 
 [dependencies.lib-common]
 features = ["grpc"]
-git      = "https://github.com/Arrow-air/lib-common.git"
-tag      = "v0.2.0"
+git      = "https://github.com/aetheric-oss/lib-common.git"
+tag      = "v2.0.0"
 
 [dependencies.tokio]
 features = ["macros", "rt-multi-thread"]
 optional = true
-version  = "1.28"
+version  = "1.33"
 
 [dependencies.utoipa]
-version = "3.0"
+version = "4.0"
 
 [dev-dependencies]
 logtest = "2.0"

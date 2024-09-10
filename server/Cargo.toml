@@ -1,8 +1,8 @@
 [package]
-description = "Arrow Assets Service gRPC and REST servers"
-keywords    = ["vtol", "server", "grpc", "rest", "template"] # max 5
+description = "Aetheric Assets Service gRPC and REST servers"
+keywords    = ["vtol", "server", "grpc", "rest", "template"]  # max 5
 name        = "svc-assets"
-version     = "0.4.1"
+version     = "0.4.2-develop.6"
 
 authors.workspace      = true
 categories.workspace   = true
@@ -19,63 +19,49 @@ vendored-openssl = ["openssl/vendored"]
 # Will add a 'mock' module for the enabled resources, providing access to mock data generation functions
 mock = ["svc-storage-client-grpc/mock"]
 # Will use a stubbed backend connection, only use for tests!
-stub_backends = [
-  "svc-storage-client-grpc/stub_client",
-  "svc-storage-client-grpc/stub_backends",
-]
+stub_backends = ["svc-storage-client-grpc/stub_client"]
 # Will implement stub functions for the server, only use for tests!
 stub_server = ["test_util"]
 # Only added to support client-grpc feature when running tests
 stub_client = ["stub_backends"]
 
 [dependencies]
-anyhow      = "1.0"
-axum        = "0.5"
-cargo-husky = "1"
-cfg-if      = "1.0"
-chrono      = { version = "0.4", features = ["serde"] }
-# pin clap to 4.3 for now, since 4.4 requires rustc 1.70.0 or newer.
-clap = { version = "=4.3.24", features = ["derive"] }
-# pin clap_lex to 0.5.0 for now, since 0.5.1 requires rustc 1.70.0 or newer.
-# Entire dependency can be removed once resolved
-clap_lex = "=0.5.0"
-# pin anstyle to 1.0.2 for now, since 1.0.3 requires rustc 1.70.0 or newer.
-# Entire dependency can be removed once resolved
-anstyle       = "=1.0.2"
+anyhow        = "1.0"
+axum          = "0.5"
+cargo-husky   = "1"
+cfg-if        = "1.0"
+clap          = { version = "4.4", features = ["derive"] }
 config        = "0.13"
 dotenv        = "0.15"
-duplicate     = "0.4"
+duplicate     = "1.0"
 futures       = "0.3"
 hyper         = "0.14"
-lapin         = "2.1"
-lipsum        = "0.8"
+lapin         = "2.3"
 log           = "0.4"
-mavlink       = "0.11"
 openssl       = "0.10"
 packed_struct = "0.10"
-prost         = "0.11"
-prost-build   = "0.11"
-prost-types   = "0.11"
+prost         = "0.12"
+prost-build   = "0.12"
+prost-types   = "0.12"
 rand          = { version = "0.8" }
 serde         = "1.0"
 serde_json    = "1.0"
 snafu         = "0.7"
-tokio         = { version = "1.28", features = ["full"] }
+tokio         = { version = "1.33", features = ["full"] }
 tokio-util    = "0.7"
-tonic         = "0.8"
-tonic-health  = "0.8"
+tonic         = "0.10"
+tonic-health  = "0.10"
 tower         = { version = "0.4", features = ["limit"] }
 tower-http    = { version = "0.4", features = ["cors", "trace"] }
-uuid          = { version = "1.2", features = ["serde"] }
 
 [dependencies.svc-storage-client-grpc]
-features = ["vehicle", "vertiport", "vertipad"]
-git      = "https://github.com/Arrow-air/svc-storage"
-tag      = "v0.11.0"
+features = ["vehicle", "vertiport", "vertipad", "group"]
+git      = "https://github.com/aetheric-oss/svc-storage"
+tag      = "v0.12.1"
 
 [dependencies.lib-common]
-git = "https://github.com/Arrow-air/lib-common.git"
-tag = "v0.2.0"
+git = "https://github.com/aetheric-oss/lib-common.git"
+tag = "v2.0.0"
 
 [dependencies.log4rs]
 features = [
@@ -88,7 +74,7 @@ version = "1.2"
 
 [dependencies.utoipa]
 features = ["axum_extras", "chrono"]
-version  = "3.3"
+version  = "4.0"
 
 [dev-dependencies]
 logtest = "2.0"
@@ -104,4 +90,4 @@ features = ["dev"]
 path     = "."
 
 [build-dependencies]
-tonic-build = "0.8"
+tonic-build = "0.10"

@@ -1,16 +1,20 @@
 #![doc = include_str!("../README.md")]
 
-mod config;
-pub use crate::config::Config;
+#[cfg(test)]
+#[macro_use]
+pub mod test_util;
+
+pub mod config;
 pub mod grpc;
 
-pub use clap::Parser;
-use log::warn;
+pub use crate::config::Config;
 
+pub use clap::Parser;
+/// rest implementation module
 pub mod rest;
 
 /// struct holding cli configuration options
-#[derive(Parser, Debug)]
+#[derive(Parser, Debug, Clone)]
 pub struct Cli {
     /// Target file to write the OpenAPI Spec
     #[arg(long)]
@@ -75,5 +79,32 @@ pub async fn shutdown_signal(
             .expect("(shutdown_signal) expect tokio signal ctrl-c"),
     }
 
-    warn!("(shutdown_signal) server shutdown for [{}].", server);
+    log::warn!("(shutdown_signal) server shutdown for [{}]", server);
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn test_server_shutdown() {
+        ut_info!("start");
+
+        let (shutdown_tx, shutdown_rx) = tokio::sync::oneshot::channel::<()>();
+        let (_, health_service) = tonic_health::server::health_reporter();
+        tokio::spawn(async move {
+            let _ = tonic::transport::Server::builder()
+                .add_service(health_service)
+                .serve_with_shutdown(
+                    "0.0.0.0:50051".parse().unwrap(),
+                    shutdown_signal("grpc", Some(shutdown_rx)),
+                )
+                .await;
+        });
+
+        // Send server the shutdown request
+        assert!(shutdown_tx.send(()).is_ok());
+
+        ut_info!("success");
+    }
 }

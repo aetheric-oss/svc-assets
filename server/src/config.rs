@@ -43,7 +43,7 @@ impl Config {
             docker_port_grpc: 50051,
             docker_port_rest: 8000,
             storage_port_grpc: 50051,
-            storage_host_grpc: "localhost".to_owned(),
+            storage_host_grpc: String::from("svc-storage"),
             log_config: String::from("log4rs.yaml"),
             rest_request_limit_per_second: 2,
             rest_concurrency_limit_per_service: 5,
@@ -83,14 +83,16 @@ impl Config {
 mod tests {
     use super::*;
 
-    #[test]
-    fn test_config_from_default() {
-        let config = Config::default();
+    #[tokio::test]
+    async fn test_config_from_default() {
+        lib_common::logger::get_log_handle().await;
+        ut_info!("Start.");
 
+        let config = Config::default();
         assert_eq!(config.docker_port_grpc, 50051);
         assert_eq!(config.docker_port_rest, 8000);
         assert_eq!(config.storage_port_grpc, 50051);
-        assert_eq!(config.storage_host_grpc, String::from("localhost"));
+        assert_eq!(config.storage_host_grpc, String::from("svc-storage"));
         assert_eq!(config.log_config, String::from("log4rs.yaml"));
         assert_eq!(config.rest_concurrency_limit_per_service, 5);
         assert_eq!(config.rest_request_limit_per_second, 2);
@@ -98,9 +100,15 @@ mod tests {
             config.rest_cors_allowed_origin,
             String::from("http://localhost:3000")
         );
+
+        ut_info!("Success.");
     }
-    #[test]
-    fn test_config_from_env() {
+
+    #[tokio::test]
+    async fn test_config_from_env() {
+        lib_common::logger::get_log_handle().await;
+        ut_info!("Start.");
+
         std::env::set_var("DOCKER_PORT_GRPC", "6789");
         std::env::set_var("DOCKER_PORT_REST", "9876");
         std::env::set_var("STORAGE_HOST_GRPC", "test_host_grpc");
@@ -127,5 +135,7 @@ mod tests {
             config.rest_cors_allowed_origin,
             String::from("https://allowed.origin.host:443")
         );
+
+        ut_info!("Success.");
     }
 }
