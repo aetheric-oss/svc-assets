@@ -1,3 +1,28 @@
+## [Release 0.5.0](https://github.com/aetheric-oss/svc-assets/releases/tag/v0.5.0)
+
+### ✨ Features
+
+- add prelude module ([`9de9f79`](https://github.com/aetheric-oss/svc-assets/commit/9de9f79b0f0184263fe97e4fc438279ac5ae0c6e))
+- add docker-compose.yml ([`92fc9ca`](https://github.com/aetheric-oss/svc-assets/commit/92fc9cad05ad32ab2909b2fe397578898e2a96f0))
+
+### 🐛 Fixes
+
+- added missing /health route ([`f82cdbe`](https://github.com/aetheric-oss/svc-assets/commit/f82cdbe578f3c42f6138fca066df3800a246c7bb))
+- change git location to aetheric-oss organization ([`d40f781`](https://github.com/aetheric-oss/svc-assets/commit/d40f781686e316ce332724952d8edafdbcbc8bc8))
+- change to search_is_null ([`ea15171`](https://github.com/aetheric-oss/svc-assets/commit/ea15171196357ad3a2a9406cf655957952f8e240))
+
+### 🛠 Maintenance
+
+- terraform provisioned file changes ([`78800c3`](https://github.com/aetheric-oss/svc-assets/commit/78800c354c4d29a0af6bc97f6988a09b69220ad0))
+- update cargo dependencies ([`b22952c`](https://github.com/aetheric-oss/svc-assets/commit/b22952c8140de961e761abd1819898f97f648564))
+- bring server code in line with latest template ([`4a4c2f3`](https://github.com/aetheric-oss/svc-assets/commit/4a4c2f38ece89cae2b7e7a72cda9bd8d5b6691d4))
+- upgrade to latest svc-storage structs ([`0435648`](https://github.com/aetheric-oss/svc-assets/commit/0435648c34c1a45835a2c0de5db1eeb2edb28ded))
+- tofu provisioned file changes ([`2699628`](https://github.com/aetheric-oss/svc-assets/commit/2699628891959fee00c58e1cfbbf73e7ad260e10))
+- fix excessive log output ([`4d0aba4`](https://github.com/aetheric-oss/svc-assets/commit/4d0aba453d557dbea3513c3c630a050af5ffcf84))
+- update old references, refactor ([`39e4b0e`](https://github.com/aetheric-oss/svc-assets/commit/39e4b0ee91b88a4cafb7dfe4279b8e83675db9a7))
+- reviewer comments ([`f252d40`](https://github.com/aetheric-oss/svc-assets/commit/f252d405158635ec404277f860097d28724509f2))
+- final fixes for r4 ([`ed439b3`](https://github.com/aetheric-oss/svc-assets/commit/ed439b37017df020b7ac1ab981cdb88b33469e19))
+
 ## [Release 0.4.1](https://github.com/Arrow-air/svc-assets/releases/tag/v0.4.1)
 
 ### 🔥 Refactorings

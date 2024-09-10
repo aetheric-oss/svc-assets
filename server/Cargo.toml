@@ -2,7 +2,7 @@
 description = "Aetheric Assets Service gRPC and REST servers"
 keywords    = ["vtol", "server", "grpc", "rest", "template"]  # max 5
 name        = "svc-assets"
-version     = "0.4.2-develop.6"
+version     = "0.5.0"
 
 authors.workspace      = true
 categories.workspace   = true
