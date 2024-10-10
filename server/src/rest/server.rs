@@ -187,16 +187,34 @@ pub async fn rest_server(
     //
     // Bind to address
     //
-    axum::Server::bind(&full_rest_addr)
-        .serve(app.into_make_service())
+    let listener = match tokio::net::TcpListener::bind(&full_rest_addr).await {
+        Ok(url) => url,
+        Err(e) => {
+            rest_error!(
+                "Could not bind address [{}]: {:?}, exiting.",
+                full_rest_addr,
+                e
+            );
+            return Err(());
+        }
+    };
+
+    //
+    // Start serving
+    //
+    match axum::serve(listener, app)
         .with_graceful_shutdown(shutdown_signal("rest", shutdown_rx))
         .await
-        .map_err(|e| {
-            rest_error!("could not start server: {}", e);
-        })?;
-
-    rest_info!("server running at: {}.", full_rest_addr);
-    Ok(())
+    {
+        Ok(_) => {
+            rest_info!("Server running at: {}.", full_rest_addr);
+            Ok(())
+        }
+        Err(e) => {
+            rest_error!("Could not start server: {}", e);
+            Err(())
+        }
+    }
 }
 
 #[cfg(test)]

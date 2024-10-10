@@ -49,3 +49,7 @@ anstyle
 Lcov
 seccomp
 Rnever
+cfgs
+combinators
+dozzle
+protos

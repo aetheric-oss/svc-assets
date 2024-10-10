@@ -4,6 +4,8 @@ pub use super::rest_types::*;
 
 use axum::{extract::Path, Extension, Json};
 use hyper::StatusCode;
+use lib_common::uuid::to_uuid;
+use svc_storage_client_grpc::prelude::Client;
 
 use crate::grpc::client::GrpcClients;
 use crate::rest::structs::AssetGroup;
@@ -65,22 +67,25 @@ pub async fn register_asset_group(
         ("id" = String, Path, description = "AssetGroup id"),
     )
 )]
+#[axum::debug_handler]
 pub async fn update_asset_group(
-    Extension(mut _grpc_clients): Extension<GrpcClients>,
+    Extension(grpc_clients): Extension<GrpcClients>,
+    Path(id): Path<String>,
     Json(payload): Json<AssetGroup>,
-    Path(_id): Path<String>,
-) -> Result<String, (StatusCode, String)> {
-    rest_info!("with payload: {:?}", &payload);
-    Err((StatusCode::NOT_IMPLEMENTED, "Not implemented".to_string()))
+) -> Result<(), (StatusCode, String)> {
+    rest_info!("Entry [{}].", &id);
+    rest_debug!("Payload: {:?}", &payload);
 
-    // Get Client
-    // let _client_option = grpc_clients.storage.get_client().await;
-    // if client_option.is_none() {
-    //     let error_msg = "svc-storage unavailable.".to_string();
-    //     rest_error!("{}", &error_msg);
-    //     return Err((StatusCode::SERVICE_UNAVAILABLE, error_msg));
-    // }
-    // let mut client = client_option.unwrap();
+    let id = to_uuid(&id)
+        .ok_or_else(|| {
+            rest_error!("Invalid aircraft id.");
+            (StatusCode::BAD_REQUEST, "Internal server error".to_string())
+        })? // Check if the aircraft_id is a valid UUID (v4)
+        .to_string();
+
+    rest_debug!("update [{}]: {}", id, grpc_clients.storage.group.get_name());
+
+    Err((StatusCode::NOT_IMPLEMENTED, "Not implemented".to_string()))
 
     // TODO(R5)
     // Ok(payload.id)
@@ -194,8 +199,8 @@ mod tests {
         let grpc_clients = GrpcClients::default(config);
         let result = update_asset_group(
             Extension(grpc_clients),
+            Path(payload.id.clone()),
             Json(payload),
-            Path(Uuid::new_v4().to_string()),
         )
         .await;
         assert!(result.is_err());

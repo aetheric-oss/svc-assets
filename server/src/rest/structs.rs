@@ -26,11 +26,11 @@ pub struct AssetGroup {
     /// UUID of the asset group.
     pub id: String,
     pub name: Option<String>,
-    /// The UUID of an [`Operator`] struct.
+    /// The UUID of an `Operator` struct.
     pub owner: String,
     pub created_at: Option<DateTime<Utc>>,
     pub updated_at: Option<DateTime<Utc>>,
-    /// The UUID of an [`Operator`] struct, if available.
+    /// The UUID of an `Operator` struct, if available.
     pub delegatee: Option<String>,
     /// The UUIDs of the assets in the group.
     pub assets: Vec<String>,
@@ -49,7 +49,7 @@ pub struct Basics {
     pub created_at: DateTime<Utc>,
     /// Updated at time.
     pub updated_at: DateTime<Utc>,
-    /// A list of UUIDs of [`Operator`] structs.
+    /// A list of UUIDs of `Operator` structs.
     ///
     /// If the vector is empty, the asset is available to everyone.
     ///
@@ -172,6 +172,14 @@ pub enum AssetStatus {
 mod tests {
     use super::*;
     use svc_storage_client_grpc::prelude::*;
+
+    #[test]
+    fn test_asset_error_display() {
+        assert_eq!(
+            format!("{}", AssetsError::InvalidUuid),
+            String::from("Invalid UUID")
+        );
+    }
 
     #[test]
     fn test_asset_basics() {

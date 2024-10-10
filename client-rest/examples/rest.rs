@@ -1,12 +1,15 @@
 //! Example communication with this service
 
-use hyper::{Body, Client, Method, Request, Response};
-use hyper::{Error, StatusCode};
+use http_body_util::{combinators::BoxBody, BodyExt, Empty, Full};
+use hyper::{body::Bytes, body::Incoming, Error, Method, Request, Response, StatusCode};
+use hyper_util::rt::TokioIo;
 use lib_common::grpc::get_endpoint_from_env;
 use lib_common::time::Utc;
+use std::convert::Infallible;
 use svc_assets_client_rest::types::*;
+use tokio::net::TcpStream;
 
-fn check_body(bytes: &hyper::body::Bytes) -> String {
+fn check_body(bytes: &Bytes) -> String {
     match String::from_utf8(bytes.to_vec()) {
         Ok(s) => s,
         Err(e) => {
@@ -15,15 +18,24 @@ fn check_body(bytes: &hyper::body::Bytes) -> String {
         }
     }
 }
+fn full<T: Into<Bytes>>(chunk: T) -> BoxBody<Bytes, Infallible> {
+    Full::new(chunk.into()).boxed()
+}
+fn empty() -> BoxBody<Bytes, Infallible> {
+    Empty::<Bytes>::new().boxed()
+}
 
-async fn evaluate(response: Result<Response<Body>, Error>, expected_code: StatusCode) -> String {
-    let Ok(response) = response else {
+async fn evaluate(
+    resp: Result<Response<Incoming>, Error>,
+    expected_code: StatusCode,
+) -> (bool, String) {
+    let Ok(response) = resp else {
         println!(
             "Response was an Err() type: {:?}",
-            response.as_ref().unwrap_err()
+            resp.as_ref().unwrap_err()
         );
-        println!("{:?}", response);
-        return String::from("");
+        println!("{:?}", resp);
+        return (false, String::from(""));
     };
 
     let status = response.status();
@@ -31,19 +43,22 @@ async fn evaluate(response: Result<Response<Body>, Error>, expected_code: Status
     if status != expected_code {
         println!("expected code: {}, actual: {}", expected_code, status);
         println!("{:?}", response);
-        return String::from("");
+        return (false, String::from(""));
     }
 
-    let str = match hyper::body::to_bytes(response.into_body()).await {
-        Ok(b) => check_body(&b),
+    let bytes = match response.collect().await {
+        Ok(bytes) => bytes,
         Err(e) => {
-            println!("Could not get bytes from response body: {}", e);
-            return String::from("");
+            println!("{}", e);
+            return (false, format!("{}", e));
         }
-    };
-    println!("{} (body: {})", status.to_string(), str);
+    }
+    .to_bytes();
 
-    str
+    let str = check_body(&bytes);
+    println!("{} (body: {})", status, str);
+
+    (true, str)
 }
 
 #[tokio::main]
@@ -51,13 +66,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("NOTE: Ensure the server is running, or this example will fail.");
 
     let (host, port) = get_endpoint_from_env("SERVER_HOSTNAME", "SERVER_PORT_REST");
-    let url = format!("http://{host}:{port}");
+    let addr = format!("{host}:{port}");
 
-    println!("Rest endpoint set to [{url}].");
+    println!("Rest endpoint set to [{addr}].");
 
-    let client = Client::builder()
-        .pool_idle_timeout(std::time::Duration::from_secs(10))
-        .build_http();
+    let stream = TcpStream::connect(addr.clone()).await?;
+    let io = TokioIo::new(stream);
+
+    let (mut sender, conn) = hyper::client::conn::http1::handshake(io).await?;
+    tokio::task::spawn(async move {
+        if let Err(err) = conn.await {
+            println!("Connection failed: {:?}", err);
+        }
+    });
+
+    let mut ok = true;
 
     let aircraft_id: String;
 
@@ -85,12 +108,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
         };
         println!("Post data: {}", data_str);
-        let uri = format!("{}/assets/aircraft", url);
+        let uri = format!("http://{}/assets/aircraft", addr.clone());
         let req = match Request::builder()
             .method(Method::POST)
             .uri(uri.clone())
             .header("content-type", "application/json")
-            .body(Body::from(data_str))
+            .body(full(data_str))
         {
             Ok(r) => r,
             Err(e) => {
@@ -98,21 +121,22 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 return Ok(());
             }
         };
+        let res = sender.send_request(req).await;
+        let (success, result_str) = evaluate(res, StatusCode::OK).await;
+        ok &= success;
 
-        let resp = client.request(req).await;
-        let result_str = evaluate(resp, StatusCode::OK).await;
         aircraft_id = result_str;
         println!("Aircraft created: {}", aircraft_id);
     }
 
     // DELETE /assets/aircraft/{aircraft_id}
     {
-        let uri = format!("{}/assets/aircraft/{}", url, aircraft_id);
+        let uri = format!("http://{}/assets/aircraft/{}", addr, aircraft_id);
         let req = match Request::builder()
             .method(Method::DELETE)
             .uri(uri.clone())
             .header("content-type", "application/json")
-            .body(Body::empty())
+            .body(empty())
         {
             Ok(r) => r,
             Err(e) => {
@@ -121,8 +145,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
         };
 
-        let resp = client.request(req).await;
-        evaluate(resp, StatusCode::OK).await;
+        let res = sender.send_request(req).await;
+        let (success, result_str) = evaluate(res, StatusCode::OK).await;
+        ok &= success;
+
+        println!("Result {}", result_str);
+    }
+
+    if ok {
+        println!("\u{1F9c1} All endpoints responded!");
+    } else {
+        eprintln!("\u{2620} Errors");
     }
 
     Ok(())

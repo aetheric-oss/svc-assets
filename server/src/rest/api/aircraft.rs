@@ -119,27 +119,31 @@ impl TryFrom<vehicle::Object> for Aircraft {
 /// This will update the aircraft's information.
 #[utoipa::path(
     put,
-    path = "/assets/aircraft",
+    path = "/assets/aircraft/{id}",
     tag = "svc-assets",
     request_body=UpdateAircraftPayload,
     responses(
         (status = 200, description = "Aircraft updated in database; a UUID is returned", body = String),
         (status = 422, description = "Request body is invalid format"),
         (status = 503, description = "Could not connect to other microservice dependencies")
+    ),
+    params(
+        ("id" = String, Path, description = "Aircraft id"),
     )
 )]
 pub async fn update_aircraft(
     Extension(grpc_clients): Extension<GrpcClients>,
+    Path(id): Path<String>,
     Json(payload): Json<UpdateAircraftPayload>,
 ) -> Result<(), StatusCode> {
-    rest_info!("entry [{}].", payload.id);
+    rest_info!("Entry [{}].", &id);
     rest_debug!("Payload: {:?}", &payload);
 
-    let id = to_uuid(&payload.id)
+    let id = to_uuid(&id)
         .ok_or_else(|| {
             rest_error!("Invalid aircraft id.");
             StatusCode::BAD_REQUEST
-        })? // Check if the aircraft_id is a valid UUID
+        })? // Check if the aircraft_id is a valid UUID (v4)
         .to_string();
 
     let mut vehicle_data = grpc_clients
@@ -148,7 +152,7 @@ pub async fn update_aircraft(
         .get_by_id(Id { id: id.clone() })
         .await
         .map_err(|e| {
-            rest_error!("could not retrieve vehicles: {e}.");
+            rest_error!("could not retrieve vehicle: {e}.");
             StatusCode::NOT_FOUND
         })?
         .into_inner()
@@ -197,11 +201,11 @@ pub async fn update_aircraft(
         .update(object)
         .await
         .map_err(|e| {
-            rest_error!("could not update vehicle: {e}.");
+            rest_error!("Could not update vehicle: {e}");
             StatusCode::INTERNAL_SERVER_ERROR
         })?;
 
-    rest_info!("successfully updated aircraft.");
+    rest_info!("Successfully updated aircraft.");
     Ok(())
 }
 
@@ -222,7 +226,7 @@ pub async fn remove_aircraft(
     Extension(grpc_clients): Extension<GrpcClients>,
     Path(id): Path<String>,
 ) -> Result<(), StatusCode> {
-    rest_info!("entry [{}].", &id);
+    rest_info!("Entry [{}].", &id);
 
     let id = to_uuid(&id)
         .ok_or_else(|| {
@@ -237,11 +241,11 @@ pub async fn remove_aircraft(
         .delete(Id { id })
         .await
         .map_err(|e| {
-            rest_error!("could not remove aircraft {e}");
+            rest_error!("Could not remove aircraft {e}");
             StatusCode::INTERNAL_SERVER_ERROR
         })?;
 
-    rest_info!("successfully removed aircraft.");
+    rest_info!("Successfully removed aircraft.");
     Ok(())
 }
 
@@ -270,19 +274,19 @@ pub async fn register_aircraft(
         .insert(payload)
         .await
         .map_err(|e| {
-            rest_error!("could not insert vehicle: {e}");
+            rest_error!("Could not insert vehicle: {e}");
             StatusCode::INTERNAL_SERVER_ERROR
         })?
         .into_inner()
         .object
         .ok_or_else(|| {
-            rest_error!("vehicle insertion failed.");
+            rest_error!("Vehicle insertion failed.");
             StatusCode::INTERNAL_SERVER_ERROR
         })?
         .id;
 
-    rest_info!("registration success.");
-    rest_debug!("new aircraft: {:?}", id);
+    rest_info!("Registration success.");
+    rest_debug!("New aircraft: {:?}", id);
 
     Ok(id)
 }
@@ -300,7 +304,7 @@ pub async fn register_aircraft(
 pub async fn get_all_aircraft(
     Extension(grpc_clients): Extension<GrpcClients>,
 ) -> Result<Json<Vec<Aircraft>>, StatusCode> {
-    rest_info!("entry.");
+    rest_info!("Entry.");
 
     let filter = AdvancedSearchFilter::search_is_null("deleted_at".to_string());
     let assets = grpc_clients
@@ -309,7 +313,7 @@ pub async fn get_all_aircraft(
         .search(filter)
         .await
         .map_err(|e| {
-            rest_error!("could not retrieve vehicles: {e}.");
+            rest_error!("Could not retrieve vehicles: {e}");
             StatusCode::NOT_FOUND
         })?
         .into_inner()
@@ -338,15 +342,15 @@ pub async fn get_all_aircraft(
 )]
 pub async fn get_aircraft_by_id(
     Extension(grpc_clients): Extension<GrpcClients>,
-    Path(aircraft_id): Path<String>,
+    Path(id): Path<String>,
 ) -> Result<Json<Aircraft>, StatusCode> {
-    rest_info!("entry [{}].", aircraft_id);
-    let id = to_uuid(&aircraft_id)
+    rest_info!("Entry [{}].", id);
+    let id = to_uuid(&id)
         .ok_or_else(|| {
             rest_error!("Invalid aircraft id.");
             StatusCode::BAD_REQUEST
-        })?
-        .to_string(); // Check if the aircraft_id is a valid UUID (v4
+        })? // Check if the aircraft_id is a valid UUID (v4)
+        .to_string();
 
     let aircraft: Aircraft = grpc_clients
         .storage
@@ -354,13 +358,13 @@ pub async fn get_aircraft_by_id(
         .get_by_id(Id { id })
         .await
         .map_err(|e| {
-            rest_error!("could not retrieve aircraft: {e}");
+            rest_error!("Could not retrieve aircraft: {e}");
             StatusCode::NOT_FOUND
         })?
         .into_inner()
         .try_into()
         .map_err(|e| {
-            rest_error!("could not convert vehicle::Object to Aircraft: {e}");
+            rest_error!("Could not convert vehicle::Object to Aircraft: {e}");
             StatusCode::INTERNAL_SERVER_ERROR
         })?;
 
@@ -393,7 +397,7 @@ mod tests {
             vehicle_data
                 .created_at
                 .clone()
-                .expect("mock didn't return a created_at date.")
+                .expect("Mock didn't return a created_at date.")
                 .into()
         );
         assert_eq!(
@@ -401,7 +405,7 @@ mod tests {
             vehicle_data
                 .updated_at
                 .clone()
-                .expect("mock didn't return a updated_at date.")
+                .expect("Mock didn't return a updated_at date.")
                 .into()
         );
         assert_eq!(aircraft.is_grouped(), false);
@@ -439,11 +443,11 @@ mod tests {
             group_id: Some(Uuid::new_v4().to_string()),
             created_at: aircraft
                 .created_at
-                .expect("mock didn't return a created_at date.")
+                .expect("Mock didn't return a created_at date.")
                 .into(),
             updated_at: aircraft
                 .updated_at
-                .expect("mock didn't return a updated_at date.")
+                .expect("Mock didn't return a updated_at date.")
                 .into(),
             whitelist: vec![Uuid::new_v4().to_string()],
             status: AssetStatus::Available,
@@ -490,7 +494,7 @@ mod tests {
     #[tokio::test]
     async fn test_get_all_aircraft() {
         get_log_handle().await;
-        ut_info!("Start.");
+        ut_info!("start");
 
         let config = crate::config::Config::default();
         let grpc_clients = GrpcClients::default(config);
@@ -514,17 +518,19 @@ mod tests {
             .await
             .unwrap();
 
-        ut_info!("Success: {:#?}", id);
+        ut_debug!("Id: {:#?}", id);
 
         let result = get_all_aircraft(Extension(grpc_clients)).await.unwrap();
-        ut_info!("Success: {:#?}", result);
+        ut_debug!("Result: {:#?}", result);
         // assert!(!result.0.is_empty());
+
+        ut_info!("success");
     }
 
     #[tokio::test]
     async fn test_get_aircraft_by_id() {
         get_log_handle().await;
-        ut_info!("Start.");
+        ut_info!("start");
 
         let config = crate::config::Config::default();
         let grpc_clients = GrpcClients::default(config);
@@ -573,12 +579,13 @@ mod tests {
             .unwrap();
 
         assert_eq!(result.0, expected);
+        ut_info!("success");
     }
 
     #[tokio::test]
     async fn test_register_aircraft() {
         get_log_handle().await;
-        ut_info!("Start.");
+        ut_info!("start");
 
         let payload = vehicle::Data {
             hangar_id: Some(Uuid::new_v4().to_string()),
@@ -601,13 +608,13 @@ mod tests {
             .await
             .unwrap();
 
-        ut_info!("Success.");
+        ut_info!("success");
     }
 
     #[tokio::test]
     async fn test_update_aircraft() {
         get_log_handle().await;
-        ut_info!("Start.");
+        ut_info!("start");
 
         let mut payload = UpdateAircraftPayload {
             id: Uuid::new_v4().to_string(),
@@ -629,24 +636,32 @@ mod tests {
 
         // invalid ID
         payload.id = "invalid".to_string();
-        let error = update_aircraft(Extension(grpc_clients.clone()), Json(payload.clone()))
-            .await
-            .unwrap_err();
+        let error = update_aircraft(
+            Extension(grpc_clients.clone()),
+            Path(payload.id.clone()),
+            Json(payload.clone()),
+        )
+        .await
+        .unwrap_err();
         assert_eq!(error, StatusCode::BAD_REQUEST);
 
         // Valid ID, but doesn't exist
         payload.id = Uuid::new_v4().to_string();
-        let error = update_aircraft(Extension(grpc_clients.clone()), Json(payload.clone()))
-            .await
-            .unwrap_err();
+        let error = update_aircraft(
+            Extension(grpc_clients.clone()),
+            Path(payload.id.clone()),
+            Json(payload.clone()),
+        )
+        .await
+        .unwrap_err();
         assert_eq!(error, StatusCode::NOT_FOUND);
-        ut_info!("Success.");
+        ut_info!("success");
     }
 
     #[tokio::test]
     async fn test_remove_aircraft() {
         get_log_handle().await;
-        ut_info!("Start.");
+        ut_info!("start");
 
         let config = crate::config::Config::default();
         let grpc_clients = GrpcClients::default(config);
@@ -661,6 +676,6 @@ mod tests {
         remove_aircraft(Extension(grpc_clients.clone()), Path(id.to_string()))
             .await
             .unwrap();
-        ut_info!("Success.");
+        ut_info!("success");
     }
 }

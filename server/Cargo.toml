@@ -27,32 +27,32 @@ stub_client = ["stub_backends"]
 
 [dependencies]
 anyhow        = "1.0"
-axum          = "0.5"
+axum          = { version = "0.7", features = ["macros"] }
 cargo-husky   = "1"
 cfg-if        = "1.0"
-clap          = { version = "4.4", features = ["derive"] }
-config        = "0.13"
+clap          = { version = "4.5", features = ["derive"] }
+config        = "0.14"
 dotenv        = "0.15"
-duplicate     = "1.0"
+duplicate     = "2.0"
 futures       = "0.3"
-hyper         = "0.14"
-lapin         = "2.3"
+hyper         = "1.4"
+lapin         = "2.5"
 log           = "0.4"
 openssl       = "0.10"
 packed_struct = "0.10"
-prost         = "0.12"
-prost-build   = "0.12"
-prost-types   = "0.12"
+prost         = "0.13"
+prost-build   = "0.13"
+prost-types   = "0.13"
 rand          = { version = "0.8" }
 serde         = "1.0"
 serde_json    = "1.0"
-snafu         = "0.7"
-tokio         = { version = "1.33", features = ["full"] }
+snafu         = "0.8"
+tokio         = { version = "1.40", features = ["full"] }
 tokio-util    = "0.7"
-tonic         = "0.10"
-tonic-health  = "0.10"
-tower         = { version = "0.4", features = ["limit"] }
-tower-http    = { version = "0.4", features = ["cors", "trace"] }
+tonic         = "0.12"
+tonic-health  = "0.12"
+tower         = { version = "0.5", features = ["limit", "buffer"] }
+tower-http    = { version = "0.6", features = ["cors", "trace"] }
 
 [dependencies.svc-storage-client-grpc]
 features = ["vehicle", "vertiport", "vertipad", "group"]
@@ -61,7 +61,7 @@ tag      = "v0.12.1"
 
 [dependencies.lib-common]
 git = "https://github.com/aetheric-oss/lib-common.git"
-tag = "v2.0.0"
+tag = "v3.0.0"
 
 [dependencies.log4rs]
 features = [
@@ -70,11 +70,11 @@ features = [
   "json_format",
   "gzip",
 ]
-version = "1.2"
+version = "1.3"
 
 [dependencies.utoipa]
 features = ["axum_extras", "chrono"]
-version  = "4.0"
+version  = "4.2"
 
 [dev-dependencies]
 logtest = "2.0"
@@ -90,4 +90,10 @@ features = ["dev"]
 path     = "."
 
 [build-dependencies]
-tonic-build = "0.10"
+tonic-build = "0.12"
+
+# https://github.com/xd009642/tarpaulin?tab=readme-ov-file#ignoring-code-in-files
+# removes warnings introduced by rust 1.8
+# can be removed when the cfg attributes can be replaced with `#[coverage(off)]` (currently only available in nightly)
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(tarpaulin_include)'] }
